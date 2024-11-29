@@ -1,0 +1,118 @@
+#################################################################
+###  Generated with the experimental alpha version of the TTL exporter of WebVOWL (version 1.1.7)  http://visualdataweb.de/webvowl/   ###
+#################################################################
+
+@prefix : 		<http://visualdataweb.org/newOntology/> .
+@prefix rdf: 		<http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: 		<http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: 		<http://www.w3.org/2002/07/owl#> .
+@prefix xsd: 		<http://www.w3.org/2001/XMLSchema#> .
+@prefix dc: 		<http://purl.org/dc/elements/1.1/> .
+@prefix xml: 		<http://www.w3.org/XML/1998/namespace> .
+@prefix wot: 		<http://xmlns.com/wot/0.1/> .
+@prefix vs: 		<http://www.w3.org/2003/06/sw-vocab-status/ns#> .
+@prefix foaf: 		<http://xmlns.com/foaf/0.1/> .
+@base 			<http://visualdataweb.org/newOntology/> .
+
+<http://visualdataweb.org/newOntology/> rdf:type owl:Ontology ;
+                                        dc:title "Minecraft Onotlogy"@en;
+                                        dc:description "Minecraft Ontology example"@en;
+                                        owl:versionInfo "0.1"@en . 
+#################################################################
+
+###  Property Definitions (Number of Property) 15 ###
+#  --------------------------- Property 0------------------------- 
+:Made_In rdf:type owl:ObjectProperty ;
+         rdfs:label "Used In"@en; 
+         rdfs:domain :Recipe;
+         rdfs:range :Crafting_Station . 
+#  --------------------------- Property 1------------------------- 
+:Obtainedd_By rdf:type owl:ObjectProperty ;
+              rdfs:label "Obtained By"@en; 
+              rdfs:domain :Item;
+              rdfs:range :Recipe . 
+#  --------------------------- Property 2------------------------- 
+:Makes rdf:type owl:ObjectProperty ;
+       rdfs:label "Makes"@en; 
+       rdfs:domain :Recipe;
+       rdfs:range :Item . 
+#  --------------------------- Property 3------------------------- 
+:Uses rdf:type owl:ObjectProperty ;
+      rdfs:label "Uses"@en; 
+      rdfs:domain :Recipe;
+      rdfs:range :Item . 
+#  --------------------------- Property 4------------------------- 
+:ID rdf:type owl:DatatypeProperty ;
+    rdfs:label "ID"@en; 
+    rdfs:domain :MainClass;
+    rdfs:range xsd:integer . 
+#  --------------------------- Property 5------------------------- 
+:Name rdf:type owl:DatatypeProperty ;
+      rdfs:label "Name"@en; 
+      rdfs:domain :Crafting_Station;
+      rdfs:range rdfs:Datatype . 
+#  --------------------------- Property 6------------------------- 
+:Contains rdf:type owl:ObjectProperty ;
+          rdfs:label "Contains"@en; 
+          rdfs:domain :Item_Collection;
+          rdfs:range :Item . 
+#  --------------------------- Property 7------------------------- 
+:Made_In rdf:type owl:ObjectProperty ;
+         rdfs:label "Made In"@en; 
+         rdfs:domain :Item;
+         rdfs:range :Crafting_Station . 
+#  --------------------------- Property 8------------------------- 
+:Uses_Recipe rdf:type owl:ObjectProperty ;
+             rdfs:label "Uses Recipe"@en; 
+             rdfs:domain :Crafting_Station;
+             rdfs:range :Recipe . 
+#  --------------------------- Property 9------------------------- 
+:MakesAmount rdf:type owl:DatatypeProperty ;
+             rdfs:label "Makes Amount"@en; 
+             rdfs:domain :Recipe;
+             rdfs:range xsd:integer . 
+#  --------------------------- Property 10------------------------- 
+:UsesAmount rdf:type owl:DatatypeProperty ;
+            rdfs:label "Uses Amount"@en; 
+            rdfs:domain :Recipe;
+            rdfs:range xsd:integer . 
+#  --------------------------- Property 11------------------------- 
+:Item_Type rdf:type owl:DatatypeProperty ;
+           rdfs:label "Item Type"@en; 
+           rdfs:domain :Item;
+           rdfs:range xsd:string . 
+#  --------------------------- Property 12------------------------- 
+:Makes rdf:type owl:ObjectProperty ;
+       rdfs:label "Makes Item"@en; 
+       rdfs:domain :Crafting_Station;
+       rdfs:range :Item . 
+#  --------------------------- Property 13------------------------- 
+:Uses_Item rdf:type owl:ObjectProperty ;
+           rdfs:label "Uses Item"@en; 
+           rdfs:domain :Crafting_Station;
+           rdfs:range :Item . 
+#  --------------------------- Property 14------------------------- 
+:Address rdf:type owl:DatatypeProperty ;
+         rdfs:label "Address"@en; 
+         rdfs:domain :Crafting_Station;
+         rdfs:range xsd:string . 
+###  Class Definitions (Number of Classes) 5 ###
+#  --------------------------- Class  0------------------------- 
+:MainClass rdf:type owl:Class; 
+           rdfs:label "MainClass"@en . 
+#  --------------------------- Class  1------------------------- 
+:Item rdf:type owl:Class; 
+      rdfs:subClassOf :MainClass ;
+      rdfs:label "Item"@en . 
+#  --------------------------- Class  2------------------------- 
+:Recipe rdf:type owl:Class; 
+        rdfs:subClassOf :MainClass ;
+        rdfs:label "Recipe"@en . 
+#  --------------------------- Class  3------------------------- 
+:Crafting_Station rdf:type owl:Class; 
+                  rdfs:subClassOf :MainClass ;
+                  rdfs:label "Crafting Station"@en . 
+#  --------------------------- Class  4------------------------- 
+:Item_Collection rdf:type owl:Class; 
+                 rdfs:subClassOf :Item ;
+                 rdfs:label "Item Collection"@en . 
