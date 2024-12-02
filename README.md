@@ -1,2 +1,79 @@
 # Path-Expression-Traversal-System
-PETS, a system for traversing distrubuted data structures
+
+![The logo, depicting a cat slowly becoming a mesh network](./readme_images/PETS.png)
+
+PETS, a system to store linked distributed data with traversal functions
+
+## Architecture
+
+```mermaid
+sequenceDiagram
+    participant API
+    participant cent as Central server
+
+    note over API: where request start
+
+
+    note over cent: A server which listens to http request<br/>and answer/forward queries.<br/>All servers are of this type, but their<br/>databases very<br/>and the central database is quite<br/>different with only one node*.
+
+    API->>+cent: Pick/crafted_by*
+    note left of cent: sent over http api
+
+    loop until not stored
+        create participant DB_A as DB
+        cent->>DB_A: 
+        note over DB_A: This database is just a node<br/>which edges point to items in other servers
+        destroy DB_A
+        DB_A->>cent: 
+    end
+    note left of DB_A: won't loop since only one node
+
+
+
+    participant Tool_company as The tool company
+    cent->>+Tool_company: Pick/crafted_by*
+
+
+    loop until not stored
+        create participant DB_B as DB
+        Tool_company->> DB_B: 
+        note over DB_B: A graph data base<br/>keeps track of nodes<br/>and relations between them.<br/>Also have node to denote<br/>when to pass the query to<br/>different server.
+        destroy DB_B
+        DB_B->>Tool_company: 
+    end
+
+    note left of DB_B: Pickaxe don't have<br/>nodes stone or stick<br/>returns server contact<br/>information.
+
+    
+    note right of Tool_company: outgoing querys can be sent in parallel
+    participant Mason_LTD as Masons LTD
+    Tool_company->>+Mason_LTD: Stone/crafted_by*
+
+
+    loop until not stored
+        create participant DB_C as DB
+        Mason_LTD->>DB_C: 
+        destroy DB_C 
+        DB_C->>Mason_LTD: 
+    end
+    note left of DB_C: Stone don't have crafted by<br/>and is att end of query, return stone
+
+
+    Mason_LTD->>-Tool_company: Data of Stone
+
+    participant Wood_INC as Wood INC
+
+    Tool_company->>+Wood_INC: Stick/crafted_by*
+    loop until not stored
+        create participant DB_D as DB
+        Wood_INC->>DB_D: 
+        destroy DB_D
+        DB_D->>Wood_INC: 
+    end
+    note left of DB_D: This query can be resolved<br/>without traversing to other<br/>servers<br/>Stick -> Plank -> Log
+
+    Wood_INC->>-Tool_company: Data of Log
+    Tool_company->>-cent: [Data of Stone, Data of Log]
+    cent->>-API: [Data of Stone, Data of Log]
+
+```
