@@ -24,7 +24,7 @@ minecraft:CraftingStation a owl:Class ;
 minecraft:Pickaxe a minecraft:Item ;
     rdfs:subClassOf minecraft:Item ;
     rdfs:label "Pickaxe" ;
-    minecraft:obtainedBy minecraft:Pickaxe_From_Stick_&_Stone_Recipe .
+    minecraft:obtainedBy minecraft:Pickaxe_From_Stick_And_Stone_Recipe .
 
 minecraft:Stick a minecraft:Item ;
     rdfs:subClassOf minecraft:Item ;

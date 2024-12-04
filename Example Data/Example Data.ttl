@@ -22,7 +22,7 @@ minecraft:Plank_Instance a minecraft:Plank .
 minecraft:CraftingTable_Instance a minecraft:CraftingTable .
 
 # Recipe Instance: Pickaxe_From_Stick_&_Stone_Recipe 
-minecraft:PickaxeRecipe_Instance a minecraft:Pickaxe_From_Stick_&_Stone_Recipe ;
+minecraft:PickaxeRecipe_Instance a minecraft:Pickaxe_From_Stick_And_Stone_Recipe ;
     minecraft:hasInput minecraft:Stick_Plank_made ;
     minecraft:hasInput minecraft:Cobblestone_Bob ;
     minecraft:hasOutput minecraft:Pickaxe_Instance ;
