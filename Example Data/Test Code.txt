@@ -1,0 +1,1 @@
+PREFIX mydb: <http://mydb.org/>PREFIX mine: <http://example.org/minecraft#>SELECT ?recipe ?stationWHERE{     ?recipe a mine:Recipe ;    	mine:hasOutput mine:Stick}
