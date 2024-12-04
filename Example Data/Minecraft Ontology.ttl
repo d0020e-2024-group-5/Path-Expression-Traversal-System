@@ -48,7 +48,7 @@ minecraft:CraftingTable a minecraft:CraftingStation ;
     rdfs:subClassOf minecraft:CraftingStation ;
     rdfs:label "CraftingTable" .
 
-minecraft:Pickaxe_From_Stick_&_Stone_Recipe a minecraft:Recipe ;
+minecraft:Pickaxe_From_Stick_And_Stone_Recipe a minecraft:Recipe ;
     rdfs:subClassOf minecraft:Recipe ;
     minecraft:hasInput minecraft:Stick, minecraft:Cobblestone ;
     minecraft:hasOutput minecraft:Pickaxe ;
