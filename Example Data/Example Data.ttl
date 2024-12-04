@@ -30,7 +30,7 @@ minecraft:PickaxeRecipe_Instance a minecraft:Pickaxe_From_Stick_And_Stone_Recipe
 
 # Recipe Instance: Stick_recipie_bamboo
 minecraft:Stick_bamboo_recipe_Instance a minecraft:Stick_From_Bamboo_Recipe ;
-    minecraft:hasInput minecraft:Bamboo_Instance 
+    minecraft:hasInput minecraft:Bamboo_Instance ;
     minecraft:hasOutput minecraft:Stick_Bamboo_made ;
     minecraft:requiresStation minecraft:CraftingTable_Instance .
 
