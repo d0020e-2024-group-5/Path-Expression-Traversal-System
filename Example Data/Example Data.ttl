@@ -16,7 +16,7 @@ minecraft:Cobblestone_Bob a minecraft:Cobblestone ;
 minecraft:Pickaxe_Instance_Henry a minecraft:Pickaxe ;
 	nodeOntology:hasID "4" ;
     nodeOntology:pointsToNode minecraft:PickaxeRecipe_Instance .
-
+	
 minecraft:Pickaxe_Instance_Gustav a minecraft:Pickaxe ;
 	nodeOntology:hasID "5" .
 
