@@ -3,40 +3,40 @@
 
 # Instances of Items
 minecraft:Stick_Plank_made_Instance a minecraft:Stick ;
-	nodeOntology:hasID "1" ;
+	nodeOntology:hasID 1 ;
     nodeOntology:pointsToNode minecraft:Stick_Planks_recipe_Instance .
 
 minecraft:Stick_Bamboo_made_Instance a minecraft:Stick ;
-	nodeOntology:hasID "2" ;
+	nodeOntology:hasID 2 ;
     nodeOntology:pointsToNode minecraft:Stick_bamboo_recipe_Instance .
 
 minecraft:Cobblestone_Bob a minecraft:Cobblestone ;
-	nodeOntology:hasID "3" .
+	nodeOntology:hasID 3 .
 
 minecraft:Pickaxe_Instance_Henry a minecraft:Pickaxe ;
-	nodeOntology:hasID "4" ;
+	nodeOntology:hasID 4 ;
     nodeOntology:pointsToNode minecraft:PickaxeRecipe_Instance .
 	
 minecraft:Pickaxe_Instance_Gustav a minecraft:Pickaxe ;
-	nodeOntology:hasID "5" .
+	nodeOntology:hasID 5 .
 
 nodeOntology:Server_b a nodeOntology:Server ;
 	nodeOntology:hasIP "9.2.3.5" .
 
 minecraft:Bamboo_Instance a nodeOntology:NodeFalse ;
-	nodeOntology:hasID "6" ;
+	nodeOntology:hasID 6 ;
 	nodeOntology:pointsToServer minecraft:Server_b . 
 
 minecraft:Plank_Instance a minecraft:Plank ;
-	nodeOntology:hasID "7" .
+	nodeOntology:hasID 7 .
 
 # Crafting Station Instance
 minecraft:CraftingTable_Instance a minecraft:CraftingTable ;
-	nodeOntology:hasID "8" .
+	nodeOntology:hasID 8 .
 
 # Recipe Instance: Pickaxe_From_Stick_And_Stone_Recipe 
 minecraft:PickaxeRecipe_Instance a minecraft:Pickaxe_From_Stick_And_Stone_Recipe ;
-	nodeOntology:hasID "9" ;
+	nodeOntology:hasID 9 ;
     nodeOntology:pointsToNode minecraft:Stick_Plank_made ;
     nodeOntology:pointsToNode minecraft:Cobblestone_Bob ;
     nodeOntology:pointsToNode minecraft:Pickaxe_Instance ;
@@ -44,14 +44,14 @@ minecraft:PickaxeRecipe_Instance a minecraft:Pickaxe_From_Stick_And_Stone_Recipe
 
 # Recipe Instance: Stick_recipie_bamboo
 minecraft:Stick_bamboo_recipe_Instance a minecraft:Stick_From_Bamboo_Recipe ;
-	nodeOntology:hasID "10" ;
+	nodeOntology:hasID 10 ;
     nodeOntology:pointsToNode minecraft:Bamboo_Instance ;
     nodeOntology:pointsToNode minecraft:Stick_Bamboo_made ;
     nodeOntology:pointsToNode minecraft:CraftingTable_Instance .
 
 # Recipe Instance: Stick_recipe_Planks
 minecraft:Stick_Planks_recipe_Instance a minecraft:Stick_From_Planks_Recipe ;
-	nodeOntology:hasID "11" ;
+	nodeOntology:hasID 11 ;
     nodeOntology:pointsToNode minecraft:Stick_Instance1, minecraft:Stick_Instance2 ;
     nodeOntology:pointsToNode minecraft:Cobblestone_Instance1, minecraft:Cobblestone_Instance2 ;
     nodeOntology:pointsToNode minecraft:Pickaxe_Instance ;

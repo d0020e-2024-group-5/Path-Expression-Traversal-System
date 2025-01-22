@@ -14,7 +14,7 @@ nodeOntology:Server a owl:Class ;
 
 nodeOntology:Node a owl:Class ;
     rdfs:label "Node" ;
-    rdfs:comment "Represents all nodes in the database system." .
+    rdfs:comment "Represents all nodes in the database system." .	
 
 nodeOntology:NodeTrue a owl:Class ;
     rdfs:subClassOf nodeOntology:Node;
@@ -44,4 +44,4 @@ nodeOntology:hasIP a rdfs:Property ;
 	
 nodeOntology:hasID a rdfs:Property ;
 	rdfs:domain nodeOntology:Node ;
-	rdfs:range xsd:string . # store ID addres as String
+	rdfs:range xsd:int  . # store ID addres as String
