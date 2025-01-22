@@ -14,7 +14,7 @@ minecraft:Pickaxe_Instance_Henry a minecraft:Pickaxe ;
 
 minecraft:Pickaxe_Instance_Gustav a minecraft:Pickaxe .
 
-minecraft:Bamboo_Instance a minecraft:Bamboo .
+minecraft:Bamboo_Instance a nodeOntology:NodeFalse .
 
 minecraft:Plank_Instance a minecraft:Plank .
 
