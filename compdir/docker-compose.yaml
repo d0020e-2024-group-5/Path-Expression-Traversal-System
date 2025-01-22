@@ -1,0 +1,14 @@
+services:
+    a:
+        # Build our go application with hostname "a", 
+        # this is also our entry point as its is mapped to an external port
+        build: ../.
+        image: PETS/app_v1
+        ports:
+            - "80:80"
+    b:
+        # same as a but no contact to outside
+        image: PETS/app_v1
+    c:
+        # same as a but no contact to outside
+        image: PETS/app_v1
