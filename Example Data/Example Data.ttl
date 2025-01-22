@@ -1,20 +1,25 @@
 @prefix minecraft: <http://example.org/minecraft#> .
+@prefix nodeOntology: <http://example.org/NodeOntology#> .
 
 # Instances of Items
 minecraft:Stick_Plank_made_Instance a minecraft:Stick ;
-    minecraft:obtainedBy minecraft:Stick_Planks_recipe_Instance .
+    nodeOntology:pointsToNode minecraft:Stick_Planks_recipe_Instance .
 
 minecraft:Stick_Bamboo_made_Instance a minecraft:Stick ;
-    minecraft:obtainedBy minecraft:Stick_bamboo_recipe_Instance .
+    nodeOntology:pointsToNode minecraft:Stick_bamboo_recipe_Instance .
 
 minecraft:Cobblestone_Bob a minecraft:Cobblestone .
 
 minecraft:Pickaxe_Instance_Henry a minecraft:Pickaxe ;
-    minecraft:obtainedBy minecraft:PickaxeRecipe_Instance .
+    nodeOntology:pointsToNode minecraft:PickaxeRecipe_Instance .
 
 minecraft:Pickaxe_Instance_Gustav a minecraft:Pickaxe .
 
-minecraft:Bamboo_Instance a nodeOntology:NodeFalse .
+nodeOntology:Server_b a nodeOntology:Server ;
+	nodeOntology:hasIP "9.2.3.5" .
+
+minecraft:Bamboo_Instance a nodeOntology:NodeFalse ;
+	nodeOntology:pointsToServer minecraft:Server_b . 
 
 minecraft:Plank_Instance a minecraft:Plank .
 
@@ -23,20 +28,20 @@ minecraft:CraftingTable_Instance a minecraft:CraftingTable .
 
 # Recipe Instance: Pickaxe_From_Stick_And_Stone_Recipe 
 minecraft:PickaxeRecipe_Instance a minecraft:Pickaxe_From_Stick_And_Stone_Recipe ;
-    minecraft:hasInput minecraft:Stick_Plank_made ;
-    minecraft:hasInput minecraft:Cobblestone_Bob ;
-    minecraft:hasOutput minecraft:Pickaxe_Instance ;
-    minecraft:requiresStation minecraft:CraftingTable_Instance .
+    nodeOntology:pointsToNode minecraft:Stick_Plank_made ;
+    nodeOntology:pointsToNode minecraft:Cobblestone_Bob ;
+    nodeOntology:pointsToNode minecraft:Pickaxe_Instance ;
+    nodeOntology:pointsToNode minecraft:CraftingTable_Instance .
 
 # Recipe Instance: Stick_recipie_bamboo
 minecraft:Stick_bamboo_recipe_Instance a minecraft:Stick_From_Bamboo_Recipe ;
-    minecraft:hasInput minecraft:Bamboo_Instance ;
-    minecraft:hasOutput minecraft:Stick_Bamboo_made ;
-    minecraft:requiresStation minecraft:CraftingTable_Instance .
+    nodeOntology:pointsToNode minecraft:Bamboo_Instance ;
+    nodeOntology:pointsToNode minecraft:Stick_Bamboo_made ;
+    nodeOntology:pointsToNode minecraft:CraftingTable_Instance .
 
 # Recipe Instance: Stick_recipe_Planks
 minecraft:Stick_Planks_recipe_Instance a minecraft:Stick_From_Planks_Recipe ;
-    minecraft:hasInput minecraft:Stick_Instance1, minecraft:Stick_Instance2 ;
-    minecraft:hasInput minecraft:Cobblestone_Instance1, minecraft:Cobblestone_Instance2 ;
-    minecraft:hasOutput minecraft:Pickaxe_Instance ;
-    minecraft:requiresStation minecraft:CraftingTable_Instance .
+    nodeOntology:pointsToNode minecraft:Stick_Instance1, minecraft:Stick_Instance2 ;
+    nodeOntology:pointsToNode minecraft:Cobblestone_Instance1, minecraft:Cobblestone_Instance2 ;
+    nodeOntology:pointsToNode minecraft:Pickaxe_Instance ;
+    nodeOntology:pointsToNode minecraft:CraftingTable_Instance .
