@@ -28,13 +28,13 @@ minecraft:CraftingStation a nodeOntology:Node ;
 minecraft:Pickaxe a minecraft:Item ;
     rdfs:subClassOf minecraft:Item ;
     rdfs:label "Pickaxe" ;
-    nodeOntology:pointsToNode minecraft:Pickaxe_From_Stick_And_Stone_Recipe .
+    minecraft:obtainedBy minecraft:Pickaxe_From_Stick_And_Stone_Recipe .
 
 minecraft:Stick a minecraft:Item ;
     rdfs:subClassOf minecraft:Item ;
     rdfs:label "Stick" ;
-    nodeOntology:pointsToNode minecraft:Stick_From_Planks_Recipe ;
-    nodeOntology:pointsToNode minecraft:Stick_From_Bamboo_Recipe .
+    minecraft:obtainedBy minecraft:Stick_From_Planks_Recipe ;
+    minecraft:obtainedBy minecraft:Stick_From_Bamboo_Recipe .
 
 minecraft:Cobblestone a minecraft:Item ;
     rdfs:subClassOf minecraft:Item ;
@@ -54,18 +54,41 @@ minecraft:CraftingTable a minecraft:CraftingStation ;
 
 minecraft:Pickaxe_From_Stick_And_Stone_Recipe a minecraft:Recipe ;
     rdfs:subClassOf minecraft:Recipe ;
-    nodeOntology:pointsToNode minecraft:Stick, minecraft:Cobblestone ;
-    nodeOntology:pointsToNode minecraft:Pickaxe ;
-    nodeOntology:pointsToNode minecraft:CraftingTable .
+    minecraft:hasInput minecraft:Stick, minecraft:Cobblestone ;
+    minecraft:hasOutput minecraft:Pickaxe ;
+    minecraft:usedInStation minecraft:CraftingTable .
 
 minecraft:Stick_From_Planks_Recipe a minecraft:Recipe ;
     rdfs:subClassOf minecraft:Recipe ;
-    nodeOntology:pointsToNode minecraft:Plank;
-    nodeOntology:pointsToNode minecraft:Stick ;
-    nodeOntology:pointsToNode minecraft:CraftingTable .
+    minecraft:hasOutput minecraft:Plank;
+    minecraft:hasInput minecraft:Stick ;
+    minecraft:pointsToNode minecraft:CraftingTable .
 
 minecraft:Stick_From_Bamboo_Recipe a minecraft:Recipe ;
     rdfs:subClassOf minecraft:Recipe ;
-    nodeOntology:pointsToNode minecraft:Bamboo;
-    nodeOntology:pointsToNode minecraft:Stick ;
-    nodeOntology:pointsToNode minecraft:CraftingTable .
+    minecraft:hasOutput minecraft:Bamboo;
+    minecraft:hasInput minecraft:Stick ;
+    minecraft:usedInStation minecraft:CraftingTable .
+	
+ #Property Definitions
+minecraft:hasInput a nodeOntology:pointsToNode ;
+    rdfs:domain minecraft:Recipe ;
+    rdfs:range minecraft:Item ;
+    rdfs:label "has input" ;
+    rdfs:comment "Specifies the input items for a recipe." .
+
+minecraft:hasOutput a nodeOntology:pointsToNode ;
+     rdfs:domain minecraft:Recipe ;
+     rdfs:range minecraft:Item ;
+     rdfs:label "has output" ;
+     rdfs:comment "Specifies the output item of a recipe." .
+minecraft:usedInStation a nodeOntology:pointsToNode ;
+     rdfs:domain minecraft:Recipe ;
+     rdfs:range minecraft:CraftingStation ;
+     rdfs:label "requires station" ;
+     rdfs:comment "Specifies the crafting station required for a recipe." .
+minecraft:obtainedBy a nodeOntology:pointsToNode ;
+     rdfs:domain minecraft:Item ;
+     rdfs:range minecraft:Recipe ;
+     rdfs:label "obtainedBy" ;
+     rdfs:comment "Specifies what recipe/source the item was made from." .
