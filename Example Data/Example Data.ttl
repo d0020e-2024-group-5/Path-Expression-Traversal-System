@@ -32,7 +32,7 @@ minecraft:Bamboo_Instance a nodeOntology:NodeFalse ;
 
 minecraft:Plank_Instance a minecraft:Plank ;
 	nodeOntology:hasID 7 ;
-    minecraft:obtainedBy minecraft:Plank_recipie_Log .
+    minecraft:obtainedBy minecraft:Plannks_From_Logs_Recipe_Instance .
 
 # Crafting Station Instance
 minecraft:CraftingTable_Instance a minecraft:CraftingTable ;
