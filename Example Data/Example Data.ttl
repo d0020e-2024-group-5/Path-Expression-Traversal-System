@@ -13,6 +13,9 @@ minecraft:Stick_Bamboo_made_Instance a minecraft:Stick ;
 minecraft:Cobblestone_Bob a minecraft:Cobblestone ;
 	nodeOntology:hasID 3 .
 
+minecraft:Log_Instance a minecraft:Log ;
+	nodeOntology:hasID 12 .
+
 minecraft:Pickaxe_Instance_Henry a minecraft:Pickaxe ;
 	nodeOntology:hasID 4 ;
     minecraft:obtainedBy minecraft:PickaxeRecipe_Instance .
@@ -28,7 +31,8 @@ minecraft:Bamboo_Instance a nodeOntology:NodeFalse ;
 	nodeOntology:pointsToServer minecraft:Server_b . 
 
 minecraft:Plank_Instance a minecraft:Plank ;
-	nodeOntology:hasID 7 .
+	nodeOntology:hasID 7 ;
+    minecraft:obtainedBy minecraft:PickaxeRecipe_Instance .
 
 # Crafting Station Instance
 minecraft:CraftingTable_Instance a minecraft:CraftingTable ;
@@ -55,4 +59,11 @@ minecraft:Stick_Planks_recipe_Instance a minecraft:Stick_From_Planks_Recipe ;
     minecraft:hasInput minecraft:Stick_Instance1, minecraft:Stick_Instance2 ;
     minecraft:hasInput minecraft:Cobblestone_Instance1, minecraft:Cobblestone_Instance2 ;
     minecraft:hasOutput minecraft:Pickaxe_Instance ;
+    minecraft:usedInStation minecraft:CraftingTable_Instance .
+
+# Recipe Instance: Plank_recipie_Log
+minecraft:Plannks_From_Logs_Recipe_Instance a minecraft:Plannks_From_Logs_Recipe ;
+	nodeOntology:hasID 12 ;
+    minecraft:hasInput minecraft:Log_Instance ;
+    minecraft:hasOutput minecraft:Plank_Instance ;
     minecraft:usedInStation minecraft:CraftingTable_Instance .

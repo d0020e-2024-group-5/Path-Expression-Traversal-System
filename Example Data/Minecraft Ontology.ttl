@@ -40,9 +40,14 @@ minecraft:Cobblestone a minecraft:Item ;
     rdfs:subClassOf minecraft:Item ;
     rdfs:label "Cobblestone".
 
+minecraft:Log a minecraft:Item ;
+    rdfs:subClassOf minecraft:Item ;
+    rdfs:label "Log".
+
 minecraft:Plank a minecraft:Item ;
     rdfs:subClassOf minecraft:Item ;
-    rdfs:label "Plank".
+    rdfs:label "Plank";
+    minecraft:obtainedBy minecraft:Stick_From_Planks_Recipe.
 
 minecraft:Bamboo a minecraft:Item ;
     rdfs:subClassOf minecraft:Item ;
@@ -60,15 +65,21 @@ minecraft:Pickaxe_From_Stick_And_Stone_Recipe a minecraft:Recipe ;
 
 minecraft:Stick_From_Planks_Recipe a minecraft:Recipe ;
     rdfs:subClassOf minecraft:Recipe ;
-    minecraft:hasOutput minecraft:Plank;
-    minecraft:hasInput minecraft:Stick ;
+    minecraft:hasInput minecraft:Plank;
+    minecraft:hasOutput minecraft:Stick ;
     minecraft:pointsToNode minecraft:CraftingTable .
 
 minecraft:Stick_From_Bamboo_Recipe a minecraft:Recipe ;
     rdfs:subClassOf minecraft:Recipe ;
-    minecraft:hasOutput minecraft:Bamboo;
-    minecraft:hasInput minecraft:Stick ;
+    minecraft:hasInput minecraft:Bamboo;
+    minecraft:hasOutput minecraft:Stick ;
     minecraft:usedInStation minecraft:CraftingTable .
+
+minecraft:Plannks_From_Logs_Recipe a minecraft:Recipe ;
+    rdfs:subClassOf minecraft:Recipe ;
+    minecraft:hasInput minecraft:Log;
+    minecraft:hasOutput minecraft:Plank ;
+    minecraft:pointsToNode minecraft:CraftingTable .
 	
  #Property Definitions
 minecraft:hasInput a nodeOntology:pointsToNode ;
