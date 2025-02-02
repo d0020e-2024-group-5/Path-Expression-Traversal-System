@@ -101,17 +101,17 @@ func grow_tree(str string, parent Node) Node {
     if operator == '/' {
         t := TraverseNode{}
         t.Parent = parent
-        t.Left = grow_tree(Left, t)
-        t.Right = grow_tree(Right, t)
-        return t
+        t.Left = grow_tree(Left, &t)
+        t.Right = grow_tree(Right, &t)
+        return &t
     } else if operator == '*' {
         l := LoopNode{}
-        l.Left = grow_tree(Left, l)
-        l.Right = grow_tree(Right, l)
-        return l
+        l.Left = grow_tree(Left, &l)
+        l.Right = grow_tree(Right, &l)
+        return &l
     } else if operator == '0' {
         l := LeafNode{Value: Left, Parent: parent}
-        return l
+        return &l
     } else {
         panic("invalid operator")
     }
