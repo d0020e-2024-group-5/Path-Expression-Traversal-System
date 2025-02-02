@@ -77,6 +77,103 @@ sequenceDiagram
     cent->>-API: [Data of Stone, Data of Log]
 
 ```
+<!-- Explain in words what happens in the sequence diagram -->
+
+## Node ontologies
+
+```mermaid
+graph TD;
+
+        Stick_Plank_made_Instance -->|obtainedBy| Stick_Planks_recipe_Instance
+
+        Stick_Bamboo_made_Instance -->|obtainedBy| Stick_bamboo_recipe_Instance
+
+
+
+        Pickaxe_Instance_Henry -->|obtainedBy| PickaxeRecipe_Instance
+
+
+        Plank_Instance -->|obtainedBy| Plannks_From_Logs_Recipe_Instance
+
+
+        PickaxeRecipe_Instance -->|hasInput| Stick_Plank_made_Instance
+        PickaxeRecipe_Instance -->|hasInput| Stick_Bamboo_made_Instance
+        PickaxeRecipe_Instance -->|hasInput| Cobblestone_Bob
+        PickaxeRecipe_Instance -->|hasOutput| Pickaxe_Instance_Henry
+        PickaxeRecipe_Instance -->|usedInStation| CraftingTable_Instance
+
+        Stick_bamboo_recipe_Instance -->|hasInput| Bamboo_Instance
+        Stick_bamboo_recipe_Instance -->|hasOutput| Stick_Bamboo_made_Instance
+        Stick_bamboo_recipe_Instance -->|usedInStation| CraftingTable_Instance
+
+        Stick_Planks_recipe_Instance -->|hasInput| Plank_Instance
+        Stick_Planks_recipe_Instance -->|hasOutput| Stick_Plank_made_Instance
+        Stick_Planks_recipe_Instance -->|usedInStation| CraftingTable_Instance
+
+        Plannks_From_Logs_Recipe_Instance -->|hasInput| Log_Instance
+        Plannks_From_Logs_Recipe_Instance -->|hasOutput| Plank_Instance
+        Plannks_From_Logs_Recipe_Instance -->|usedInStation| CraftingTable_Instance
+```
+
+## Node ontologies distributed
+
+```mermaid
+graph TD;
+
+        root
+
+        subgraph Server A
+            Stick_Bamboo_made_Instance
+            Stick_bamboo_recipe_Instance
+            Bamboo_Instance
+            CraftingTable_Instance
+        end
+
+        subgraph Server B
+            Plank_Instance
+            Stick_Plank_made_Instance
+            Stick_Planks_recipe_Instance
+        end
+
+        subgraph Server C
+            Pickaxe_Instance_Henry
+            PickaxeRecipe_Instance
+            Plannks_From_Logs_Recipe_Instance
+            Cobblestone_Bob
+            Log_Instance
+        end
+
+        root -->|Pickaxe_Instance_Henry| Pickaxe_Instance_Henry
+        root -->|Cobblestone_Bob| Cobblestone_Bob
+
+        Stick_Plank_made_Instance -->|obtainedBy| Stick_Planks_recipe_Instance
+
+        Stick_Bamboo_made_Instance -->|obtainedBy| Stick_bamboo_recipe_Instance
+
+        Pickaxe_Instance_Henry -->|obtainedBy| PickaxeRecipe_Instance
+
+
+        Plank_Instance -->|obtainedBy| Plannks_From_Logs_Recipe_Instance
+
+
+        PickaxeRecipe_Instance -->|hasInput| Stick_Plank_made_Instance
+        PickaxeRecipe_Instance -->|hasInput| Stick_Bamboo_made_Instance
+        PickaxeRecipe_Instance -->|hasInput| Cobblestone_Bob
+        PickaxeRecipe_Instance -->|hasOutput| Pickaxe_Instance_Henry
+        PickaxeRecipe_Instance -->|usedInStation| CraftingTable_Instance
+
+        Stick_bamboo_recipe_Instance -->|hasInput| Bamboo_Instance
+        Stick_bamboo_recipe_Instance -->|hasOutput| Stick_Bamboo_made_Instance
+        Stick_bamboo_recipe_Instance -->|usedInStation| CraftingTable_Instance
+
+        Stick_Planks_recipe_Instance -->|hasInput| Plank_Instance
+        Stick_Planks_recipe_Instance -->|hasOutput| Stick_Plank_made_Instance
+        Stick_Planks_recipe_Instance -->|usedInStation| CraftingTable_Instance
+
+        Plannks_From_Logs_Recipe_Instance -->|hasInput| Log_Instance
+        Plannks_From_Logs_Recipe_Instance -->|hasOutput| Plank_Instance
+        Plannks_From_Logs_Recipe_Instance -->|usedInStation| CraftingTable_Instance
+```
 
 ## Query structure
 
@@ -301,5 +398,4 @@ func (self OrNode) nextEdge(caller *Node) []*LeafNode {
         log.fatal("i dont know what should happen here?")
     }
 }
-
 ```
