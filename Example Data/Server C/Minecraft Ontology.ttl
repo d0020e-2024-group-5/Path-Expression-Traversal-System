@@ -1,0 +1,105 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix minecraft: <http://example.org/minecraft#> .
+@prefix nodeOntology: <http://example.org/NodeOntology#> .
+
+minecraft: a owl:Ontology ;
+    rdfs:comment "An RDF Ontology for Minecraft's Crafting System." ;
+    rdfs:label "Minecraft Crafting Ontology" .
+
+# Main Classes
+minecraft:Item a nodeOntology:Node ;
+    rdfs:subClassOf minecraft:Node ;
+    rdfs:label "Item" ;
+    rdfs:comment "Represents any craftable or collectible item in Minecraft." .
+
+minecraft:Recipe a nodeOntology:Node ;
+    rdfs:subClassOf minecraft:Node ;
+    rdfs:label "Recipe" ;
+    rdfs:comment "Represents a crafting recipe in Minecraft." .
+
+minecraft:CraftingStation a nodeOntology:Node ;
+    rdfs:subClassOf minecraft:Node ;
+    rdfs:label "Crafting Station" ;
+    rdfs:comment "Represents a station where crafting occurs." .
+
+# Subclasses and Instances
+minecraft:Pickaxe a minecraft:Item ;
+    rdfs:subClassOf minecraft:Item ;
+    rdfs:label "Pickaxe" ;
+    minecraft:obtainedBy minecraft:Pickaxe_From_Stick_And_Stone_Recipe .
+
+minecraft:Stick a minecraft:Item ;
+    rdfs:subClassOf minecraft:Item ;
+    rdfs:label "Stick" ;
+    minecraft:obtainedBy minecraft:Stick_From_Planks_Recipe ;
+    minecraft:obtainedBy minecraft:Stick_From_Bamboo_Recipe .
+
+minecraft:Cobblestone a minecraft:Item ;
+    rdfs:subClassOf minecraft:Item ;
+    rdfs:label "Cobblestone".
+
+minecraft:Log a minecraft:Item ;
+    rdfs:subClassOf minecraft:Item ;
+    rdfs:label "Log".
+
+minecraft:Plank a minecraft:Item ;
+    rdfs:subClassOf minecraft:Item ;
+    rdfs:label "Plank";
+    minecraft:obtainedBy minecraft:Stick_From_Planks_Recipe.
+
+minecraft:Bamboo a minecraft:Item ;
+    rdfs:subClassOf minecraft:Item ;
+    rdfs:label "Bamboo".
+
+minecraft:CraftingTable a minecraft:CraftingStation ;
+    rdfs:subClassOf minecraft:CraftingStation ;
+    rdfs:label "CraftingTable" .
+
+minecraft:Pickaxe_From_Stick_And_Stone_Recipe a minecraft:Recipe ;
+    rdfs:subClassOf minecraft:Recipe ;
+    minecraft:hasInput minecraft:Stick, minecraft:Cobblestone ;
+    minecraft:hasOutput minecraft:Pickaxe ;
+    minecraft:usedInStation minecraft:CraftingTable .
+
+minecraft:Stick_From_Planks_Recipe a minecraft:Recipe ;
+    rdfs:subClassOf minecraft:Recipe ;
+    minecraft:hasInput minecraft:Plank;
+    minecraft:hasOutput minecraft:Stick ;
+    minecraft:pointsToNode minecraft:CraftingTable .
+
+minecraft:Stick_From_Bamboo_Recipe a minecraft:Recipe ;
+    rdfs:subClassOf minecraft:Recipe ;
+    minecraft:hasInput minecraft:Bamboo;
+    minecraft:hasOutput minecraft:Stick ;
+    minecraft:usedInStation minecraft:CraftingTable .
+
+minecraft:Plannks_From_Logs_Recipe a minecraft:Recipe ;
+    rdfs:subClassOf minecraft:Recipe ;
+    minecraft:hasInput minecraft:Log;
+    minecraft:hasOutput minecraft:Plank ;
+    minecraft:pointsToNode minecraft:CraftingTable .
+	
+ #Property Definitions
+minecraft:hasInput a nodeOntology:pointsToNode ;
+    rdfs:domain minecraft:Recipe ;
+    rdfs:range minecraft:Item ;
+    rdfs:label "has input" ;
+    rdfs:comment "Specifies the input items for a recipe." .
+
+minecraft:hasOutput a nodeOntology:pointsToNode ;
+     rdfs:domain minecraft:Recipe ;
+     rdfs:range minecraft:Item ;
+     rdfs:label "has output" ;
+     rdfs:comment "Specifies the output item of a recipe." .
+minecraft:usedInStation a nodeOntology:pointsToNode ;
+     rdfs:domain minecraft:Recipe ;
+     rdfs:range minecraft:CraftingStation ;
+     rdfs:label "requires station" ;
+     rdfs:comment "Specifies the crafting station required for a recipe." .
+minecraft:obtainedBy a nodeOntology:pointsToNode ;
+     rdfs:domain minecraft:Item ;
+     rdfs:range minecraft:Recipe ;
+     rdfs:label "obtainedBy" ;
+     rdfs:comment "Specifies what recipe/source the item was made from." .

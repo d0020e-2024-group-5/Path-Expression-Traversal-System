@@ -1,0 +1,39 @@
+@prefix minecraft: <http://example.org/minecraft#> .
+@prefix nodeOntology: <http://example.org/NodeOntology#> .
+
+# Instances of Items
+minecraft:Stick_Plank_made_Instance a minecraft:Stick ;
+	nodeOntology:hasID 1 ;
+    minecraft:obtainedBy minecraft:Stick_Planks_recipe_Instance .
+
+minecraft:Server_a a nodeOntology:Server ;
+	nodeOntology:hasIP "1.1.1.1" .	
+
+minecraft:Server_b a nodeOntology:Server ;
+	nodeOntology:hasIP "2.2.2.2" .
+
+minecraft:Server_c a nodeOntology:Server ;	
+	nodeOntology:hasIP "3.3.3.3" .
+
+
+minecraft:Plank_Instance a minecraft:Plank ;
+	nodeOntology:hasID 7 ;
+    minecraft:obtainedBy minecraft:Plannks_From_Logs_Recipe_Instance .
+
+# Crafting Station Instance
+minecraft:CraftingTable_Instance a minecraft:CraftingTable ;
+	nodeOntology:pointsToServer minecraft:Server_a ;
+	nodeOntology:hasID 8 .
+
+
+# Recipe Instance: Stick_recipe_Planks
+minecraft:Stick_Planks_recipe_Instance a minecraft:Stick_From_Planks_Recipe ;
+	nodeOntology:hasID 11 ;
+    minecraft:hasInput minecraft:Plank_Instance ;
+    minecraft:hasOutput minecraft:Stick_Plank_made_Instance ;
+    minecraft:usedInStation minecraft:CraftingTable_Instance .
+
+# Recipe Instance: Plank_recipie_Log
+minecraft:Plannks_From_Logs_Recipe_Instance a minecraft:Plannks_From_Logs_Recipe ;
+	nodeOntology:hasID 13 ;
+	nodeOntology:pointsToServer minecraft:Server_c .
