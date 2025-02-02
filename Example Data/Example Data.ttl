@@ -32,7 +32,7 @@ minecraft:Bamboo_Instance a nodeOntology:NodeFalse ;
 
 minecraft:Plank_Instance a minecraft:Plank ;
 	nodeOntology:hasID 7 ;
-    minecraft:obtainedBy minecraft:PickaxeRecipe_Instance .
+    minecraft:obtainedBy minecraft:Plannks_From_Logs_Recipe_Instance .
 
 # Crafting Station Instance
 minecraft:CraftingTable_Instance a minecraft:CraftingTable ;
@@ -41,29 +41,29 @@ minecraft:CraftingTable_Instance a minecraft:CraftingTable ;
 # Recipe Instance: Pickaxe_From_Stick_And_Stone_Recipe 
 minecraft:PickaxeRecipe_Instance a minecraft:Pickaxe_From_Stick_And_Stone_Recipe ;
 	nodeOntology:hasID 9 ;
-    minecraft:hasInput minecraft:Stick_Plank_made ;
+    minecraft:hasInput minecraft:Stick_Plank_made_Instance  ;
+	minecraft:hasInput minecraft:Stick_Bamboo_made_Instance ;
     minecraft:hasInput minecraft:Cobblestone_Bob ;
-    minecraft:hasOutput minecraft:Pickaxe_Instance ;
+    minecraft:hasOutput minecraft:Pickaxe_Instance_Henry ;
     minecraft:usedInStation minecraft:CraftingTable_Instance .
 
 # Recipe Instance: Stick_recipie_bamboo
 minecraft:Stick_bamboo_recipe_Instance a minecraft:Stick_From_Bamboo_Recipe ;
 	nodeOntology:hasID 10 ;
     minecraft:hasInput minecraft:Bamboo_Instance ;
-    minecraft:hasOutput minecraft:Stick_Bamboo_made ;
+    minecraft:hasOutput minecraft:Stick_Bamboo_made_Instance ;
     minecraft:usedInStation minecraft:CraftingTable_Instance .
 
 # Recipe Instance: Stick_recipe_Planks
 minecraft:Stick_Planks_recipe_Instance a minecraft:Stick_From_Planks_Recipe ;
 	nodeOntology:hasID 11 ;
-    minecraft:hasInput minecraft:Stick_Instance1, minecraft:Stick_Instance2 ;
-    minecraft:hasInput minecraft:Cobblestone_Instance1, minecraft:Cobblestone_Instance2 ;
-    minecraft:hasOutput minecraft:Pickaxe_Instance ;
+    minecraft:hasInput minecraft:Plank_Instance ;
+    minecraft:hasOutput minecraft:Stick_Plank_made_Instance ;
     minecraft:usedInStation minecraft:CraftingTable_Instance .
 
 # Recipe Instance: Plank_recipie_Log
 minecraft:Plannks_From_Logs_Recipe_Instance a minecraft:Plannks_From_Logs_Recipe ;
-	nodeOntology:hasID 12 ;
+	nodeOntology:hasID 13 ;
     minecraft:hasInput minecraft:Log_Instance ;
     minecraft:hasOutput minecraft:Plank_Instance ;
     minecraft:usedInStation minecraft:CraftingTable_Instance .
