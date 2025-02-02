@@ -1,49 +1,13 @@
 package main
 
 import (
-	"bytes"
+	// "bytes"
 	"fmt"
 	"regexp"
 	"strings"
 	// "unicode"
 	// "testing"
 )
-
-func copied_code() {
-
-	match, _ := regexp.MatchString("p([a-z]+)ch", "peach")
-	fmt.Println(match)
-
-	r, _ := regexp.Compile("p([a-z]+)ch")
-
-	fmt.Println(r.MatchString("peach"))
-
-	fmt.Println(r.FindString("peach punch"))
-
-	fmt.Println("idx:", r.FindStringIndex("peach punch"))
-
-	fmt.Println(r.FindStringSubmatch("peach punch"))
-
-	fmt.Println(r.FindStringSubmatchIndex("peach punch"))
-
-	fmt.Println(r.FindAllString("peach punch pinch", -1))
-
-	fmt.Println("all:", r.FindAllStringSubmatchIndex(
-		"peach punch pinch", -1))
-
-	fmt.Println(r.FindAllString("peach punch pinch", 2))
-
-	fmt.Println(r.Match([]byte("peach")))
-
-	r = regexp.MustCompile("p([a-z]+)ch")
-	fmt.Println("regexp:", r)
-
-	fmt.Println(r.ReplaceAllString("a peach", "<fruit>"))
-
-	in := []byte("a peach")
-	out := r.ReplaceAllFunc(in, bytes.ToUpper)
-	fmt.Println(string(out))
-}
 
 // https://stackoverflow.com/questions/4466091/split-string-using-regular-expression-in-go
 func RegSplit(text string, delimeter string) []string {
@@ -64,7 +28,7 @@ func removeWhitespace(inp string) string {
 }
 
 type Node interface {
-	NextNode()
+	NextNode(Node) []*LeafNode
 }
 type TraverseNode struct {
 	Parent Node
@@ -80,15 +44,53 @@ type LoopNode struct {
     Left Node
     Right Node
 }
-// NextNode implements Node.
-func (t TraverseNode) NextNode() {
-	panic("unimplemented")
+func (t *TraverseNode) NextNode(caller Node) []*LeafNode{
+    var leafs []*LeafNode
+    if &caller == &(*t).Parent { // Pointer comparison to avoid same value struct bug
+        // if the caller is parent, we should deced into the left branch,
+        // t.Left.NextNode(t)
+        leafs = append(leafs, t.Left.NextNode(t)...)
+    } else if &caller == &(*t).Left{
+        // when the left branch has evaluated it will call us again
+        // an we than have to evaluate the right branch
+        // t.Right.NextNode(t)
+        leafs = append(leafs, t.Right.NextNode(t)...)
+    } else if &caller == &(*t).Right {
+        // when the right brach has evaluated it will call us again
+        // we then know we have been fully evaluated and can call our parent saying we are done
+        t.Parent.NextNode(t)
+        leafs = append(leafs, t.Parent.NextNode(t)...)
+    } else {
+        panic("i dont know what should happen here1?")
+    }
+    return leafs
 }
-func (t LeafNode) NextNode() {
-	panic("unimplemented")
+func (l *LeafNode) NextNode(caller Node) []*LeafNode{
+    if &caller == &(*l).Parent {
+        return []*LeafNode{l}
+    } else {
+        panic("unimplemented")    
+    }
 }
-func (t LoopNode) NextNode() {
-	panic("unimplemented")
+func (l *LoopNode) NextNode(caller Node) []*LeafNode{
+    var leafs []*LeafNode
+    if &caller == &(*l).Parent {
+        tmp1 := l.NextNode(l)
+        tmp2 := l.NextNode(l)
+        leafs = append(leafs, tmp1...)
+        leafs = append(leafs, tmp2...)
+    } else if &caller == &(*l).Left {
+        tmp1 := l.NextNode(l)
+        tmp2 := l.NextNode(l)
+        leafs = append(leafs, tmp1...)
+        leafs = append(leafs, tmp2...)
+    } else if &caller == &(*l).Right {
+        tmp1 := l.Parent.NextNode(l)
+        leafs = append(leafs, tmp1...)
+    } else {
+        panic("unimplemented")
+    }
+    return leafs
 }
 
 
@@ -160,6 +162,7 @@ func main() {
 	root := TraverseNode{}
 	// root.Left
 	GrowTree(root, txt2)
+    fmt.Println("")
 
 }
 
