@@ -2,6 +2,7 @@ package main
 
 import (
 	// "bytes"
+
 	"fmt"
 	"regexp"
 	"strings"
@@ -40,130 +41,166 @@ type LeafNode struct {
 	Value  string
 }
 type LoopNode struct {
-    Parent Node
-    Left Node
-    Right Node
+	Parent Node
+	Left   Node
+	Right  Node
 }
-func (t *TraverseNode) NextNode(caller Node) []*LeafNode{
-    var leafs []*LeafNode
-    if &caller == &(*t).Parent { // Pointer comparison to avoid same value struct bug
-        // if the caller is parent, we should deced into the left branch,
-        // t.Left.NextNode(t)
-        leafs = append(leafs, t.Left.NextNode(t)...)
-    } else if &caller == &(*t).Left{
-        // when the left branch has evaluated it will call us again
-        // an we than have to evaluate the right branch
-        // t.Right.NextNode(t)
-        leafs = append(leafs, t.Right.NextNode(t)...)
-    } else if &caller == &(*t).Right {
-        // when the right brach has evaluated it will call us again
-        // we then know we have been fully evaluated and can call our parent saying we are done
-        t.Parent.NextNode(t)
-        leafs = append(leafs, t.Parent.NextNode(t)...)
-    } else {
-        panic("i dont know what should happen here1?")
-    }
-    return leafs
-}
-func (l *LeafNode) NextNode(caller Node) []*LeafNode{
-    if &caller == &(*l).Parent {
-        return []*LeafNode{l}
-    } else {
-        panic("unimplemented")    
-    }
-}
-func (l *LoopNode) NextNode(caller Node) []*LeafNode{
-    var leafs []*LeafNode
-    if &caller == &(*l).Parent {
-        tmp1 := l.NextNode(l)
-        tmp2 := l.NextNode(l)
-        leafs = append(leafs, tmp1...)
-        leafs = append(leafs, tmp2...)
-    } else if &caller == &(*l).Left {
-        tmp1 := l.NextNode(l)
-        tmp2 := l.NextNode(l)
-        leafs = append(leafs, tmp1...)
-        leafs = append(leafs, tmp2...)
-    } else if &caller == &(*l).Right {
-        tmp1 := l.Parent.NextNode(l)
-        leafs = append(leafs, tmp1...)
-    } else {
-        panic("unimplemented")
-    }
-    return leafs
+type RootNode struct {
+	Child Node
 }
 
+// NextNode implements Node.
+// func (r RootNode) NextNode(Node) []*LeafNode {
+// 	panic("unimplemented")
+// }
+
+func (r *RootNode) NextNode(caller Node) []*LeafNode {
+	return r.Child.NextNode(r)
+}
+
+func (t *TraverseNode) NextNode(caller Node) []*LeafNode {
+	var leafs []*LeafNode
+	if &caller == &(*t).Parent { // Pointer comparison to avoid same value struct bug
+		// if the caller is parent, we should deced into the left branch,
+		// t.Left.NextNode(t)
+		leafs = append(leafs, t.Left.NextNode(t)...)
+	} else if &caller == &(*t).Left {
+		// when the left branch has evaluated it will call us again
+		// an we than have to evaluate the right branch
+		// t.Right.NextNode(t)
+		leafs = append(leafs, t.Right.NextNode(t)...)
+	} else if &caller == &(*t).Right {
+		// when the right brach has evaluated it will call us again
+		// we then know we have been fully evaluated and can call our parent saying we are done
+		t.Parent.NextNode(t)
+		leafs = append(leafs, t.Parent.NextNode(t)...)
+	} else {
+		panic("i dont know what should happen here1?")
+	}
+	return leafs
+}
+func (l *LeafNode) NextNode(caller Node) []*LeafNode {
+	if &caller == &(*l).Parent {
+		return []*LeafNode{l}
+	} else {
+		panic("leafnode nextnode panic")
+	}
+}
+func (l *LoopNode) NextNode(caller Node) []*LeafNode {
+	var leafs []*LeafNode
+	if &caller == &(*l).Parent {
+		tmp1 := l.NextNode(l)
+		tmp2 := l.NextNode(l)
+		leafs = append(leafs, tmp1...)
+		leafs = append(leafs, tmp2...)
+	} else if &caller == &(*l).Left {
+		tmp1 := l.NextNode(l)
+		tmp2 := l.NextNode(l)
+		leafs = append(leafs, tmp1...)
+		leafs = append(leafs, tmp2...)
+	} else if &caller == &(*l).Right {
+		tmp1 := l.Parent.NextNode(l)
+		leafs = append(leafs, tmp1...)
+	} else {
+		panic("loopnode nextnode panic")
+	}
+	return leafs
+}
 
 func grow_tree(str string, parent Node) Node {
-    parts := split_q(str)
-    Left, operator, Right := parts[0], []rune(parts[1])[0], parts[2] 
-
-    if operator == '/' {
-        t := TraverseNode{}
-        t.Parent = parent
-        t.Left = grow_tree(Left, &t)
-        t.Right = grow_tree(Right, &t)
-        return &t
-    } else if operator == '*' {
-        l := LoopNode{}
-        l.Left = grow_tree(Left, &l)
-        l.Right = grow_tree(Right, &l)
-        return &l
-    } else if operator == '0' {
-        l := LeafNode{Value: Left, Parent: parent}
-        return &l
-    } else {
-        panic("invalid operator")
-    }
+	parts := split_q(str)
+    fmt.Printf("%v\n",parts)
+	Left, operator, Right := parts[0], parts[1], parts[2]
+    
+	if operator == "/" {
+		t := TraverseNode{}
+		t.Parent = parent
+		t.Left = grow_tree(Left, &t)
+		t.Right = grow_tree(Right, &t)
+		return &t
+	} else if operator == "*" {
+		l := LoopNode{}
+		l.Left = grow_tree(Left, &l)
+		l.Right = grow_tree(Right, &l)
+		return &l
+	} else if operator == "0" {
+		l := LeafNode{Value: Left, Parent: parent}
+		return &l
+	} else {
+		panic("invalid operator")
+	}
 }
 
+func containsOperators(s string) bool {
+	re := regexp.MustCompile(`[/*&|]`)
+	return re.MatchString(s)
+}
 
 func split_q(str string) [3]string {
-    opened := 0
-    closed := 0
-    
-	for i, char := range str {
-        if char == '{' {
-            opened += 1
-            continue
+    fmt.Println(str)
+	opened := 0
+	closed := 0
+	if str == "" {
+		return [3]string{"", "0", ""}
+	} else if !containsOperators(str){
+        if str[0] == '{' && str[len(str)-1] == '}' {
+            str = str[1:]
+            str = str[:len(str)-1]
+            return split_q(str)
+        } else {
+            return [3]string{str, "0", ""}
         }
-        if char == '}' {
-            closed += 1
-            continue
-        } 
+    }
 
-        if opened == closed{
-            // if no paranthasees are opned
-            if strings.Contains("/*&|", string(char)) {
-                return [...]string{str[:i], string(str[i]), str[i:]}
-            }
-        } else if opened > closed {
-            // do nothing
-        } 
+	for i, char := range str {
+        // fmt.Println(string(char))
+
+		if char == '{' {
+			opened += 1
+		} else if char == '}' {
+			closed += 1
+			if i == len(str)-1 {
+				str = str[1:]
+				str = str[:len(str)-1]
+                fmt.Println(char)
+				return split_q(str)
+			}
+		}
+
+		if opened == closed {
+			// if no paranthasees are opned
+			if strings.Contains("/*&|", string(char)) {
+				return [...]string{str[:i], string(str[i]), str[i+1:]}
+			} 
+		} else if opened > closed {
+			// do nothing
+		}
 	}
-    panic("something went wrong")
+
+	panic("something went wrong")
 }
 
 func main() {
-	// re := regexp.MustCompile("\\/")
-	// txt1 := "S/Pickaxe/obtainedBy/crafting_recipe/hasInput"
-	txt2 := "S/Pick/{Made_of | Crafting_recipie}/rarity"
+	txt2 := "Sasdas/Pick/{Made_of}*"
 	txt2 = removeWhitespace(txt2)
-	// index := 2
-	// last := ???
-	// tmp := RegSplit(txt2, "\\/") // split expression on / into parts
+
+	root := RootNode{}
+	tmp := grow_tree(txt2, &root)
+    root.Child = tmp
+
+    
+    fmt.Println(tmp)
+
+	// re := regexp.MustCompile("^(.*?)\\/(.*)")
+	// match := re.FindStringSubmatch(txt2)
+	// fmt.Println(match)
+	// root := TraverseNode{}
+	// root.Left = &LeafNode{Value: match[1]}
+	// tmp := grow_tree(txt2, &root)
 	// fmt.Println(tmp)
-	// start := tmp[0]
-	// tmp = append(tmp[:0], tmp[1:]...)
-	// root := &BinaryTreeNode{Edge: start}
-	// fmt.Print(tmp)
-	re := regexp.MustCompile("^(.*?)\\/")
 
-	root := TraverseNode{}
-	// root.Left
-	GrowTree(root, txt2)
-    fmt.Println("")
-
+	// tmp5 := split_q("")
+	// fmt.Println(tmp5)
 }
 
 // `S/Pickaxe/obtainedBy/crafting_recipe/hasInput`
