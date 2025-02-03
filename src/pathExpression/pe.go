@@ -1,84 +1,84 @@
 package main
 
 import (
-	// "bytes"
-
 	"fmt"
 	"regexp"
 	"strings"
-	// "unicode"
-	// "testing"
 )
 
-// https://stackoverflow.com/questions/4466091/split-string-using-regular-expression-in-go
-func RegSplit(text string, delimeter string) []string {
-	reg := regexp.MustCompile(delimeter)
-	indexes := reg.FindAllStringIndex(text, -1)
-	laststart := 0
-	result := make([]string, len(indexes)+1)
-	for i, element := range indexes {
-		result[i] = text[laststart:element[0]]
-		laststart = element[1]
-	}
-	result[len(indexes)] = text[laststart:len(text)]
-	return result
-}
-
+// Removes whitespace in a string
 func removeWhitespace(inp string) string {
 	return strings.Join(strings.Fields(inp), "")
 }
 
+// interface type that all nodes need to implement
+// it add the possibility to query for the next node
+// returns the leaf nodes that are next in the query
 type Node interface {
 	NextNode(Node) []*LeafNode
 }
+
+// A Traverse Node represent a traversal from right to left
 type TraverseNode struct {
 	Parent Node
 	Left   Node
 	Right  Node
 }
+
+// A leaf node represent en edge in the query, these are also the leafs in the evaluation tree
 type LeafNode struct {
 	Parent Node
 	Value  string
 }
+
+// Struct representing a loop in the query structure
 type LoopNode struct {
 	Parent Node
 	Left   Node
 	Right  Node
 }
+
+// The root of a query tree, passes next node to child with required info
 type RootNode struct {
 	Child Node
 }
 
-// NextNode implements Node.
-// func (r RootNode) NextNode(Node) []*LeafNode {
-// 	panic("unimplemented")
-// }
-
+// Passes next node to child with required info
 func (r *RootNode) NextNode(caller Node) []*LeafNode {
 	return r.Child.NextNode(r)
 }
 
+// node that implements the traverse function.
+// If left node calls traverse, continue to right tree
+// if right tree calls, branch has been evaluated and call next tree on parent
 func (t *TraverseNode) NextNode(caller Node) []*LeafNode {
 	var leafs []*LeafNode
+
 	if &caller == &(*t).Parent { // Pointer comparison to avoid same value struct bug
 		// if the caller is parent, we should deced into the left branch,
 		// t.Left.NextNode(t)
 		leafs = append(leafs, t.Left.NextNode(t)...)
+
 	} else if &caller == &(*t).Left {
 		// when the left branch has evaluated it will call us again
 		// an we than have to evaluate the right branch
 		// t.Right.NextNode(t)
 		leafs = append(leafs, t.Right.NextNode(t)...)
+
 	} else if &caller == &(*t).Right {
 		// when the right brach has evaluated it will call us again
 		// we then know we have been fully evaluated and can call our parent saying we are done
 		t.Parent.NextNode(t)
 		leafs = append(leafs, t.Parent.NextNode(t)...)
+
 	} else {
 		panic("i dont know what should happen here1?")
 	}
 	return leafs
 }
+
+// TODO nil should be able to call next node, this is because we need to call next node from outside of the tree
+// This node represents an edge in the query
 func (l *LeafNode) NextNode(caller Node) []*LeafNode {
 	if &caller == &(*l).Parent {
 		return []*LeafNode{l}
@@ -86,6 +86,10 @@ func (l *LeafNode) NextNode(caller Node) []*LeafNode {
 		panic("leafnode nextnode panic")
 	}
 }
+
+// we want to have an looping behavior, when left is done evaluating we want to repeat it which means
+// when left calls an we evaluate left again, but exiting the loop is also viable si right should also evaluate.
+// right is the exit so when right is done pass ask parent for next node
 func (l *LoopNode) NextNode(caller Node) []*LeafNode {
 	var leafs []*LeafNode
 	if &caller == &(*l).Parent {
@@ -107,77 +111,122 @@ func (l *LoopNode) NextNode(caller Node) []*LeafNode {
 	return leafs
 }
 
+// creates a branch where the top node has the given parent.
+// return a the top node
 func grow_tree(str string, parent Node) Node {
+	// split the string to a left operator and right part
+	// this functions takes into account brackets {}
 	parts := split_q(str)
-    fmt.Printf("%v\n",parts)
+	fmt.Printf("%v\n", parts)
 	Left, operator, Right := parts[0], parts[1], parts[2]
-    
+
+	// if the operator is traverse create a traverse node
 	if operator == "/" {
 		t := TraverseNode{}
 		t.Parent = parent
 		t.Left = grow_tree(Left, &t)
 		t.Right = grow_tree(Right, &t)
 		return &t
+
+		// if the operator is loop (aka match zero or more) create a loop node
 	} else if operator == "*" {
 		l := LoopNode{}
 		l.Left = grow_tree(Left, &l)
 		l.Right = grow_tree(Right, &l)
 		return &l
+
+		// if the operator is "0" this indicates that the parsing resulted in only a left side
+		// this means this is an leaf node
 	} else if operator == "0" {
 		l := LeafNode{Value: Left, Parent: parent}
 		return &l
+
+		// No operator matched
 	} else {
 		panic("invalid operator")
 	}
 }
 
+// if the passed string contains a valid operator,
+// note that this returns true even for operators that are planed but not implanted
 func containsOperators(s string) bool {
 	re := regexp.MustCompile(`[/*&|]`)
 	return re.MatchString(s)
 }
 
+// this splits the query into the first evaluated operator off the string and its left and right sides.
+// this string “{recipe/input}*price/currency“ would split into “{recipe/input}“ “*“ “price/currency“
+// as the first evaluated operator is *
 func split_q(str string) [3]string {
-    fmt.Println(str)
+	fmt.Println(str)
 	opened := 0
 	closed := 0
+
+	// maybe this should return error?
+	// when is it the case that an empty would be passed?
+	// except in these cases "s/pick/recipe/"
+	// or "s//error_here/recipe"
+	// both of these might be better to check beforehand?
 	if str == "" {
 		return [3]string{"", "0", ""}
-	} else if !containsOperators(str){
-        if str[0] == '{' && str[len(str)-1] == '}' {
-            str = str[1:]
-            str = str[:len(str)-1]
-            return split_q(str)
-        } else {
-            return [3]string{str, "0", ""}
-        }
-    }
 
+		// if no operator is contained
+	} else if !containsOperators(str) {
+		// if the string is contained inside brackets remove them
+		if str[0] == '{' && str[len(str)-1] == '}' {
+			str = str[1:]
+			str = str[:len(str)-1]
+			// why call split again?
+			// we know no operators are in the string
+			// this will just end up att the return bellow, ``return [3]string{str, "0", ""}``
+			return split_q(str)
+		} else {
+			// since we have no operators or enclosing brackets this is an edge
+			return [3]string{str, "0", ""}
+		}
+	}
+	// for each character advance until the operator is found
 	for i, char := range str {
-        // fmt.Println(string(char))
+		// fmt.Println(string(char))
 
+		// count opening brackets
 		if char == '{' {
 			opened += 1
+
+			// count closing brackets
 		} else if char == '}' {
 			closed += 1
+
+			// if this was the last and char encountered and its an closing bracket
+			// the whole statement is enclosed on one
+			// remove brackets and parse again
+			// TODO should we not check if closed == opened, if they are not equal we have an error in the query
 			if i == len(str)-1 {
 				str = str[1:]
 				str = str[:len(str)-1]
-                fmt.Println(char)
+				fmt.Println(char)
 				return split_q(str)
 			}
 		}
 
+		// if we are not inside a bracket
 		if opened == closed {
-			// if no paranthasees are opned
+			// if its an valid opertor att hte position split there
 			if strings.Contains("/*&|", string(char)) {
 				return [...]string{str[:i], string(str[i]), str[i+1:]}
-			} 
+			}
+
+			// TODO why this empty else if?
 		} else if opened > closed {
 			// do nothing
 		}
 	}
 
-	panic("something went wrong")
+	// noting should be able to cause this if the query is correctly formed?
+	// only two ways i see into this is "{hello/test}hej"
+	// and two ways i see into this is "he{llo/test"
+	// TODO add test in the beginning if an non operator is after an closing bracket, example "}h" or before and opening bracket "a{"
+	panic("something went wrong, no operators to split on")
 }
 
 func main() {
@@ -186,10 +235,9 @@ func main() {
 
 	root := RootNode{}
 	tmp := grow_tree(txt2, &root)
-    root.Child = tmp
+	root.Child = tmp
 
-    
-    fmt.Println(tmp)
+	fmt.Println(tmp)
 
 	// re := regexp.MustCompile("^(.*?)\\/(.*)")
 	// match := re.FindStringSubmatch(txt2)
