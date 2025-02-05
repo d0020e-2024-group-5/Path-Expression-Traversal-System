@@ -8,14 +8,14 @@ services:
         ports:
             - "80:80"
         volumes:
-            - /usr/app/Example Data/Server A:/usr/app/shared_volume
+            - ./../Example Data/Server A/Example Data_A.ttl:/usr/app/shared_volume/data.ttl
             # - ../src/:/usr/app
     b:
         # same as a but no contact to outside
         image: PETS/app_v1
         container_name: serverB
         volumes:
-            - /usr/app/"Example Data"/"Server B"/usr/app/shared_volume
+            - ./../Example Data/Server B/Example Data_B.ttl:/usr/app/shared_volume/data.ttl
             # - ../src/:/usr/app
     c:
 
@@ -23,7 +23,7 @@ services:
         image: PETS/app_v1
         container_name: serverC
         volumes:
-            - /usr/app/"Example Data"/"Server C":/usr/app/shared_volume
+            - ./../Example Data/Server C/Example Data_C.ttl:/usr/app/shared_volume/data.ttl
 volumes:
     dataA:
     dataB:
