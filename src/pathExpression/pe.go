@@ -29,7 +29,7 @@ type TraverseNode struct {
 type LeafNode struct {
 	Parent Node
 	Value  string
-	ID int
+	ID     int
 }
 
 // Struct representing a loop in the query structure
@@ -55,18 +55,18 @@ func (r *RootNode) NextNode(caller Node) []*LeafNode {
 func (t *TraverseNode) NextNode(caller Node) []*LeafNode {
 	var leafs []*LeafNode
 
-	if &caller == &(*t).Parent { // Pointer comparison to avoid same value struct bug
+	if caller == t.Parent { // Pointer comparison to avoid same value struct bug
 		// if the caller is parent, we should deced into the left branch,
 		// t.Left.NextNode(t)
 		leafs = append(leafs, t.Left.NextNode(t)...)
 
-	} else if &caller == &(*t).Left {
+	} else if caller == t.Left {
 		// when the left branch has evaluated it will call us again
 		// an we than have to evaluate the right branch
 		// t.Right.NextNode(t)
 		leafs = append(leafs, t.Right.NextNode(t)...)
 
-	} else if &caller == &(*t).Right {
+	} else if caller == t.Right {
 		// when the right brach has evaluated it will call us again
 		// we then know we have been fully evaluated and can call our parent saying we are done
 		t.Parent.NextNode(t)
@@ -81,8 +81,10 @@ func (t *TraverseNode) NextNode(caller Node) []*LeafNode {
 // TODO nil should be able to call next node, this is because we need to call next node from outside of the tree
 // This node represents an edge in the query
 func (l *LeafNode) NextNode(caller Node) []*LeafNode {
-	if &caller == &(*l).Parent {
+	if caller == l.Parent {
 		return []*LeafNode{l}
+	} else if caller == nil {
+		return l.Parent.NextNode(l)
 	} else {
 		panic("leafnode nextnode panic")
 	}
@@ -93,17 +95,17 @@ func (l *LeafNode) NextNode(caller Node) []*LeafNode {
 // right is the exit so when right is done pass ask parent for next node
 func (l *LoopNode) NextNode(caller Node) []*LeafNode {
 	var leafs []*LeafNode
-	if &caller == &(*l).Parent {
-		tmp1 := l.NextNode(l)
-		tmp2 := l.NextNode(l)
+	if caller == l.Parent {
+		tmp1 := l.Left.NextNode(l)
+		tmp2 := l.Right.NextNode(l)
 		leafs = append(leafs, tmp1...)
 		leafs = append(leafs, tmp2...)
-	} else if &caller == &(*l).Left {
-		tmp1 := l.NextNode(l)
-		tmp2 := l.NextNode(l)
+	} else if caller == l.Left {
+		tmp1 := l.Left.NextNode(l)
+		tmp2 := l.Right.NextNode(l)
 		leafs = append(leafs, tmp1...)
 		leafs = append(leafs, tmp2...)
-	} else if &caller == &(*l).Right {
+	} else if caller == l.Right {
 		tmp1 := l.Parent.NextNode(l)
 		leafs = append(leafs, tmp1...)
 	} else {
@@ -132,6 +134,7 @@ func grow_tree(str string, parent Node, id *int) Node {
 		// if the operator is loop (aka match zero or more) create a loop node
 	} else if operator == "*" {
 		l := LoopNode{}
+		l.Parent = parent
 		l.Left = grow_tree(Left, &l, id)
 		l.Right = grow_tree(Right, &l, id)
 		return &l
@@ -234,7 +237,7 @@ func split_q(str string) [3]string {
 }
 
 func main() {
-	txt2 := "Sasdas/Pick/{Made_of}*"
+	txt2 := "Sasdas/Pick/{Made_of/säl}*"
 	txt2 = removeWhitespace(txt2)
 
 	id_int := 0
@@ -242,13 +245,14 @@ func main() {
 	tmp := grow_tree(txt2, &root, &id_int)
 	root.Child = tmp
 
-	leaf := root.NextNode(nil)
-	fmt.Printf("%v", leaf)
-
+	leaf := root.NextNode(nil)[0]
+	fmt.Printf("%v\n", leaf)
+	for i := 0; i < 10; i++ {
+		leaf = leaf.NextNode(nil)[0]
+		fmt.Printf("%v\n", leaf)
+	}
 
 	// fmt.Println(tmp)
-
-
 
 	// re := regexp.MustCompile("^(.*?)\\/(.*)")
 	// match := re.FindStringSubmatch(txt2)
