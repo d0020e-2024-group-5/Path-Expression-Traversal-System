@@ -30,7 +30,7 @@ func removeWhitespace(inp string) string {
 
 type Node interface {
 	NextNode(Node) []*LeafNode
-}
+}	
 type TraverseNode struct {
 	Parent Node
 	Left   Node
@@ -39,6 +39,7 @@ type TraverseNode struct {
 type LeafNode struct {
 	Parent Node
 	Value  string
+	ID int
 }
 type LoopNode struct {
 	Parent Node
@@ -57,7 +58,6 @@ type RootNode struct {
 func (r *RootNode) NextNode(caller Node) []*LeafNode {
 	return r.Child.NextNode(r)
 }
-
 func (t *TraverseNode) NextNode(caller Node) []*LeafNode {
 	var leafs []*LeafNode
 	if &caller == &(*t).Parent { // Pointer comparison to avoid same value struct bug
@@ -107,7 +107,7 @@ func (l *LoopNode) NextNode(caller Node) []*LeafNode {
 	return leafs
 }
 
-func grow_tree(str string, parent Node) Node {
+func grow_tree(str string, parent Node, id *int) Node {
 	parts := split_q(str)
     fmt.Printf("%v\n",parts)
 	Left, operator, Right := parts[0], parts[1], parts[2]
@@ -115,21 +115,26 @@ func grow_tree(str string, parent Node) Node {
 	if operator == "/" {
 		t := TraverseNode{}
 		t.Parent = parent
-		t.Left = grow_tree(Left, &t)
-		t.Right = grow_tree(Right, &t)
+		t.Left = grow_tree(Left, &t, id)
+		t.Right = grow_tree(Right, &t, id)
 		return &t
 	} else if operator == "*" {
 		l := LoopNode{}
-		l.Left = grow_tree(Left, &l)
-		l.Right = grow_tree(Right, &l)
+		l.Left = grow_tree(Left, &l, id)
+		l.Right = grow_tree(Right, &l, id)
 		return &l
 	} else if operator == "0" {
-		l := LeafNode{Value: Left, Parent: parent}
+		l := LeafNode{Value: Left, ID: *id, Parent: parent}
+		tmp := *id
+		tmp++
+		*id = tmp
 		return &l
 	} else {
 		panic("invalid operator")
 	}
 }
+
+
 
 func containsOperators(s string) bool {
 	re := regexp.MustCompile(`[/*&|]`)
@@ -184,11 +189,11 @@ func main() {
 	txt2 := "Sasdas/Pick/{Made_of}*"
 	txt2 = removeWhitespace(txt2)
 
+	id_int := 0
 	root := RootNode{}
-	tmp := grow_tree(txt2, &root)
+	tmp := grow_tree(txt2, &root, &id_int)
     root.Child = tmp
 
-    
     fmt.Println(tmp)
 
 	// re := regexp.MustCompile("^(.*?)\\/(.*)")
