@@ -16,13 +16,9 @@ func removeWhitespace(inp string) string {
 // returns the leaf nodes that are next in the query
 type Node interface {
 	NextNode(Node) []*LeafNode
-<<<<<<< HEAD
-}	
-=======
 }
 
 // A Traverse Node represent a traversal from right to left
->>>>>>> 881939739dd8826072e46e3a833dabe2e707b98f
 type TraverseNode struct {
 	Parent Node
 	Left   Node
@@ -52,13 +48,10 @@ type RootNode struct {
 func (r *RootNode) NextNode(caller Node) []*LeafNode {
 	return r.Child.NextNode(r)
 }
-<<<<<<< HEAD
-=======
 
 // node that implements the traverse function.
 // If left node calls traverse, continue to right tree
 // if right tree calls, branch has been evaluated and call next tree on parent
->>>>>>> 881939739dd8826072e46e3a833dabe2e707b98f
 func (t *TraverseNode) NextNode(caller Node) []*LeafNode {
 	var leafs []*LeafNode
 
@@ -119,15 +112,11 @@ func (l *LoopNode) NextNode(caller Node) []*LeafNode {
 	return leafs
 }
 
-<<<<<<< HEAD
-func grow_tree(str string, parent Node, id *int) Node {
-=======
 // creates a branch where the top node has the given parent.
 // return a the top node
-func grow_tree(str string, parent Node) Node {
+func grow_tree(str string, parent Node, id *int) Node {
 	// split the string to a left operator and right part
 	// this functions takes into account brackets {}
->>>>>>> 881939739dd8826072e46e3a833dabe2e707b98f
 	parts := split_q(str)
 	fmt.Printf("%v\n", parts)
 	Left, operator, Right := parts[0], parts[1], parts[2]
@@ -162,13 +151,8 @@ func grow_tree(str string, parent Node) Node {
 	}
 }
 
-<<<<<<< HEAD
-
-
-=======
 // if the passed string contains a valid operator,
 // note that this returns true even for operators that are planed but not implanted
->>>>>>> 881939739dd8826072e46e3a833dabe2e707b98f
 func containsOperators(s string) bool {
 	re := regexp.MustCompile(`[/*&|]`)
 	return re.MatchString(s)
@@ -255,17 +239,16 @@ func main() {
 
 	id_int := 0
 	root := RootNode{}
-<<<<<<< HEAD
 	tmp := grow_tree(txt2, &root, &id_int)
-    root.Child = tmp
-
-    fmt.Println(tmp)
-=======
-	tmp := grow_tree(txt2, &root)
 	root.Child = tmp
 
-	fmt.Println(tmp)
->>>>>>> 881939739dd8826072e46e3a833dabe2e707b98f
+	leaf := root.NextNode(nil)
+	fmt.Printf("%v", leaf)
+
+
+	// fmt.Println(tmp)
+
+
 
 	// re := regexp.MustCompile("^(.*?)\\/(.*)")
 	// match := re.FindStringSubmatch(txt2)
