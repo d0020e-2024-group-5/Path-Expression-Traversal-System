@@ -74,21 +74,13 @@ func main() {
 	http.ListenAndServe(":80", nil)
 }
 
-// import (
-// 	"bufio"
-// 	"fmt"
-// 	"os"
-// 	"strconv"
-// 	"strings"
-// )
-
 func parse() {
 	path, err := os.Getwd()
 	if err != nil {
 		log.Println(err)
 	}
 	fmt.Println(path) // for example /home/user
-	file, err := os.Open("./src/Example Data/Example Data.ttl")
+	file, err := os.Open("./shared_volume/data.ttl")
 	if err != nil {
 		fmt.Println(err)
 		return
