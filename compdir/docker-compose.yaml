@@ -9,14 +9,12 @@ services:
             - "80:80"
         volumes:
             - ./../Example Data/Server A/Example Data_A.ttl:/usr/app/shared_volume/data.ttl
-            # - ../src/:/usr/app
     b:
         # same as a but no contact to outside
         image: PETS/app_v1
         container_name: serverB
         volumes:
             - ./../Example Data/Server B/Example Data_B.ttl:/usr/app/shared_volume/data.ttl
-            # - ../src/:/usr/app
     c:
 
         # same as a but no contact to outside
@@ -24,7 +22,3 @@ services:
         container_name: serverC
         volumes:
             - ./../Example Data/Server C/Example Data_C.ttl:/usr/app/shared_volume/data.ttl
-volumes:
-    dataA:
-    dataB:
-    dataC:
