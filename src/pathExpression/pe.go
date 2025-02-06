@@ -6,9 +6,12 @@ import (
 	"strings"
 )
 
-// Removes whitespace in a string
-func removeWhitespace(inp string) string {
-	return strings.Join(strings.Fields(inp), "")
+// preprocesses the query
+func preprocessQuery(inp string) string {
+	//remove whitespace
+	inp = strings.Replace(inp, "*/", "*", -1)
+	inp = strings.Join(strings.Fields(inp), "")
+	return inp
 }
 
 // interface type that all nodes need to implement
@@ -118,18 +121,6 @@ func (t *TraverseNode) NextNode(caller Node) []*LeafNode {
 	return leafs
 }
 
-// TODO nil should be able to call next node, this is because we need to call next node from outside of the tree
-// This node represents an edge in the query
-func (l *LeafNode) NextNode(caller Node) []*LeafNode {
-	if caller == l.Parent {
-		return []*LeafNode{l}
-	} else if caller == nil {
-		return l.Parent.NextNode(l)
-	} else {
-		panic("leafnode nextnode panic")
-	}
-}
-
 // we want to have an looping behavior, when left is done evaluating we want to repeat it which means
 // when left calls an we evaluate left again, but exiting the loop is also viable si right should also evaluate.
 // right is the exit so when right is done pass ask parent for next node
@@ -152,6 +143,18 @@ func (l *LoopNode) NextNode(caller Node) []*LeafNode {
 		panic("loopnode nextnode panic")
 	}
 	return leafs
+}
+
+// TODO nil should be able to call next node, this is because we need to call next node from outside of the tree
+// This node represents an edge in the query
+func (l *LeafNode) NextNode(caller Node) []*LeafNode {
+	if caller == l.Parent {
+		return []*LeafNode{l}
+	} else if caller == nil {
+		return l.Parent.NextNode(l)
+	} else {
+		panic("leafnode nextnode panic")
+	}
 }
 
 // creates a branch where the top node has the given parent.
@@ -276,9 +279,34 @@ func split_q(str string) [3]string {
 	panic("something went wrong, no operators to split on")
 }
 
+
+type QuerySak struct {
+	Query string
+	Rootpointer *RootNode
+	CurrentLeaf *LeafNode 
+	NextNode int
+}
+
+func bobTheBuilder(input_query string) QuerySak{
+	input_query = removeWhitespace(input_query)
+
+	id_int := 0
+	root := RootNode{}
+	tmp := grow_tree(input_query, &root, &id_int)
+	root.Child = tmp
+
+	q := QuerySak{}
+	q.Query = input_query
+	q.Rootpointer = &root
+	q.CurrentLeaf = root.NextNode(nil)[0]
+	q.NextNode = 0 //idk why choom
+
+	return q
+}
+
 func main() {
 	txt2 := "Sasdas/Pick/{Made_of/säl}*"
-	txt2 = removeWhitespace(txt2)
+	txt2 = preprocessQuery(txt2)
 
 	id_int := 0
 	root := RootNode{}
