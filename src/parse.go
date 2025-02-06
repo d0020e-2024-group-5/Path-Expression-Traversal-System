@@ -8,16 +8,6 @@ import (
 	"strings"
 )
 
-//	type Node struct {
-//		NodeName string
-//		NodeID   int
-//	}
-//
-// type Tuple struct { // FOR EDGES
-//
-//		key   string // ex. obtainedBy
-//		value string // ex. recipe
-//	}
 func parse(nodeLst map[Node][]Tuple) map[Node][]Tuple {
 
 	file, err := os.Open("./shared_volume/data.ttl") // READ DATA FILE
