@@ -99,6 +99,13 @@ func (q *QueryStruct) next(data map[string][]DataEdge) []QueryStruct {
 	return nextQ
 }
 
+func RecursiveTraverse(q *QueryStruct, data map[string][]DataEdge) {
+	for _, qRec := range q.next(data) {
+		fmt.Printf("%s\n\n", qRec.DebugToString())
+		RecursiveTraverse(&qRec, data)
+	}
+}
+
 func TestBob() {
 	data := map[string][]DataEdge{
 		"s": {
@@ -115,15 +122,7 @@ func TestBob() {
 	fmt.Printf("%v\n\n", data)
 
 	q, _ := bobTheBuilder("s/pickaxe/{obtainedBy/hasInput}*", data)
-	fmt.Println(q.DebugToString())
-	fmt.Println()
+	fmt.Printf("%s\n\n", q.DebugToString())
 
-	q = q.next(data)[0]
-	fmt.Println(q.DebugToString())
-	fmt.Println()
-
-	q = q.next(data)[0]
-	fmt.Println(q.DebugToString())
-	fmt.Println()
-
+	RecursiveTraverse(&q, data)
 }
