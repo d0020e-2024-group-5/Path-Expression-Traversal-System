@@ -7,18 +7,34 @@ import (
 	"os"
 )
 
-func main() {
+var hName string
 
+type Node struct {
+	NodeName string
+	NodeID   int
+}
+type Tuple struct { // FOR EDGES
+	key   string // ex. obtainedBy
+	value string // ex. recipe
+}
+
+var nodeLst = map[Node][]Tuple{} // NODE HASHMAP WITH A TUPLE LIST (EDGES) AS VALUE
+
+func main() {
+	nodeLst = parse(nodeLst)
+	fmt.Printf("gragor")
+	fmt.Println(nodeLst)
 	// This request path forwards the request to serve B
 	http.HandleFunc("/contact_b", func(w http.ResponseWriter, r *http.Request) {
 		// get hostname, (in the case its running in docker return the container id)
 		hname, err := os.Hostname()
-
+		fmt.Println(hname)
+		fmt.Println("test")
 		// send back that the server is sending a request to server B
 		fmt.Fprintf(w, "server %s sending request to server B\n", hname)
 		// get response from server b which forward to server c
 
-		resp, err := http.Get("http://b/contact_c")
+		resp, err := http.Get("http://b/contact_c") //Pickaxe/obtainedBy
 
 		// if we got an error send back the error
 		if err != nil {
