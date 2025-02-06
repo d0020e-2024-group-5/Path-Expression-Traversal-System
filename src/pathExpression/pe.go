@@ -160,7 +160,7 @@ func grow_tree(str string, parent Node, id *int) Node {
 	// split the string to a left operator and right part
 	// this functions takes into account brackets {}
 	parts := split_q(str)
-	fmt.Printf("%v\n", parts)
+	// fmt.Printf("%v\n", parts)
 	Left, operator, Right := parts[0], parts[1], parts[2]
 
 	// if the operator is traverse create a traverse node
@@ -205,7 +205,6 @@ func containsOperators(s string) bool {
 // this string “{recipe/input}*price/currency“ would split into “{recipe/input}“ “*“ “price/currency“
 // as the first evaluated operator is *
 func split_q(str string) [3]string {
-	fmt.Println(str)
 
 	// maybe this should return error?
 	// when is it the case that an empty would be passed?
@@ -269,16 +268,29 @@ func split_q(str string) [3]string {
 	panic("something went wrong, no operators to split on")
 }
 
-// struct to represent all the info we need in the query
-type QueryStruct struct {
-	Query       string
-	Rootpointer *RootNode
-	CurrentLeaf *LeafNode
-	NextNode    int
+// TODO remove when parse is added
+type DataNode struct {
+	Name string
+	// Id int id is not required since this is kept track off in the map
+	edges []DataEdge
+}
+type DataEdge struct {
+	name      string
+	target_id int
 }
 
-// creates and returns a deafult QueryStruct from a query string
-func bobTheBuilder(input_query string) QueryStruct {
+// struct to represent all the info we need in the query
+type QueryStruct struct {
+	Query       string    // the query as a string
+	Rootpointer *RootNode // pointer to the tree
+	CurrentLeaf *LeafNode // the path that should be taken to the next node
+	NextNode    string    // the name of the node next node
+}
+
+// creates and returns QueryStruct from a query string
+// if the string matches waht querystruct.Tostring
+func bobTheBuilder(input_query string, data map[int]DataNode) (QueryStruct, error) {
+	// pre process query, remove spaces and change
 	input_query = preprocessQuery(input_query)
 
 	id_int := 0
@@ -286,30 +298,66 @@ func bobTheBuilder(input_query string) QueryStruct {
 	tmp := grow_tree(input_query, &root, &id_int)
 	root.Child = tmp
 
+	// construct the tree
 	q := QueryStruct{}
 	q.Query = input_query
 	q.Rootpointer = &root
-	q.CurrentLeaf = root.NextNode(nil)[0]
-	q.NextNode = 0 //idk why choom
 
-	return q
+	// TODO this need to be changed to being conditione if we have passed in the leaf node in the input_query
+	// TODO these might also not be a single return, assume single for the moment
+	q.CurrentLeaf = root.NextNode(nil)[0].NextNode(nil)[0]
+
+	// TODO this need to be changed to being conditione if we have passed in the next node in the input_query
+	q.NextNode = root.NextNode(nil)[0].Value
+	// find the start node
+
+	// TODO test if nextNode is -1 and return error
+
+	return q, nil
+}
+
+// This function converts the queryStruct to an string which could be passed on to another server
+func (q *QueryStruct) ToString() string {
+	return fmt.Sprintf("%s\n%s\n%d", q.Query, q.NextNode, q.CurrentLeaf.ID)
+}
+
+func (q *QueryStruct) DebugToString() string {
+	return fmt.Sprintf("%s\nNextNode: %s\nFollowingEdge: %d (%s)", q.Query, q.NextNode, q.CurrentLeaf.ID, q.CurrentLeaf.Value)
+}
+
+func testBob() {
+	data := map[int]DataNode{
+		1: {
+			"start",
+			[]DataEdge{{"from_s", 2}}},
+		2: {
+			"end",
+			[]DataEdge{},
+		},
+	}
+
+	q, _ := bobTheBuilder("start/from_s", data)
+
+	fmt.Print(q.DebugToString())
 }
 
 func main() {
-	txt2 := "Sasdas/Pick/{Made_of/säl}*"
-	txt2 = preprocessQuery(txt2)
+	testBob()
 
-	id_int := 0
-	root := RootNode{}
-	tmp := grow_tree(txt2, &root, &id_int)
-	root.Child = tmp
+	// txt2 := "Sasdas/Pick/{Made_of/säl}*"
+	// txt2 = preprocessQuery(txt2)
 
-	leaf := root.NextNode(nil)[0]
-	fmt.Printf("%v\n", leaf)
-	for i := 0; i < 10; i++ {
-		leaf = leaf.NextNode(nil)[0]
-		fmt.Printf("%v\n", leaf)
-	}
+	// id_int := 0
+	// root := RootNode{}
+	// tmp := grow_tree(txt2, &root, &id_int)
+	// root.Child = tmp
+
+	// leaf := root.NextNode(nil)[0]
+	// fmt.Printf("%v\n", leaf)
+	// for i := 0; i < 10; i++ {
+	// 	leaf = leaf.NextNode(nil)[0]
+	// 	fmt.Printf("%v\n", leaf)
+	// }
 
 	// fmt.Println(tmp)
 
