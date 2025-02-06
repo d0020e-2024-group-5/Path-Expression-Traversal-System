@@ -288,7 +288,7 @@ type QuerySak struct {
 }
 
 func bobTheBuilder(input_query string) QuerySak{
-	input_query = removeWhitespace(input_query)
+	input_query = preprocessQuery(input_query)
 
 	id_int := 0
 	root := RootNode{}
