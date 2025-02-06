@@ -61,6 +61,10 @@ func main() {
 		fmt.Fprintf(w, "server %s return", hname)
 	})
 
+	http.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, sendQuery("hello"))
+	})
+
 	http.HandleFunc("/", handler) // servers the main HTML file
 
 	http.HandleFunc("/api/submit", handleSubmit) // API endpoint to handle form submission

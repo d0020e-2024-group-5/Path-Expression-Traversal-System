@@ -1,7 +1,7 @@
 FROM golang:1.23
 
 # have a dir 
-WORKDIR /usr/app
+WORKDIR /usr/app/
 
 # when modules is used, downlaod stuff to image
 # COPY go.mod go.sum
@@ -11,7 +11,7 @@ WORKDIR /usr/app
 COPY . .
 
 # build our executable
-RUN go build -o ./main src/main.go
+RUN go build -C src -o ../main
 
 # run the executable /usr/app/main
 CMD [ "./main" ]
