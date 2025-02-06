@@ -143,7 +143,6 @@ func (l *LoopNode) NextNode(caller Node) []*LeafNode {
 	return leafs
 }
 
-// TODO nil should be able to call next node, this is because we need to call next node from outside of the tree
 // This node represents an edge in the query
 func (l *LeafNode) NextNode(caller Node) []*LeafNode {
 	if caller == l.Parent {
