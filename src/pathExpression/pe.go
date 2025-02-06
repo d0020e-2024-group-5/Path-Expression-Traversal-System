@@ -16,6 +16,7 @@ func removeWhitespace(inp string) string {
 // returns the leaf nodes that are next in the query
 type Node interface {
 	NextNode(Node) []*LeafNode
+	GetLeaf(Node, int) *LeafNode
 }
 
 // A Traverse Node represent a traversal from right to left
@@ -43,6 +44,45 @@ type LoopNode struct {
 type RootNode struct {
 	Child Node
 }
+
+func (r *RootNode) GetLeaf(caller Node, id int) *LeafNode {
+	return r.Child.GetLeaf(r, id)
+}
+
+func (t *TraverseNode) GetLeaf(caller Node, id int) *LeafNode {
+	tmp1 := t.Left.GetLeaf(t, id)
+	tmp2 := t.Right.GetLeaf(t, id)
+
+	if tmp1 != nil {
+		return tmp1
+	} else if tmp2 != nil {
+		return tmp2
+	} else {
+		return nil
+	}
+}
+
+func (l *LoopNode) GetLeaf(caller Node, id int) *LeafNode {
+	tmp1 := l.Left.GetLeaf(l, id)
+	tmp2 := l.Right.GetLeaf(l, id)
+
+	if tmp1 != nil {
+		return tmp1
+	} else if tmp2 != nil {
+		return tmp2
+	} else {
+		return nil
+	}
+}
+
+func (l *LeafNode) GetLeaf(caller Node, id int) *LeafNode {
+	if l.ID == id {
+		return l
+	}
+	return nil
+}
+
+
 
 // Passes next node to child with required info
 func (r *RootNode) NextNode(caller Node) []*LeafNode {
