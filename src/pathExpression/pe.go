@@ -85,8 +85,6 @@ func (l *LeafNode) GetLeaf(caller Node, id int) *LeafNode {
 	return nil
 }
 
-
-
 // Passes next node to child with required info
 func (r *RootNode) NextNode(caller Node) []*LeafNode {
 	return r.Child.NextNode(r)
@@ -209,8 +207,6 @@ func containsOperators(s string) bool {
 // as the first evaluated operator is *
 func split_q(str string) [3]string {
 	fmt.Println(str)
-	opened := 0
-	closed := 0
 
 	// maybe this should return error?
 	// when is it the case that an empty would be passed?
@@ -235,40 +231,35 @@ func split_q(str string) [3]string {
 			return [3]string{str, "0", ""}
 		}
 	}
+	//is inside brackets counter
+	insideCount := 0
 	// for each character advance until the operator is found
 	for i, char := range str {
-		// fmt.Println(string(char))
-
-		// count opening brackets
-		if char == '{' {
-			opened += 1
-
-			// count closing brackets
-		} else if char == '}' {
-			closed += 1
-
-			// if this was the last and char encountered and its an closing bracket
-			// the whole statement is enclosed on one
-			// remove brackets and parse again
-			// TODO should we not check if closed == opened, if they are not equal we have an error in the query
+		if insideCount > 0 {
+			if char == '}' {
+				//remove level of inside brackets
+				insideCount = insideCount - 1
+			}
 			if i == len(str)-1 {
 				str = str[1:]
 				str = str[:len(str)-1]
-				fmt.Println(char)
+				// if this was the last and char encountered and its an closing bracket
+				// the whole statement is enclosed on one
+				// remove brackets and parse again
+				// we should never be att the end and not be on a closing bracket
 				return split_q(str)
 			}
-		}
+		} else {
+			if char == '{' {
+				//add level of inside brackets
+				insideCount = insideCount + 1
 
-		// if we are not inside a bracket
-		if opened == closed {
-			// if its an valid opertor att hte position split there
-			if strings.Contains("/*&|", string(char)) {
-				return [...]string{str[:i], string(str[i]), str[i+1:]}
+			} else {
+				// The first operator found outside of brackets it the one we want to split on
+				if strings.Contains("/*&|", string(char)) {
+					return [...]string{str[:i], string(str[i]), str[i+1:]}
+				}
 			}
-
-			// TODO why this empty else if?
-		} else if opened > closed {
-			// do nothing
 		}
 	}
 
@@ -281,14 +272,14 @@ func split_q(str string) [3]string {
 
 // struct to represent all the info we need in the query
 type QueryStruct struct {
-	Query string
+	Query       string
 	Rootpointer *RootNode
-	CurrentLeaf *LeafNode 
-	NextNode int
+	CurrentLeaf *LeafNode
+	NextNode    int
 }
 
 // creates and returns a deafult QueryStruct from a query string
-func bobTheBuilder(input_query string) QueryStruct{
+func bobTheBuilder(input_query string) QueryStruct {
 	input_query = preprocessQuery(input_query)
 
 	id_int := 0
