@@ -279,15 +279,16 @@ func split_q(str string) [3]string {
 	panic("something went wrong, no operators to split on")
 }
 
-
-type QuerySak struct {
+// struct to represent all the info we need in the query
+type QueryStruct struct {
 	Query string
 	Rootpointer *RootNode
 	CurrentLeaf *LeafNode 
 	NextNode int
 }
 
-func bobTheBuilder(input_query string) QuerySak{
+// creates and returns a deafult QueryStruct from a query string
+func bobTheBuilder(input_query string) QueryStruct{
 	input_query = preprocessQuery(input_query)
 
 	id_int := 0
@@ -295,7 +296,7 @@ func bobTheBuilder(input_query string) QuerySak{
 	tmp := grow_tree(input_query, &root, &id_int)
 	root.Child = tmp
 
-	q := QuerySak{}
+	q := QueryStruct{}
 	q.Query = input_query
 	q.Rootpointer = &root
 	q.CurrentLeaf = root.NextNode(nil)[0]
