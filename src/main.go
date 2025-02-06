@@ -27,7 +27,7 @@ func main() {
 		if err != nil {
 			fmt.Fprintf(w, "Got an error %s", err)
 		} else {
-			// copy the resposne from b and send back
+			// copy the response from b and send back
 			io.Copy(w, resp.Body)
 		}
 		// print that we are done

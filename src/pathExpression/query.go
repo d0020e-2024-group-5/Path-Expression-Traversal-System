@@ -26,13 +26,13 @@ type DataEdge struct {
 // struct to represent all the info we need in the query
 type QueryStruct struct {
 	Query       string    // the query as a string
-	Rootpointer *RootNode // pointer to the tree
+	RootPointer *RootNode // pointer to the tree
 	FollowLeaf  *LeafNode // the path that should be taken to the next node
 	NextNode    string    // the name of the node next node
 }
 
 // creates and returns QueryStruct from a query string
-// if the string matches waht querystruct.Tostring
+// TODO when input query as multiple lines update NextNode and FollowLeaf accordingly
 func bobTheBuilder(input_query string, data map[string][]DataEdge) (QueryStruct, error) {
 	// pre process query, remove spaces and change
 	input_query = preprocessQuery(input_query)
@@ -45,7 +45,7 @@ func bobTheBuilder(input_query string, data map[string][]DataEdge) (QueryStruct,
 	// construct the tree
 	q := QueryStruct{}
 	q.Query = input_query
-	q.Rootpointer = &root
+	q.RootPointer = &root
 
 	// TODO this need to be changed to being conditione if we have passed in the leaf node in the input_query
 	// TODO these might also not be a single return, assume single for the moment
@@ -88,7 +88,7 @@ func (q *QueryStruct) next(data map[string][]DataEdge) []QueryStruct {
 				// and next node
 				copy := QueryStruct{
 					Query:       q.Query,
-					Rootpointer: q.Rootpointer,
+					RootPointer: q.RootPointer,
 					FollowLeaf:  follow_edge,
 					NextNode:    exist_edge.TargetName,
 				}
