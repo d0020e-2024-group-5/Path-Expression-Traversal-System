@@ -7,18 +7,7 @@ import (
 	"strconv"
 	"strings"
 )
-
-//	type Node struct {
-//		NodeName string
-//		NodeID   int
-//	}
-//
-// type Tuple struct { // FOR EDGES
-//
-//		key   string // ex. obtainedBy
-//		value string // ex. recipe
-//	}
-func parse(nodeLst map[Node][]Tuple) map[Node][]Tuple {
+func parse(nodeLst map[Node][]Tuple) map[Node][]Tuple { // FUNCTION READS DATA FILE LINE BY LINE, CHECKING PREFIX KEYWORDS BEFORE APPENDING RELEVANT NODES AND EDGES TO THE NODE HASHMAP "nodeLst"
 
 	file, err := os.Open("./shared_volume/data.ttl") // READ DATA FILE
 	if err != nil {
@@ -98,7 +87,7 @@ func parse(nodeLst map[Node][]Tuple) map[Node][]Tuple {
 	fmt.Println(nodeLst)
 	return nodeLst
 }
-func getWrd(w string) string {
+func getWrd(w string) string { // GETS THE FIRST WORD SEPARETED BY A SPACE
 	wrd := ""
 	for i := range w {
 		if w[i] == ' ' {
