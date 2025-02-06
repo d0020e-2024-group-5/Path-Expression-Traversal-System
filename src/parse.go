@@ -7,7 +7,12 @@ import (
 	"strconv"
 	"strings"
 )
+<<<<<<< HEAD
 func parse(nodeLst map[Node][]Tuple) map[Node][]Tuple { // FUNCTION READS DATA FILE LINE BY LINE, CHECKING PREFIX KEYWORDS BEFORE APPENDING RELEVANT NODES AND EDGES TO THE NODE HASHMAP "nodeLst"
+=======
+
+func parse(nodeLst map[Node][]Tuple) map[Node][]Tuple {
+>>>>>>> c1128953bde9973dbccc08fc7295350c1467fd83
 
 	file, err := os.Open("./shared_volume/data.ttl") // READ DATA FILE
 	if err != nil {
