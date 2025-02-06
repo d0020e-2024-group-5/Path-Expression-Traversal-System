@@ -1,18 +1,9 @@
-package main
+package pathExpression
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 )
-
-// preprocesses the query
-func preprocessQuery(inp string) string {
-	//remove whitespace
-	inp = strings.Replace(inp, "*/", "*", -1)
-	inp = strings.Join(strings.Fields(inp), "")
-	return inp
-}
 
 // interface type that all nodes need to implement
 // it add the possibility to query for the next node
@@ -269,109 +260,38 @@ func split_q(str string) [3]string {
 }
 
 // TODO remove when parse is added
-type DataNode struct {
-	Name string
-	// Id int id is not required since this is kept track off in the map
-	edges []DataEdge
-}
-type DataEdge struct {
-	name      string
-	target_id int
-}
 
-// struct to represent all the info we need in the query
-type QueryStruct struct {
-	Query       string    // the query as a string
-	Rootpointer *RootNode // pointer to the tree
-	CurrentLeaf *LeafNode // the path that should be taken to the next node
-	NextNode    string    // the name of the node next node
-}
+// func main() {
+// testBob()
 
-// creates and returns QueryStruct from a query string
-// if the string matches waht querystruct.Tostring
-func bobTheBuilder(input_query string, data map[int]DataNode) (QueryStruct, error) {
-	// pre process query, remove spaces and change
-	input_query = preprocessQuery(input_query)
+// txt2 := "Sasdas/Pick/{Made_of/säl}*"
+// txt2 = preprocessQuery(txt2)
 
-	id_int := 0
-	root := RootNode{}
-	tmp := grow_tree(input_query, &root, &id_int)
-	root.Child = tmp
+// id_int := 0
+// root := RootNode{}
+// tmp := grow_tree(txt2, &root, &id_int)
+// root.Child = tmp
 
-	// construct the tree
-	q := QueryStruct{}
-	q.Query = input_query
-	q.Rootpointer = &root
+// leaf := root.NextNode(nil)[0]
+// fmt.Printf("%v\n", leaf)
+// for i := 0; i < 10; i++ {
+// 	leaf = leaf.NextNode(nil)[0]
+// 	fmt.Printf("%v\n", leaf)
+// }
 
-	// TODO this need to be changed to being conditione if we have passed in the leaf node in the input_query
-	// TODO these might also not be a single return, assume single for the moment
-	q.CurrentLeaf = root.NextNode(nil)[0].NextNode(nil)[0]
+// fmt.Println(tmp)
 
-	// TODO this need to be changed to being conditione if we have passed in the next node in the input_query
-	q.NextNode = root.NextNode(nil)[0].Value
-	// find the start node
+// re := regexp.MustCompile("^(.*?)\\/(.*)")
+// match := re.FindStringSubmatch(txt2)
+// fmt.Println(match)
+// root := TraverseNode{}
+// root.Left = &LeafNode{Value: match[1]}
+// tmp := grow_tree(txt2, &root)
+// fmt.Println(tmp)
 
-	// TODO test if nextNode is -1 and return error
-
-	return q, nil
-}
-
-// This function converts the queryStruct to an string which could be passed on to another server
-func (q *QueryStruct) ToString() string {
-	return fmt.Sprintf("%s\n%s\n%d", q.Query, q.NextNode, q.CurrentLeaf.ID)
-}
-
-func (q *QueryStruct) DebugToString() string {
-	return fmt.Sprintf("%s\nNextNode: %s\nFollowingEdge: %d (%s)", q.Query, q.NextNode, q.CurrentLeaf.ID, q.CurrentLeaf.Value)
-}
-
-func testBob() {
-	data := map[int]DataNode{
-		1: {
-			"start",
-			[]DataEdge{{"from_s", 2}}},
-		2: {
-			"end",
-			[]DataEdge{},
-		},
-	}
-
-	q, _ := bobTheBuilder("start/from_s", data)
-
-	fmt.Print(q.DebugToString())
-}
-
-func main() {
-	testBob()
-
-	// txt2 := "Sasdas/Pick/{Made_of/säl}*"
-	// txt2 = preprocessQuery(txt2)
-
-	// id_int := 0
-	// root := RootNode{}
-	// tmp := grow_tree(txt2, &root, &id_int)
-	// root.Child = tmp
-
-	// leaf := root.NextNode(nil)[0]
-	// fmt.Printf("%v\n", leaf)
-	// for i := 0; i < 10; i++ {
-	// 	leaf = leaf.NextNode(nil)[0]
-	// 	fmt.Printf("%v\n", leaf)
-	// }
-
-	// fmt.Println(tmp)
-
-	// re := regexp.MustCompile("^(.*?)\\/(.*)")
-	// match := re.FindStringSubmatch(txt2)
-	// fmt.Println(match)
-	// root := TraverseNode{}
-	// root.Left = &LeafNode{Value: match[1]}
-	// tmp := grow_tree(txt2, &root)
-	// fmt.Println(tmp)
-
-	// tmp5 := split_q("")
-	// fmt.Println(tmp5)
-}
+// tmp5 := split_q("")
+// fmt.Println(tmp5)
+// }
 
 // `S/Pickaxe/obtainedBy/crafting_recipe/hasInput`
 // The example will start att pickaxe and follow edge `obtainedBy` to `Pickaxe_From_Stick_And_Stone_Recipe`

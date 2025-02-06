@@ -5,9 +5,12 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"pets/pathExpression"
 )
 
 func main() {
+	pathExpression.TestBob()
+	return
 
 	// This request path forwards the request to serve B
 	http.HandleFunc("/contact_b", func(w http.ResponseWriter, r *http.Request) {
