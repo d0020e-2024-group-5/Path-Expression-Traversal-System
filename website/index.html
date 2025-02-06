@@ -10,11 +10,16 @@
 </head>
 <body>
 
-<input type="text" id="input" placeholder="Enter something...">
-<button onclick="sendData()">Send</button>
+<div class="flex-container">
+    <input type="text" id="input" placeholder="Enter something...">
+    <button onclick="sendData()">Send</button>
+   
+</div>
+<div class="flex-container">
+    <p id="response"></p>
+</div>
+<!--<button onclick="fetchData()">Get Server Data</button>-->
 
-<button onclick="fetchData()">Get Server Data</button>
-<p id="response"></p>
 
 <script>
 
@@ -58,6 +63,28 @@ function sendData() {
 }
 
 </script>
+
+<style>
+
+#input {
+    border-radius: 40px;
+    height: 40px;
+    width: 250px;
+}
+
+.flex-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+} 
+
+button {
+    height: 40px;
+    width: 40px;
+    border-radius: 25px;
+}
+
+</style>
 
 </body>
 </html>
