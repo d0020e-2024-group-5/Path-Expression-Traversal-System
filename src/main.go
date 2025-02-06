@@ -52,6 +52,10 @@ func main() {
 		fmt.Fprintf(w, "server %s return", hname)
 	})
 
+	http.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, sendQuery("hello"))
+	})
+
 	// create the server and listen to port 80
 	http.ListenAndServe(":80", nil)
 }
