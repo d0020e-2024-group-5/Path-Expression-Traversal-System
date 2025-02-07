@@ -13,8 +13,8 @@ type DataNode struct {
 	Edges []DataEdge
 }
 type DataEdge struct {
-	EdgeName	string
-	TargetName	string
+	EdgeName   string
+	TargetName string
 }
 
 var nodeLst = map[string]DataNode{} // NODE HASHMAP WITH A TUPLE LIST (EDGES) AS VALUE
@@ -39,7 +39,7 @@ func main() {
 		if err != nil {
 			fmt.Fprintf(w, "Got an error %s", err)
 		} else {
-			// copy the resposne from b and send back
+			// copy the response from b and send back
 			io.Copy(w, resp.Body)
 		}
 		// print that we are done
