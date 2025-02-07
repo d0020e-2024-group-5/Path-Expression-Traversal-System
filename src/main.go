@@ -23,8 +23,10 @@ type ResponseData struct {
 	Message string `json:"message"`
 }
 
-func main() {
+var nodeLst = map[string]DataNode{} // NODE HASHMAP WITH A TUPLE LIST (EDGES) AS VALUE
 
+func main() {
+	nodeLst = parse(nodeLst)
 	//http.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
 	//	fmt.Fprint(w, sendQuery("hello"))
 	//})
