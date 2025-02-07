@@ -6,14 +6,11 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"pets/parse"
+	"pets/pathExpression"
 
 	"github.com/TyphonHill/go-mermaid/diagrams/flowchart"
 )
-
-type DataEdge struct {
-	EdgeName   string
-	TargetName string
-}
 
 type RequestData struct {
 	Data string `json:"data"`
@@ -23,10 +20,17 @@ type ResponseData struct {
 	Message string `json:"message"`
 }
 
-var nodeLst = map[string][]DataEdge{} // NODE HASHMAP WITH A TUPLE LIST (EDGES) AS VALUE
+var nodeLst = map[string][]pathExpression.DataEdge{} // NODE HASHMAP WITH A TUPLE LIST (EDGES) AS VALUE
 
 func main() {
-	nodeLst = parse(nodeLst)
+	nodeLst = parse.Parse()
+
+	// EXAMPLE REMOVE ME LATER
+	q, _ := pathExpression.BobTheBuilder("Pickaxe_Instance_Henry/{obtainedBy/hasInput}*", nodeLst)
+	s := pathExpression.TraverseQuery(&q, nodeLst)
+	println(s)
+
+	// END EXAMPLE
 	//http.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
 	//	fmt.Fprint(w, sendQuery("hello"))
 	//})
@@ -99,15 +103,10 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func TraverseQuery(data map[string][]DataEdge) string {
-	return "pickaxe-->|obtainedBy|Pickaxe_From_Stick_And_Stone_Recipe\nPickaxe_From_Stick_And_Stone_Recipe-->|hasInput|Stick\nPickaxe_From_Stick_And_Stone_Recipe-->|hasInput|Cobblestone"
-}
-
 func sendQuery(queryString string) string {
 	//q, _ := bobTheBuilder(queryString, data)
 
-	ret := TraverseQuery(nil)
-	return ret
+	return queryString
 }
 
 func mermaid(w http.ResponseWriter, r *http.Request) {
