@@ -11,7 +11,7 @@ import (
 
 func parse(nodeLst map[string]DataNode) map[string]DataNode { // FUNCTION READS DATA FILE LINE BY LINE, CHECKING PREFIX KEYWORDS BEFORE APPENDING RELEVANT NODES AND EDGES TO THE NODE HASHMAP "nodeLst"
 
-	file, err := os.Open("./OWL.txt") // READ DATA FILE
+	file, err := os.Open("./shared_volume/data.ttl") // READ DATA FILE
 	if err != nil {
 		fmt.Println(err)
 		return nodeLst
@@ -87,9 +87,7 @@ func parse(nodeLst map[string]DataNode) map[string]DataNode { // FUNCTION READS 
 			continue // NEXT LINE IN SAME NODE
 		} else if strings.HasSuffix(line, ".") { // END OF NODE
 			// APPEND TO LIST OF NODES
-			firstWord = ""
-			//tempTuple.key = ""
-			//tempTuple.value = ""
+			firstWord = "" // EMPTY NODE (NEW NODE)
 		} else {
 			continue // NEWLINE/EMPTY SPACE
 		}

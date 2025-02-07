@@ -10,9 +10,7 @@ import (
 var hName string
 
 type DataNode struct {
-	//NodeName string
 	Edges []DataEdge
-	//NodeID   int
 }
 type DataEdge struct {
 	EdgeName	string
