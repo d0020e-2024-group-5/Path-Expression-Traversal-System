@@ -112,6 +112,10 @@ func TraverseQuery(q *QueryStruct, data map[string][]DataEdge) string {
 func RecursiveTraverse(q *QueryStruct, data map[string][]DataEdge, res io.Writer) {
 	for _, qRec := range q.next(data) {
 		// TODO if qRec has an edge "pointsToServer" send query to that server and write result to res
+		// data[qRec.NextNode] if has points to server
+		// data[server] -> has ip
+		// call http.Post("http://{ip/domain}/api/internal_forward", q.ToString) with q.toString
+		// pipe response to res
 		fmt.Fprintf(res, "%s-->|%s|%s\n", q.NextNode, qRec.FollowLeaf.Value, qRec.NextNode)
 		RecursiveTraverse(&qRec, data, res)
 	}
