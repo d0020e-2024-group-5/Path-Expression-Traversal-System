@@ -303,3 +303,120 @@ func (self OrNode) nextEdge(caller *Node) []*LeafNode {
 }
 
 ```
+
+## Parsing ontologies to GoLang
+
+```go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+)
+
+// the parse function takes a Go map (a dictionary with key-value pairs) with a key being the node name and the value being the DataNode struct
+func parse(nodeLst map[string]DataNode) map[string]DataNode { 
+
+    // ontology is read from the servers own docker volume (server storage)
+	file, err := os.Open("./shared_volume/data.ttl") 
+	if err != nil {
+		fmt.Println(err)
+		return nodeLst
+	}
+	defer file.Close()
+
+    // nodeLst map and other temp variables are declared here. the temp variables are used for storing and writing nodes/node information
+	nodeLst = make(map[string]DataNode)
+	var tempN DataNode  
+	var tempTuple DataEdge
+	var firstWord string
+
+	scanner := bufio.NewScanner(file) 
+	for scanner.Scan() {
+        
+        // many if statement to check the prefix of the lines in order to see type of node
+		line := scanner.Text()
+		if strings.HasPrefix(line, "@prefix") { // SKIP LINES STARTING WITH "@PREFIX"
+			continue
+		}
+
+        // first condition to check if it could be a node
+		if strings.HasPrefix(line, "minecraft:") { 
+			temp := strings.TrimPrefix(line, "minecraft:")
+
+			wrd := getWrd(temp) // FIRST WORD IN LINE
+			firstWord = wrd // store in tempVar
+			
+        // If object has id, we know it is an actual node and save it
+		} else if strings.HasPrefix(line, "	nodeOntology:hasID ") { // CHECK ID
+			temp := strings.TrimPrefix(line, "	nodeOntology:hasID ")
+			nodeLst[firstWord] = tempN
+			wrd := getWrd(temp) // FIRST WORD IN LINE
+			
+			if entry, ok := nodeLst[wrd]; ok {
+				entry.Edges = append(entry.Edges, tempTuple)
+				nodeLst[wrd] = entry
+			} // APPEND KEY NODE TO MAP OF NODES
+
+			// CHECK FOR EDGES IN FOLLOWING ELSE IF STATEMENT
+		} else if strings.HasPrefix(line, "    minecraft:obtainedBy") || (strings.HasPrefix(line, "    minecraft:hasInput")) || (strings.HasPrefix(line, "    minecraft:hasOutput") || (strings.HasPrefix(line, "    minecraft:usedInStation"))) {
+
+			if strings.HasPrefix(line, "    minecraft:obtainedBy") {
+				temp := strings.TrimPrefix(line, "    minecraft:obtainedBy minecraft:")
+				wrd := getWrd(temp)
+				tempTuple.EdgeName = "obtainedBy"
+				tempTuple.TargetName = wrd
+			} else if strings.HasPrefix(line, "    minecraft:hasInput") {
+				temp := strings.TrimPrefix(line, "    minecraft:hasInput minecraft:")
+				wrd := getWrd(temp)
+				tempTuple.EdgeName = "hasInput"
+				tempTuple.TargetName = wrd
+			} else if strings.HasPrefix(line, "    minecraft:hasOutput") {
+				temp := strings.TrimPrefix(line, "    minecraft:hasOutput minecraft:")
+				wrd := getWrd(temp)
+				tempTuple.EdgeName = "hasOutput"
+				tempTuple.TargetName = wrd
+			} else if strings.HasPrefix(line, "    minecraft:usedInStation") {
+				temp := strings.TrimPrefix(line, "    minecraft:usedInStation minecraft:")
+				wrd := getWrd(temp)
+				tempTuple.EdgeName = "usedInStation"
+				tempTuple.TargetName = wrd
+			}
+			
+			if entry, ok := nodeLst[firstWord]; ok {
+				entry.Edges = append(entry.Edges, tempTuple)
+				nodeLst[firstWord] = entry
+			} // appends edges to DataEdge[] in node "firstword"
+		}
+		if strings.HasSuffix(line, ";") {
+			continue // NEXT LINE IN SAME NODE
+
+
+		} else if strings.HasSuffix(line, ".") { // describes end of node, so reset the tempVariable firstWord
+			firstWord = "" // EMPTY NODE (NEW NODE)
+		} else {
+			continue // NEWLINE/EMPTY SPACE
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		fmt.Println("Error reading file:", err)
+	}
+	fmt.Println(nodeLst)
+	return nodeLst
+}
+
+// getWrd gets the first word separated by a space
+func getWrd(w string) string { 
+	wrd := ""
+	for i := range w {
+		if w[i] == ' ' {
+			wrd = w[0:i]
+			break
+		}
+	}
+	return wrd
+}
+```
