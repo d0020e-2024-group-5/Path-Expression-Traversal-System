@@ -15,10 +15,9 @@ func main() {
 	nodeLst = parse.Parse()
 
 	// EXAMPLE REMOVE ME LATER
-	q, _ := pathExpression.BobTheBuilder("Pickaxe_Instance_Henry/{obtainedBy/hasInput}*", nodeLst)
+	q, _ := pathExpression.BobTheBuilder("Pickaxe_Instance_Henry/{obtainedBy/hasInput}*")
 	s := pathExpression.TraverseQuery(&q, nodeLst)
 	println(s)
-
 	// END EXAMPLE
 
 	// This request path forwards the request to serve B

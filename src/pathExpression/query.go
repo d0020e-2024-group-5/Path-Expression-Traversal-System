@@ -34,7 +34,7 @@ type QueryStruct struct {
 
 // creates and returns QueryStruct from a query string
 // TODO when input query as multiple lines update NextNode and FollowLeaf accordingly
-func BobTheBuilder(input_query string, data map[string][]DataEdge) (QueryStruct, error) {
+func BobTheBuilder(input_query string) (QueryStruct, error) {
 	// pre process query, remove spaces and change
 	input_query = preprocessQuery(input_query)
 
@@ -49,18 +49,11 @@ func BobTheBuilder(input_query string, data map[string][]DataEdge) (QueryStruct,
 	q.RootPointer = &root
 
 	// TODO this need to be changed to being conditione if we have passed in the leaf node in the input_query
-	// TODO these might also not be a single return, assume single for the moment
-	q.FollowLeaf = root.NextNode(nil)[0].NextNode(nil)[0]
+	q.FollowLeaf = root.NextNode(nil)[0]
 
 	// TODO this need to be changed to being conditione if we have passed in the next node in the input_query
-	// TODO these might also not be a single return, assume single for the moment
-	// TODO throw error if it cant find first node, spent way to long wondering why i got nil pointer deref
-	for _, edge := range data[root.NextNode(nil)[0].Value] {
-		if edge.EdgeName == q.FollowLeaf.Value {
-			q.NextNode = edge.TargetName
-			break
-		}
-	}
+	// TODO error handling, we cant be sure that the first "operator" is traverse and therefore might get a multiple return
+	q.NextNode = q.FollowLeaf.Value
 
 	return q, nil
 }
@@ -132,7 +125,7 @@ func TestBob() {
 	}
 	fmt.Printf("%v\n\n", data)
 
-	q, _ := BobTheBuilder("s/pickaxe/{obtainedBy/hasInput}*", data)
+	q, _ := BobTheBuilder("s/pickaxe/{obtainedBy/hasInput}*")
 	fmt.Printf("%s\n\n", q.DebugToString())
 
 	fmt.Println(TraverseQuery(&q, data))
