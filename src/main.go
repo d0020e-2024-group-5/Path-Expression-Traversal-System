@@ -6,7 +6,14 @@ import (
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/TyphonHill/go-mermaid/diagrams/flowchart"
 )
+
+type DataEdge struct {
+	EdgeName   string
+	TargetName string
+}
 
 type RequestData struct {
 	Data string `json:"data"`
@@ -18,61 +25,18 @@ type ResponseData struct {
 
 func main() {
 
-	// This request path forwards the request to serve B
-	http.HandleFunc("/contact_b", func(w http.ResponseWriter, r *http.Request) {
-		// get hostname, (in the case its running in docker return the container id)
-		hname, err := os.Hostname()
-
-		// send back that the server is sending a request to server B
-		fmt.Fprintf(w, "server %s sending request to server B\n", hname)
-		// get response from server b which forward to server c
-
-		resp, err := http.Get("http://b/contact_c")
-
-		// if we got an error send back the error
-		if err != nil {
-			fmt.Fprintf(w, "Got an error %s", err)
-		} else {
-			// copy the resposne from b and send back
-			io.Copy(w, resp.Body)
-		}
-		// print that we are done
-		fmt.Fprintf(w, "\nclosing")
-	})
-
-	// This request path forwards the request to serve C, works the same way as /a
-	http.HandleFunc("/contact_c", func(w http.ResponseWriter, r *http.Request) {
-
-		hname, err := os.Hostname()
-		fmt.Fprintf(w, "server %s sending request to server C\n", hname)
-		resp, err := http.Get("http://c/return")
-		if err != nil {
-			fmt.Fprintf(w, "Got an error %s", err)
-		} else {
-			io.Copy(w, resp.Body)
-		}
-		fmt.Fprintf(w, "\nclosing")
-	})
-
-	// acting as the final node,  this does not forward the request
-	// and only responds with its hostname
-	http.HandleFunc("/return", func(w http.ResponseWriter, r *http.Request) {
-		hname, _ := os.Hostname()
-		fmt.Fprintf(w, "server %s return", hname)
-	})
-
-	http.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, sendQuery("hello"))
-	})
+	//http.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
+	//	fmt.Fprint(w, sendQuery("hello"))
+	//})
 
 	http.HandleFunc("/", handler) // servers the main HTML file
 
 	http.HandleFunc("/api/submit", handleSubmit) // API endpoint to handle form submission
 
+	fmt.Printf("Server is running on http://localhost:80")
+
 	// create the server and listen to port 80
 	http.ListenAndServe(":80", nil)
-
-	fmt.Printf("Server is running on http://localhost:80")
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -118,12 +82,46 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("Received from client:", requestData.Data)
+	//if requestData.Data == "mermaid" {
+	//	mermaid(w, r)
+	//	return
+	//}
+	res := sendQuery(requestData.Data)
+	fmt.Println("Received from client:", res)
 
 	// create a response containging the recieived data
-	response := ResponseData{Message: "You entered: " + requestData.Data}
+	response := ResponseData{Message: res}
 
 	// set response content type to JSON and send it back
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+func TraverseQuery(data map[string][]DataEdge) string {
+	return "pickaxe-->|obtainedBy|Pickaxe_From_Stick_And_Stone_Recipe\nPickaxe_From_Stick_And_Stone_Recipe-->|hasInput|Stick\nPickaxe_From_Stick_And_Stone_Recipe-->|hasInput|Cobblestone"
+}
+
+func sendQuery(queryString string) string {
+	//q, _ := bobTheBuilder(queryString, data)
+
+	ret := TraverseQuery(nil)
+	return ret
+}
+
+func mermaid(w http.ResponseWriter, r *http.Request) {
+	fc := flowchart.NewFlowchart()
+	fc.Title = "Mermaid"
+
+	node1 := fc.AddNode("Start")
+	node2 := fc.AddNode("End")
+
+	link := fc.AddLink(node1, node2)
+	link.Shape = flowchart.LinkShapeDotted
+
+	diagram := fc.String()
+
+	response := ResponseData{Message: diagram}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
