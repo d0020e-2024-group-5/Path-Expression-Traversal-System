@@ -104,9 +104,11 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 }
 
 func sendQuery(queryString string) string {
-	//q, _ := bobTheBuilder(queryString, data)
 
-	return queryString
+	q, _ := pathExpression.BobTheBuilder(queryString, nodeLst)
+	s := pathExpression.TraverseQuery(&q, nodeLst)
+	println(s)
+	return s
 }
 
 func mermaid(w http.ResponseWriter, r *http.Request) {
