@@ -9,12 +9,17 @@ import (
 	"pets/pathExpression"
 )
 
-var hName string
-
 var nodeLst = map[string][]pathExpression.DataEdge{} // NODE HASHMAP WITH A TUPLE LIST (EDGES) AS VALUE
 
 func main() {
 	nodeLst = parse.Parse()
+
+	// EXAMPLE REMOVE ME LATER
+	q, _ := pathExpression.BobTheBuilder("Pickaxe_Instance_Henry/{obtainedBy/hasInput}*", nodeLst)
+	s := pathExpression.TraverseQuery(&q, nodeLst)
+	println(s)
+
+	// END EXAMPLE
 
 	// This request path forwards the request to serve B
 	http.HandleFunc("/contact_b", func(w http.ResponseWriter, r *http.Request) {

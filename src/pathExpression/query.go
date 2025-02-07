@@ -34,7 +34,7 @@ type QueryStruct struct {
 
 // creates and returns QueryStruct from a query string
 // TODO when input query as multiple lines update NextNode and FollowLeaf accordingly
-func bobTheBuilder(input_query string, data map[string][]DataEdge) (QueryStruct, error) {
+func BobTheBuilder(input_query string, data map[string][]DataEdge) (QueryStruct, error) {
 	// pre process query, remove spaces and change
 	input_query = preprocessQuery(input_query)
 
@@ -132,7 +132,7 @@ func TestBob() {
 	}
 	fmt.Printf("%v\n\n", data)
 
-	q, _ := bobTheBuilder("s/pickaxe/{obtainedBy/hasInput}*", data)
+	q, _ := BobTheBuilder("s/pickaxe/{obtainedBy/hasInput}*", data)
 	fmt.Printf("%s\n\n", q.DebugToString())
 
 	fmt.Println(TraverseQuery(&q, data))
