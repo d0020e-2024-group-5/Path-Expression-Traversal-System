@@ -5,24 +5,17 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"pets/parse"
+	"pets/pathExpression"
 )
 
 var hName string
 
-type DataNode struct {
-	Edges []DataEdge
-}
-type DataEdge struct {
-	EdgeName   string
-	TargetName string
-}
-
-var nodeLst = map[string]DataNode{} // NODE HASHMAP WITH A TUPLE LIST (EDGES) AS VALUE
+var nodeLst = map[string][]pathExpression.DataEdge{} // NODE HASHMAP WITH A TUPLE LIST (EDGES) AS VALUE
 
 func main() {
-	nodeLst = parse(nodeLst)
-	fmt.Printf("gragor")
-	fmt.Println(nodeLst)
+	nodeLst = parse.Parse()
+
 	// This request path forwards the request to serve B
 	http.HandleFunc("/contact_b", func(w http.ResponseWriter, r *http.Request) {
 		// get hostname, (in the case its running in docker return the container id)
