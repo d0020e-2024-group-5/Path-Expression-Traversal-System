@@ -1,8 +1,10 @@
 package pathExpression
 
 import (
+	"bytes"
 	"fmt"
 	"io"
+	"net/http"
 	"strings"
 )
 
@@ -111,6 +113,13 @@ func TraverseQuery(q *QueryStruct, data map[string][]DataEdge) string {
 
 func RecursiveTraverse(q *QueryStruct, data map[string][]DataEdge, res io.Writer) {
 	for _, qRec := range q.next(data) {
+		// http://(currentserver)/(contact_[pointstoserverX])
+		// if (strings.Contains(data[q.NextNode], "pointsToServerA")){
+		// 	buff := []byte(q.ToString())
+		// 	b := bytes.NewBuffer(buff)
+		// 	http.Post("http://a/", "", b)
+		// }
+		
 		// TODO if qRec has an edge "pointsToServer" send query to that server and write result to res
 		// data[qRec.NextNode] if has points to server
 		// data[server] -> has ip
