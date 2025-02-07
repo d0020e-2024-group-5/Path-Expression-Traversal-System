@@ -4,6 +4,14 @@
 
 PETS, a system to store linked distributed data with traversal functions
 
+## Ontology
+
+An Ontology is a way to describe a reletionship with the stucture subject, predicate and object. And our data is therefore a list of these structures which can be describe as following:
+```mermaid
+    graph LR;
+        Subject -->|Predicate| Object;
+```
+
 ## Architecture
 
 ```mermaid
