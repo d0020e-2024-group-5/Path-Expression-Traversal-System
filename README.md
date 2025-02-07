@@ -13,7 +13,7 @@ An Ontology is a way to describe a reletionship with a stucture of subject, pred
 ```
 We call all subjects and objects nodes and predicates edges.
 ```mermaid
-    graph;
+    graph LR;
         Node -->|Edge| Node;
 ```
 What we want to do is to search such an ontology strucure using a queary where this structure is spread over several servers.
