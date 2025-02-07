@@ -1,30 +1,32 @@
-package main
+package parse
 
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
-	"strconv"
+	p "pets/pathExpression"
 	"strings"
 )
 
-
-func parse(nodeLst map[string]DataNode) map[string]DataNode { // FUNCTION READS DATA FILE LINE BY LINE, CHECKING PREFIX KEYWORDS BEFORE APPENDING RELEVANT NODES AND EDGES TO THE NODE HASHMAP "nodeLst"
+func Parse() map[string][]p.DataEdge { // FUNCTION READS DATA FILE LINE BY LINE, CHECKING PREFIX KEYWORDS BEFORE APPENDING RELEVANT NODES AND EDGES TO THE NODE HASHMAP "nodeLst"
 
 	file, err := os.Open("./shared_volume/data.ttl") // READ DATA FILE
 	if err != nil {
-		fmt.Println(err)
-		return nodeLst
+		log.Printf("can't open data.ttl, fallback to Example Data_c.ttl: %s", err.Error())
+		file, err = os.Open("./../Example Data/Server C/Example Data_C.ttl")
+		if err != nil {
+			log.Fatalf("cant open fallback data: %s", err.Error())
+		}
 	}
 
 	defer file.Close()
-	nodeLst = make(map[string]DataNode)
-	var tempN DataNode
-	var tempTuple DataEdge
+	nodeLst := make(map[string][]p.DataEdge)
+	var tempTuple p.DataEdge
 	var firstWord string
 	scanner := bufio.NewScanner(file) // READ ONTOLOGY LINE BY LINE
 	for scanner.Scan() {
-		
+
 		line := scanner.Text()
 		if strings.HasPrefix(line, "@prefix") { // SKIP LINES WITH "@PREFIX"
 			continue
@@ -34,25 +36,22 @@ func parse(nodeLst map[string]DataNode) map[string]DataNode { // FUNCTION READS 
 
 			wrd := getWrd(temp) // FIRST WORD IN LINE
 			firstWord = wrd
-			
+
 			//newNode.NodeName = wrd // ASSIGN TO NODENAME
-			
 
 		} else if strings.HasPrefix(line, "	nodeOntology:hasID ") { // CHECK ID
 			temp := strings.TrimPrefix(line, "	nodeOntology:hasID ")
-			nodeLst[firstWord] = tempN
-			wrd := getWrd(temp) // FIRST WORD IN LINE
-			
-			i, err := strconv.Atoi(wrd) // STRING TO INT
-			if err != nil {
-				fmt.Println("Error reading file:", err)
+
+			_, ok := nodeLst[firstWord]
+			if !ok {
+				nodeLst[firstWord] = make([]p.DataEdge, 0)
 			}
-			
+			wrd := getWrd(temp) // FIRST WORD IN LINE
+
 			if entry, ok := nodeLst[wrd]; ok {
-				entry.Edges = append(entry.Edges, tempTuple)
+				entry = append(entry, tempTuple)
 				nodeLst[wrd] = entry
 			} // APPEND THE EDGES TO TUPLE SLICE // APPEND KEY NODE TO MAP OF NODES
-			fmt.Println(i)
 			// CHECK FOR EDGES IN FOLLOWING ELSE IF STATEMENT
 		} else if strings.HasPrefix(line, "    minecraft:obtainedBy") || (strings.HasPrefix(line, "    minecraft:hasInput")) || (strings.HasPrefix(line, "    minecraft:hasOutput") || (strings.HasPrefix(line, "    minecraft:usedInStation"))) {
 
@@ -77,9 +76,9 @@ func parse(nodeLst map[string]DataNode) map[string]DataNode { // FUNCTION READS 
 				tempTuple.EdgeName = "usedInStation"
 				tempTuple.TargetName = wrd
 			}
-			
+
 			if entry, ok := nodeLst[firstWord]; ok {
-				entry.Edges = append(entry.Edges, tempTuple)
+				entry = append(entry, tempTuple)
 				nodeLst[firstWord] = entry
 			} // APPEND THE EDGES TO TUPLE SLICE
 		}
@@ -95,7 +94,6 @@ func parse(nodeLst map[string]DataNode) map[string]DataNode { // FUNCTION READS 
 	if err := scanner.Err(); err != nil {
 		fmt.Println("Error reading file:", err)
 	}
-	fmt.Println(nodeLst)
 	return nodeLst
 }
 func getWrd(w string) string { // GETS THE FIRST WORD SEPARETED BY A SPACE
