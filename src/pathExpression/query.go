@@ -74,6 +74,7 @@ func (q *QueryStruct) DebugToString() string {
 	return fmt.Sprintf("%s\nNextNode: %s\nFollowingEdge: %d (%s)", q.Query, q.NextNode, q.FollowLeaf.ID, q.FollowLeaf.Value)
 }
 
+// this function evolutes the query and with the help of the data and return new queries which have traversed one step
 func (q *QueryStruct) next(data map[string][]DataEdge) []QueryStruct {
 	nextQ := make([]QueryStruct, 0)
 
@@ -100,6 +101,8 @@ func (q *QueryStruct) next(data map[string][]DataEdge) []QueryStruct {
 	return nextQ
 }
 
+// this function takes an query struct and traverses the data.
+// Returns the path the query in mermaid format
 func TraverseQuery(q *QueryStruct, data map[string][]DataEdge) string {
 	sBuilder := new(strings.Builder)
 	RecursiveTraverse(q, data, sBuilder)
@@ -108,8 +111,8 @@ func TraverseQuery(q *QueryStruct, data map[string][]DataEdge) string {
 
 func RecursiveTraverse(q *QueryStruct, data map[string][]DataEdge, res io.Writer) {
 	for _, qRec := range q.next(data) {
+		// TODO if qRec has an edge "pointsToServer" send query to that server and write result to res
 		fmt.Fprintf(res, "%s-->|%s|%s\n", q.NextNode, qRec.FollowLeaf.Value, qRec.NextNode)
-		// fmt.Printf("%s\n\n", qRec.DebugToString())
 		RecursiveTraverse(&qRec, data, res)
 	}
 }
