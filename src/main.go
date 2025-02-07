@@ -9,16 +9,15 @@ import (
 
 var hName string
 
-type Node struct {
-	NodeName string
-	NodeID   int
+type DataNode struct {
+	Edges []DataEdge
 }
-type Tuple struct { // FOR EDGES
-	key   string // ex. obtainedBy
-	value string // ex. recipe
+type DataEdge struct {
+	EdgeName	string
+	TargetName	string
 }
 
-var nodeLst = map[Node][]Tuple{} // NODE HASHMAP WITH A TUPLE LIST (EDGES) AS VALUE
+var nodeLst = map[string]DataNode{} // NODE HASHMAP WITH A TUPLE LIST (EDGES) AS VALUE
 
 func main() {
 	nodeLst = parse(nodeLst)
