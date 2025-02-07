@@ -23,7 +23,7 @@ type ResponseData struct {
 	Message string `json:"message"`
 }
 
-var nodeLst = map[string]DataNode{} // NODE HASHMAP WITH A TUPLE LIST (EDGES) AS VALUE
+var nodeLst = map[string][]DataEdge{} // NODE HASHMAP WITH A TUPLE LIST (EDGES) AS VALUE
 
 func main() {
 	nodeLst = parse(nodeLst)
