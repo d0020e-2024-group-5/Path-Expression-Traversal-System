@@ -2,6 +2,7 @@ package pathExpression
 
 import (
 	"fmt"
+	"io"
 	"strings"
 )
 
@@ -99,10 +100,17 @@ func (q *QueryStruct) next(data map[string][]DataEdge) []QueryStruct {
 	return nextQ
 }
 
-func RecursiveTraverse(q *QueryStruct, data map[string][]DataEdge) {
+func TraverseQuery(q *QueryStruct, data map[string][]DataEdge) string {
+	sBuilder := new(strings.Builder)
+	RecursiveTraverse(q, data, sBuilder)
+	return sBuilder.String()
+}
+
+func RecursiveTraverse(q *QueryStruct, data map[string][]DataEdge, res io.Writer) {
 	for _, qRec := range q.next(data) {
-		fmt.Printf("%s\n\n", qRec.DebugToString())
-		RecursiveTraverse(&qRec, data)
+		fmt.Fprintf(res, "%s-->|%s|%s\n", q.NextNode, qRec.FollowLeaf.Value, qRec.NextNode)
+		// fmt.Printf("%s\n\n", qRec.DebugToString())
+		RecursiveTraverse(&qRec, data, res)
 	}
 }
 
@@ -124,5 +132,5 @@ func TestBob() {
 	q, _ := bobTheBuilder("s/pickaxe/{obtainedBy/hasInput}*", data)
 	fmt.Printf("%s\n\n", q.DebugToString())
 
-	RecursiveTraverse(&q, data)
+	fmt.Println(TraverseQuery(&q, data))
 }
