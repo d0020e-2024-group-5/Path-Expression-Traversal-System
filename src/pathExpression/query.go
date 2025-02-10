@@ -1,8 +1,10 @@
 package pathExpression
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 )
 
@@ -37,30 +39,44 @@ type QueryStruct struct {
 func BobTheBuilder(input_query string) (QueryStruct, error) {
 	// pre process query, remove spaces and change
 	input_query = preprocessQuery(input_query)
+	// split query on separators ";"
+	components := strings.Split(input_query, ";")
 
 	id_int := 0
 	root := RootNode{}
-	tmp := grow_tree(input_query, &root, &id_int)
+	tmp := grow_tree(components[0], &root, &id_int)
 	root.Child = tmp
 
 	// construct the tree
 	q := QueryStruct{}
-	q.Query = input_query
+	q.Query = components[0]
 	q.RootPointer = &root
 
 	// TODO this need to be changed to being conditione if we have passed in the leaf node in the input_query
-	q.FollowLeaf = root.NextNode(nil)[0]
+	if len(components) == 3 {
+		i, err := strconv.Atoi(components[2])
+		if err != nil {
+			return q, err
+		}
+		q.FollowLeaf = root.GetLeaf(i)
+		q.NextNode = components[1]
 
-	// TODO this need to be changed to being conditione if we have passed in the next node in the input_query
-	// TODO error handling, we cant be sure that the first "operator" is traverse and therefore might get a multiple return
-	q.NextNode = q.FollowLeaf.Value
+	} else if len(components) == 1 {
+
+		q.FollowLeaf = root.NextNode(nil)[0]
+		// TODO this need to be changed to being conditione if we have passed in the next node in the input_query
+		// TODO error handling, we cant be sure that the first "operator" is traverse and therefore might get a multiple return
+		q.NextNode = q.FollowLeaf.Value
+	} else {
+		return q, errors.New("amount of 'lines' in query is not 1 or 3")
+	}
 
 	return q, nil
 }
 
 // This function converts the queryStruct to an string which could be passed on to another server
 func (q *QueryStruct) ToString() string {
-	return fmt.Sprintf("%s\n%s\n%d", q.Query, q.NextNode, q.FollowLeaf.ID)
+	return fmt.Sprintf("%s;%s;%d", q.Query, q.NextNode, q.FollowLeaf.ID)
 }
 
 func (q *QueryStruct) DebugToString() string {
@@ -129,4 +145,46 @@ func TestBob() {
 	fmt.Printf("%s\n\n", q.DebugToString())
 
 	fmt.Println(TraverseQuery(&q, data))
+}
+
+func TestBob2() {
+	data := map[string][]DataEdge{
+		"s": {
+			{"pickaxe", "pickaxe"},
+		},
+		"pickaxe": {
+			{"obtainedBy", "Pickaxe_From_Stick_And_Stone_Recipe"},
+		},
+		"Pickaxe_From_Stick_And_Stone_Recipe": {
+			{"hasInput", "Stick"},
+			{"hasInput", "Cobblestone"},
+		},
+	}
+
+	q, _ := BobTheBuilder("s/pickaxe/{obtainedBy/hasInput}*")
+	// fmt.Printf("%s\n\n", q.DebugToString())
+
+	q = q.next(data)[0]
+	fmt.Printf("%s\n\n", q.DebugToString())
+
+	q = q.next(data)[0]
+	fmt.Printf("%s\n\n", q.DebugToString())
+
+	q = q.next(data)[0]
+	fmt.Printf("%s\n\n", q.DebugToString())
+
+	fmt.Println("=================================")
+
+	q, _ = BobTheBuilder("s/pickaxe/{obtainedBy/hasInput}*")
+	// fmt.Printf("%s\n\n", q.DebugToString())
+
+	q, _ = BobTheBuilder(q.next(data)[0].ToString())
+	fmt.Printf("%s\n\n", q.DebugToString())
+
+	q, _ = BobTheBuilder(q.next(data)[0].ToString())
+	fmt.Printf("%s\n\n", q.DebugToString())
+
+	q, _ = BobTheBuilder(q.next(data)[0].ToString())
+	fmt.Printf("%s\n\n", q.DebugToString())
+
 }
