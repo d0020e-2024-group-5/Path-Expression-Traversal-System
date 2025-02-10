@@ -166,7 +166,21 @@ Pickaxe --> Mineshaft --> Rare
 
 ``S/Stick/{obtainedBy & foundAt}/rarity`` would return nothing as stick dont have the edge foundAt
 
-### Example 5, groups {}
+
+### Example 5, XOR
+
+Allows the query to continue, only if one of the edges exist
+
+``S/Pickaxe/{obtainedBy ^ foundAt}/rarity`` would return
+
+```text
+Pickaxe --> Pickaxe_From_Stick_And_Stone_Recipe --> Common
+Pickaxe --> Mineshaft --> Rare
+```
+
+``S/Stick/{obtainedBy & foundAt}/rarity`` would go down obtainedBy as it does not have the edge foundAt
+
+### Example 6, groups {}
 
 TODO EXPLAIN MORE
 
