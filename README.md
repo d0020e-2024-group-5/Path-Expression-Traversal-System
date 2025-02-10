@@ -30,32 +30,44 @@ What we want to do is to search such an ontology strucure using a queary where t
 
 ## Parsing the ontolgies into GoLang
 
-Reading the ontologies into Go is very simple. Since the ontologies follow a certain standard (Subject, Predicate, Object) we use this to read the subject prefix in order to infer the type of object.
+For this parsing function, nodes have been defined as struct containing an array (or slices in GoLang) with edges to the node. We also create a struct for edges with the properties "EdgeName" and "TargetName" with each property denoting how an item is obtained respectively what the edge is pointing to. One server can then save all these nodes in a hashmap (dictionary) with the key being the node name and the value, the DataNode struct.
 ```go
-        // Example ontology:
-        
-		if strings.HasPrefix(line, "minecraft:") {
-			temp := strings.TrimPrefix(line, "minecraft:")
+type DataNode struct {
+    Edges []DataEdge
+}
+type DataEdge struct { // minecraft:obtainedBy minecraft:Stick_bamboo_recipe_Instance
+    EdgeName   string  // obtainedBy
+    TargetName string  // Stick_bamboo_recipe_Instance
+}
 
-			wrd := getWrd(temp) // FIRST WORD IN LINE
-			firstWord = wr		
-
-		} else if strings.HasPrefix(line, "	nodeOntology:hasID ") { // CHECK ID
-			temp := strings.TrimPrefix(line, "	nodeOntology:hasID ")
-			nodeLst[firstWord] = tempN
-			wrd := getWrd(temp) // FIRST WORD IN LINE
-			
-			i, err := strconv.Atoi(wrd) // STRING TO INT
-			if err != nil {
-				fmt.Println("Error reading file:", err)
-			}
-			
-			if entry, ok := nodeLst[wrd]; ok {
-				entry.Edges = append(entry.Edges, tempTuple)
-				nodeLst[wrd] = entry
-			} // APPEND THE EDGES TO TUPLE SLICE // APPEND KEY NODE TO MAP OF NODES
-			fmt.Println(i)
+var data map[string]DataNode
 ```
+Reading the ontologies into Go is very simple. Since the ontologies follow a certain standard (Subject, Predicate, Object) we utilize this to read the subject prefix in order to infer the type of object and similarly what attributes it may have to apply them to our hashmap of nodes.
+```go
+		if strings.HasPrefix(line, "minecraft:") { //minecraft:Stick_Bamboo_made_Instance a minecraft:Stick ;
+
+			temp := strings.TrimPrefix(line, "minecraft:") //Stick_Bamboo_made_Instance a minecraft:Stick ;
+
+			wrd := getFirstWord(temp) // Get the first word in trimmed line; "Stick_Bamboo_made_Instance"
+
+            nodeLst[wrd] = ""  // Declare a key "wrd" with value "" in the hashmap "nodeLst"
+        }
+
+        // Next line;       minecraft:obtainedBy minecraft:Stick_bamboo_recipe_Instance
+        if strings.HasPrefix(line, "minecraft:EdgeName minecraft:TargetName"){
+            var tempEdge DataEdge
+            temp := strings.TrimPrefix(line, "minecraft:") //obtainedBy minecraft:Stick_bamboo_recipe_Instance
+			firstName := getFirstWord(temp) // Get the first word in trimmed line; "obtainedBy"
+            temp := strings.TrimPrefix(temp, "EdgeName minecraft:")
+            secondName := getFirstWord(temp) // Get the second word in trimmed line; "Stick_bamboo_recipe_Instance"
+
+            tempEdge.EdgeName = firstName
+            tempEdge.TargetName = secondName
+
+            nodeLst[wrd] = append(nodeLst[wrd], tempEdge)  // Append tempEdge to array of edges in node "wrd"
+        }
+```
+
 
 ## Architecture
 
