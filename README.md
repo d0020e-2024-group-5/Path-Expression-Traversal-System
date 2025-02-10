@@ -4,20 +4,23 @@
 
 PETS, a system to store linked distributed data with traversal functions
 
-## Ontology
+## Ontologies
 
 An Ontology is a way to describe a reletionship with a stucture of subject, predicate and object. And our data is therefore a list of these structures which can be describe as following:
+
 ```mermaid
     graph LR;
         Subject -->|Predicate| Object;
 ```
+
 We call all subjects and objects nodes and predicates edges.
+
 ```mermaid
     graph LR;
-        Node -->|Edge| Node;
+        Node1 -->|Edge| Node2;
 ```
-What we want to do is to search such an ontology strucure using a queary where this structure is spread over several servers.
 
+What we want to do is to search such an ontology strucure using a queary where this structure is spread over several servers.
 
 ## Architecture
 
@@ -92,10 +95,252 @@ sequenceDiagram
     cent->>-API: [Data of Stone, Data of Log]
 
 ```
+<!-- Explain in words what happens in the sequence diagram -->
+
+## Node ontologies
+
+```mermaid
+graph TD;
+
+        Stick_Plank_made_Instance -->|obtainedBy| Stick_Planks_recipe_Instance
+
+        Stick_Bamboo_made_Instance -->|obtainedBy| Stick_bamboo_recipe_Instance
+
+
+
+        Pickaxe_Instance_Henry -->|obtainedBy| PickaxeRecipe_Instance
+
+
+        Plank_Instance -->|obtainedBy| Plannks_From_Logs_Recipe_Instance
+
+
+        PickaxeRecipe_Instance -->|hasInput| Stick_Plank_made_Instance
+        PickaxeRecipe_Instance -->|hasInput| Stick_Bamboo_made_Instance
+        PickaxeRecipe_Instance -->|hasInput| Cobblestone_Bob
+        PickaxeRecipe_Instance -->|hasOutput| Pickaxe_Instance_Henry
+        PickaxeRecipe_Instance -->|usedInStation| CraftingTable_Instance
+
+        Stick_bamboo_recipe_Instance -->|hasInput| Bamboo_Instance
+        Stick_bamboo_recipe_Instance -->|hasOutput| Stick_Bamboo_made_Instance
+        Stick_bamboo_recipe_Instance -->|usedInStation| CraftingTable_Instance
+
+        Stick_Planks_recipe_Instance -->|hasInput| Plank_Instance
+        Stick_Planks_recipe_Instance -->|hasOutput| Stick_Plank_made_Instance
+        Stick_Planks_recipe_Instance -->|usedInStation| CraftingTable_Instance
+
+        Plannks_From_Logs_Recipe_Instance -->|hasInput| Log_Instance
+        Plannks_From_Logs_Recipe_Instance -->|hasOutput| Plank_Instance
+        Plannks_From_Logs_Recipe_Instance -->|usedInStation| CraftingTable_Instance
+```
+
+## Node ontologies distributed
+
+```mermaid
+graph TD;
+
+        root
+
+        subgraph Server A
+            Stick_Bamboo_made_Instance
+            Stick_bamboo_recipe_Instance
+            Bamboo_Instance
+            CraftingTable_Instance
+        end
+
+        subgraph Server B
+            Plank_Instance
+            Stick_Plank_made_Instance
+            Stick_Planks_recipe_Instance
+        end
+
+        subgraph Server C
+            Pickaxe_Instance_Henry
+            PickaxeRecipe_Instance
+            Plannks_From_Logs_Recipe_Instance
+            Cobblestone_Bob
+            Log_Instance
+        end
+
+        root -->|Pickaxe_Instance_Henry| Pickaxe_Instance_Henry
+        root -->|Cobblestone_Bob| Cobblestone_Bob
+
+        Stick_Plank_made_Instance -->|obtainedBy| Stick_Planks_recipe_Instance
+
+        Stick_Bamboo_made_Instance -->|obtainedBy| Stick_bamboo_recipe_Instance
+
+        Pickaxe_Instance_Henry -->|obtainedBy| PickaxeRecipe_Instance
+
+
+        Plank_Instance -->|obtainedBy| Plannks_From_Logs_Recipe_Instance
+
+
+        PickaxeRecipe_Instance -->|hasInput| Stick_Plank_made_Instance
+        PickaxeRecipe_Instance -->|hasInput| Stick_Bamboo_made_Instance
+        PickaxeRecipe_Instance -->|hasInput| Cobblestone_Bob
+        PickaxeRecipe_Instance -->|hasOutput| Pickaxe_Instance_Henry
+        PickaxeRecipe_Instance -->|usedInStation| CraftingTable_Instance
+
+        Stick_bamboo_recipe_Instance -->|hasInput| Bamboo_Instance
+        Stick_bamboo_recipe_Instance -->|hasOutput| Stick_Bamboo_made_Instance
+        Stick_bamboo_recipe_Instance -->|usedInStation| CraftingTable_Instance
+
+        Stick_Planks_recipe_Instance -->|hasInput| Plank_Instance
+        Stick_Planks_recipe_Instance -->|hasOutput| Stick_Plank_made_Instance
+        Stick_Planks_recipe_Instance -->|usedInStation| CraftingTable_Instance
+
+        Plannks_From_Logs_Recipe_Instance -->|hasInput| Log_Instance
+        Plannks_From_Logs_Recipe_Instance -->|hasOutput| Plank_Instance
+        Plannks_From_Logs_Recipe_Instance -->|usedInStation| CraftingTable_Instance
+```
+
+## Truly distributed data
+
+```mermaid
+graph TD;
+subgraph Server_a
+Server_a_minecraft:Stick_Bamboo_made_Instance([Stick_Bamboo_made_Instance])
+end
+Server_a_minecraft:Stick_Bamboo_made_Instance-->|obtainedBy|Server_a_minecraft:Stick_bamboo_recipe_Instance
+
+subgraph Server_a
+Server_a_minecraft:Server_a[(Server_a)]
+end
+
+subgraph Server_a
+Server_a_minecraft:Bamboo_Instance([Bamboo_Instance])
+end
+
+subgraph Server_a
+Server_a_minecraft:CraftingTable_Instance([CraftingTable_Instance])
+end
+
+subgraph Server_a
+Server_a_minecraft:Stick_bamboo_recipe_Instance([Stick_bamboo_recipe_Instance])
+end
+Server_a_minecraft:Stick_bamboo_recipe_Instance-->|hasInput|Server_a_minecraft:Bamboo_Instance
+Server_a_minecraft:Stick_bamboo_recipe_Instance-->|hasOutput|Server_a_minecraft:Stick_Bamboo_made_Instance
+Server_a_minecraft:Stick_bamboo_recipe_Instance-->|usedInStation|Server_a_minecraft:CraftingTable_Instance
+
+subgraph Server_b
+Server_b_minecraft:Stick_Plank_made_Instance([Stick_Plank_made_Instance])
+end
+Server_b_minecraft:Stick_Plank_made_Instance-->|obtainedBy|Server_b_minecraft:Stick_Planks_recipe_Instance
+
+subgraph Server_b
+Server_b_minecraft:Server_a[(Server_a)]
+end
+
+subgraph Server_b
+Server_b_minecraft:Server_b[(Server_b)]
+end
+
+subgraph Server_b
+Server_b_minecraft:Server_c[(Server_c)]
+end
+
+subgraph Server_b
+Server_b_minecraft:Plank_Instance([Plank_Instance])
+end
+Server_b_minecraft:Plank_Instance-->|obtainedBy|Server_b_minecraft:Plannks_From_Logs_Recipe_Instance
+
+subgraph Server_b
+Server_b_minecraft:CraftingTable_Instance[CraftingTable_Instance]
+end
+Server_b_minecraft:CraftingTable_Instance-->|inter_server|Server_a_minecraft:CraftingTable_Instance
+Server_b_minecraft:CraftingTable_Instance-->|pointsToServer|Server_b_minecraft:Server_a
+
+subgraph Server_b
+Server_b_minecraft:Stick_Planks_recipe_Instance([Stick_Planks_recipe_Instance])
+end
+Server_b_minecraft:Stick_Planks_recipe_Instance-->|hasInput|Server_b_minecraft:Plank_Instance
+Server_b_minecraft:Stick_Planks_recipe_Instance-->|hasOutput|Server_b_minecraft:Stick_Plank_made_Instance
+Server_b_minecraft:Stick_Planks_recipe_Instance-->|usedInStation|Server_b_minecraft:CraftingTable_Instance
+
+subgraph Server_b
+Server_b_minecraft:Plannks_From_Logs_Recipe_Instance[Plannks_From_Logs_Recipe_Instance]
+end
+Server_b_minecraft:Plannks_From_Logs_Recipe_Instance-->|inter_server|Server_c_minecraft:Plannks_From_Logs_Recipe_Instance
+Server_b_minecraft:Plannks_From_Logs_Recipe_Instance-->|pointsToServer|Server_b_minecraft:Server_c
+
+subgraph Server_c
+Server_c_minecraft:Stick_Plank_made_Instance[Stick_Plank_made_Instance]
+end
+Server_c_minecraft:Stick_Plank_made_Instance-->|inter_server|Server_b_minecraft:Stick_Plank_made_Instance
+Server_c_minecraft:Stick_Plank_made_Instance-->|pointsToServer|Server_c_minecraft:Server_b
+
+subgraph Server_c
+Server_c_minecraft:Stick_Bamboo_made_Instance[Stick_Bamboo_made_Instance]
+end
+Server_c_minecraft:Stick_Bamboo_made_Instance-->|inter_server|Server_a_minecraft:Stick_Bamboo_made_Instance
+Server_c_minecraft:Stick_Bamboo_made_Instance-->|pointsToServer|Server_c_minecraft:Server_a
+
+subgraph Server_c
+Server_c_minecraft:Cobblestone_Bob([Cobblestone_Bob])
+end
+
+subgraph Server_c
+Server_c_minecraft:Log_Instance([Log_Instance])
+end
+
+subgraph Server_c
+Server_c_minecraft:Pickaxe_Instance_Henry([Pickaxe_Instance_Henry])
+end
+Server_c_minecraft:Pickaxe_Instance_Henry-->|obtainedBy|Server_c_minecraft:PickaxeRecipe_Instance
+
+subgraph Server_c
+Server_c_minecraft:Pickaxe_Instance_Gustav([Pickaxe_Instance_Gustav])
+end
+
+subgraph Server_c
+Server_c_minecraft:Server_a[(Server_a)]
+end
+
+subgraph Server_c
+Server_c_minecraft:Server_b[(Server_b)]
+end
+
+subgraph Server_c
+Server_c_minecraft:Server_c[(Server_c)]
+end
+
+subgraph Server_c
+Server_c_minecraft:Plank_Instance[Plank_Instance]
+end
+Server_c_minecraft:Plank_Instance-->|inter_server|Server_b_minecraft:Plank_Instance
+Server_c_minecraft:Plank_Instance-->|pointsToServer|Server_c_minecraft:Server_b
+
+subgraph Server_c
+Server_c_minecraft:CraftingTable_Instance[CraftingTable_Instance]
+end
+Server_c_minecraft:CraftingTable_Instance-->|inter_server|Server_a_minecraft:CraftingTable_Instance
+Server_c_minecraft:CraftingTable_Instance-->|pointsToServer|Server_c_minecraft:Server_a
+
+subgraph Server_c
+Server_c_minecraft:PickaxeRecipe_Instance([PickaxeRecipe_Instance])
+end
+Server_c_minecraft:PickaxeRecipe_Instance-->|hasInput|Server_c_minecraft:Stick_Plank_made_Instance
+Server_c_minecraft:PickaxeRecipe_Instance-->|hasInput|Server_c_minecraft:Stick_Bamboo_made_Instance
+Server_c_minecraft:PickaxeRecipe_Instance-->|hasInput|Server_c_minecraft:Cobblestone_Bob
+Server_c_minecraft:PickaxeRecipe_Instance-->|hasOutput|Server_c_minecraft:Pickaxe_Instance_Henry
+Server_c_minecraft:PickaxeRecipe_Instance-->|usedInStation|Server_c_minecraft:CraftingTable_Instance
+
+subgraph Server_c
+Server_c_minecraft:Stick_bamboo_recipe_Instance[Stick_bamboo_recipe_Instance]
+end
+Server_c_minecraft:Stick_bamboo_recipe_Instance-->|inter_server|Server_a_minecraft:Stick_bamboo_recipe_Instance
+Server_c_minecraft:Stick_bamboo_recipe_Instance-->|pointsToServer|Server_c_minecraft:Server_a
+
+subgraph Server_c
+Server_c_minecraft:Plannks_From_Logs_Recipe_Instance([Plannks_From_Logs_Recipe_Instance])
+end
+Server_c_minecraft:Plannks_From_Logs_Recipe_Instance-->|hasInput|Server_c_minecraft:Log_Instance
+Server_c_minecraft:Plannks_From_Logs_Recipe_Instance-->|hasOutput|Server_c_minecraft:Plank_Instance
+Server_c_minecraft:Plannks_From_Logs_Recipe_Instance-->|usedInStation|Server_c_minecraft:CraftingTable_Instance
+```
 
 ## Query structure
 
-The query structure was designed for simplicity and not fines, the goal was an easy way to write path expressions with loops
+The query structure was designed for simplicity and not fines, the goal was an easy way to write path expressions with loops.
 
 ```mermaid
 graph LR;
@@ -125,7 +370,7 @@ To follow a simple path, first have the starting node (s in this case a we have 
 
 The example will start att pickaxe and follow edge `obtainedBy` to `Pickaxe_From_Stick_And_Stone_Recipe`
 where the query will split and go to both `Cobblestone` and `stick`.
-Since this is the end of the query they are returned
+Since this is the end of the query they are returned.
 
 ### Example 2, Loop
 
@@ -140,11 +385,11 @@ Pickaxe --> Pickaxe_From_Stick_And_Stone_Recipe --> Stick --> Stick_From_Planks_
 Pickaxe --> Pickaxe_From_Stick_And_Stone_Recipe --> Cobblestone
 ```
 
-both Cobblestone and Log would be returned
+Where both Cobblestone and Log would be returned.
 
 ### Example 3, Or
 
-allows a path traversal to follow either edge
+Allows a path traversal to follow either edge
 
 ``S/Pickaxe/{obtainedBy/rarity|foundAt}/rarity``
 
@@ -164,7 +409,7 @@ Pickaxe --> Pickaxe_From_Stick_And_Stone_Recipe --> Common
 Pickaxe --> Mineshaft --> Rare
 ```
 
-``S/Stick/{obtainedBy & foundAt}/rarity`` would return nothing as stick dont have the edge foundAt
+``S/Stick/{obtainedBy & foundAt}/rarity`` would return nothing as stick dont have the edge foundAt.
 
 
 ### Example 5, XOR
@@ -196,7 +441,7 @@ Lets take an example query af show its internal evaluation
 
 ``S/Pickaxe/{obtainedBy/hasInput}*``
 
-This is then converted to a tree structure of operations, where the leafs are edges and
+This is then converted to a tree structure of operations, where the leafs are edges and.
 
 <!-- Note to readers, this look incredibly like the state machines that regex compiles to -->
 ```mermaid
@@ -230,7 +475,7 @@ to find the next node we need to look higher, the *traverse*'s parent.
 This gives us the knowledge that we are on the left side of *loop* operator (aka *zero or more*)
 We then have two possible options continue right or redo the left side.
 by evaluating the left side we get ``obtainedBy`` again, showing us that the *loop* works.
-the right sides gives us NULL, the end of the query an valid position to return
+the right sides gives us NULL, the end of the query an valid position to return.
 
 ## go style pseudo code
 
@@ -331,121 +576,4 @@ func (self OrNode) nextEdge(caller *Node) []*LeafNode {
     }
 }
 
-```
-
-## Parsing ontologies to GoLang
-
-```go
-package main
-
-import (
-	"bufio"
-	"fmt"
-	"os"
-	"strconv"
-	"strings"
-)
-
-// the parse function takes a Go map (a dictionary with key-value pairs) with a key being the node name and the value being the DataNode struct
-func parse(nodeLst map[string]DataNode) map[string]DataNode { 
-
-    // ontology is read from the servers own docker volume (server storage)
-	file, err := os.Open("./shared_volume/data.ttl") 
-	if err != nil {
-		fmt.Println(err)
-		return nodeLst
-	}
-	defer file.Close()
-
-    // nodeLst map and other temp variables are declared here. the temp variables are used for storing and writing nodes/node information
-	nodeLst = make(map[string]DataNode)
-	var tempN DataNode  
-	var tempTuple DataEdge
-	var firstWord string
-
-	scanner := bufio.NewScanner(file) 
-	for scanner.Scan() {
-        
-        // many if statement to check the prefix of the lines in order to see type of node
-		line := scanner.Text()
-		if strings.HasPrefix(line, "@prefix") { // SKIP LINES STARTING WITH "@PREFIX"
-			continue
-		}
-
-        // first condition to check if it could be a node
-		if strings.HasPrefix(line, "minecraft:") { 
-			temp := strings.TrimPrefix(line, "minecraft:")
-
-			wrd := getWrd(temp) // FIRST WORD IN LINE
-			firstWord = wrd // store in tempVar
-			
-        // If object has id, we know it is an actual node and save it
-		} else if strings.HasPrefix(line, "	nodeOntology:hasID ") { // CHECK ID
-			temp := strings.TrimPrefix(line, "	nodeOntology:hasID ")
-			nodeLst[firstWord] = tempN
-			wrd := getWrd(temp) // FIRST WORD IN LINE
-			
-			if entry, ok := nodeLst[wrd]; ok {
-				entry.Edges = append(entry.Edges, tempTuple)
-				nodeLst[wrd] = entry
-			} // APPEND KEY NODE TO MAP OF NODES
-
-			// CHECK FOR EDGES IN FOLLOWING ELSE IF STATEMENT
-		} else if strings.HasPrefix(line, "    minecraft:obtainedBy") || (strings.HasPrefix(line, "    minecraft:hasInput")) || (strings.HasPrefix(line, "    minecraft:hasOutput") || (strings.HasPrefix(line, "    minecraft:usedInStation"))) {
-
-			if strings.HasPrefix(line, "    minecraft:obtainedBy") {
-				temp := strings.TrimPrefix(line, "    minecraft:obtainedBy minecraft:")
-				wrd := getWrd(temp)
-				tempTuple.EdgeName = "obtainedBy"
-				tempTuple.TargetName = wrd
-			} else if strings.HasPrefix(line, "    minecraft:hasInput") {
-				temp := strings.TrimPrefix(line, "    minecraft:hasInput minecraft:")
-				wrd := getWrd(temp)
-				tempTuple.EdgeName = "hasInput"
-				tempTuple.TargetName = wrd
-			} else if strings.HasPrefix(line, "    minecraft:hasOutput") {
-				temp := strings.TrimPrefix(line, "    minecraft:hasOutput minecraft:")
-				wrd := getWrd(temp)
-				tempTuple.EdgeName = "hasOutput"
-				tempTuple.TargetName = wrd
-			} else if strings.HasPrefix(line, "    minecraft:usedInStation") {
-				temp := strings.TrimPrefix(line, "    minecraft:usedInStation minecraft:")
-				wrd := getWrd(temp)
-				tempTuple.EdgeName = "usedInStation"
-				tempTuple.TargetName = wrd
-			}
-			
-			if entry, ok := nodeLst[firstWord]; ok {
-				entry.Edges = append(entry.Edges, tempTuple)
-				nodeLst[firstWord] = entry
-			} // appends edges to DataEdge[] in node "firstword"
-		}
-		if strings.HasSuffix(line, ";") {
-			continue // NEXT LINE IN SAME NODE
-
-
-		} else if strings.HasSuffix(line, ".") { // describes end of node, so reset the tempVariable firstWord
-			firstWord = "" // EMPTY NODE (NEW NODE)
-		} else {
-			continue // NEWLINE/EMPTY SPACE
-		}
-	}
-	if err := scanner.Err(); err != nil {
-		fmt.Println("Error reading file:", err)
-	}
-	fmt.Println(nodeLst)
-	return nodeLst
-}
-
-// getWrd gets the first word separated by a space
-func getWrd(w string) string { 
-	wrd := ""
-	for i := range w {
-		if w[i] == ' ' {
-			wrd = w[0:i]
-			break
-		}
-	}
-	return wrd
-}
 ```
