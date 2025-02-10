@@ -6,15 +6,29 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>-->
     <title>Webserver</title>
 </head>
 <body>
 
-<input type="text" id="input" placeholder="Enter something...">
-<button onclick="sendData()">Send</button>
+<div class="flex-container">
+    <input type="text" id="input" placeholder="Enter something..." oninput="checkInput()">
+    <button onclick="sendData()">Send</button>
+   
+</div>
+<div class="flex-container">
+    <p id="response"></p>
+</div>
+<!--<button onclick="fetchData()">Get Server Data</button>-->
+<!--<div class="mermaid" id="mermaidDiagram" style="display:none;"></div>-->
 
-<button onclick="fetchData()">Get Server Data</button>
-<p id="response"></p>
+<!--<pre class="mermaid">
+
+C4Component
+    title component diags user story n1
+    //*mermaid things*//
+  </pre>-->
+  
 
 <script>
 
@@ -42,7 +56,7 @@ function sendData() {
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ data: input })  
+        body: JSON.stringify({data: input})  
     })
     // skickar
     .then(response => {
@@ -57,7 +71,52 @@ function sendData() {
     .catch(error => console.error("Error:", error));
 }
 
+function checkInput() {
+    const input = document.getElementById("input").value.toLowerCase();
+    if (input === "mermaid") {
+        fetch("/api/submit", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({data: "mermaid"})
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("mermaidDiagram").textContent = data.Message;
+            document.getElementById("mermaidDiagram").style.display = "block";
+            mermaid.init(undefined, ".mermaid");
+        })
+        .catch(error => console.error("Error:", error));
+    } else {
+        document.getElementById("mermaid-diagram").style.display = "none";
+    }
+}
+
+//import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.esm.min.mjs';
+//mermaid.initialize({ startOnLoad: true});
+
 </script>
+
+<style>
+
+#input {
+    border-radius: 40px;
+    height: 40px;
+    width: 250px;
+}
+
+.flex-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+} 
+
+button {
+    height: 40px;
+    width: 40px;
+    border-radius: 25px;
+}
+
+</style>
 
 </body>
 </html>
