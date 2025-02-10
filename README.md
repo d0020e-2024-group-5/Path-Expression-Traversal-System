@@ -372,22 +372,43 @@ The example will start att pickaxe and follow edge `obtainedBy` to `Pickaxe_From
 where the query will split and go to both `Cobblestone` and `stick`.
 Since this is the end of the query they are returned.
 
-### Example 2, Loop
 
-Looping expressions, matching more than once, allowing for following a path of unknown length. The syntax is the to add a star around a group ``{...}*``
+
+### Example 2, groups {}
+
+In the above example the query each operation was evaluated left to right, in some cases this might not be desierd when using more complex operators such a loop (aka match zero or more)
+
+``S/Pick/made_of/Crafting_recipie*``
+``S/Pick/{made_of/Crafting_recipie}*``
+
+In other cases we might want to do more complex
+operations, for exapmle an AND or an XOR operation between edges, those are explained in further examples.
+
+
+<!-- ### example arguments (), TO BE DECIDED
+
+arguments could be added to loop operator? -->
+
+
+### Example 3, Loop
+
+Looping expressions, matching more than once, allowing for following a path of unknown length. The syntax is the to add a star around a group ``{...}*`` or if only a singel edge requeris looping the group can be omited
 
 ``S/Pickaxe/{obtainedBy/hasInput}*``
 
-Will see what pick is made of recursively down to its minimal component, the paths are
+will loop down by the edges obtainedBy/hasInput untill it reaches the end
 
 ```text
 Pickaxe --> Pickaxe_From_Stick_And_Stone_Recipe --> Stick --> Stick_From_Planks_Recipe --> Plank --> Plank_From_Logs_Recipe --> Log
 Pickaxe --> Pickaxe_From_Stick_And_Stone_Recipe --> Cobblestone
 ```
-
 Where both Cobblestone and Log would be returned.
 
-### Example 3, Or
+``S/Pickaxe/{obtainedBy/hasInput}*/rarity``
+
+after taking hasInput it will loop if available and go check the rarity if available if neither edge exist it returns as normal.
+
+### Example 4, Or
 
 Allows a path traversal to follow either edge
 
@@ -398,7 +419,7 @@ Pickaxe --> Pickaxe_From_Stick_And_Stone_Recipe --> Common
 Pickaxe --> Mineshaft --> Rare
 ```
 
-### Example 4, AND
+### Example 5, AND
 
 Only allows the query to continue if both edges exist on the node, both are traversed
 
@@ -412,7 +433,7 @@ Pickaxe --> Mineshaft --> Rare
 ``S/Stick/{obtainedBy & foundAt}/rarity`` would return nothing as stick dont have the edge foundAt.
 
 
-### Example 5, XOR
+### Example 6, XOR
 
 Allows the query to continue, only if one of the edges exist
 
@@ -423,25 +444,14 @@ Pickaxe --> Pickaxe_From_Stick_And_Stone_Recipe --> Common
 Pickaxe --> Mineshaft --> Rare
 ```
 
-``S/Stick/{obtainedBy & foundAt}/rarity`` would go down obtainedBy as it does not have the edge foundAt
+``S/Stick/{obtainedBy ^ foundAt}/rarity`` would go down obtainedBy as it does not have the edge foundAt
 
-### Example 6, groups {}
 
-TODO EXPLAIN MORE
+## Current limitations
+Currently AND, OR and XOR are not implemented due to the program not supporting evaluation between different edges. NextNode does not have acces to other data. With the current implemtation of the three being that of a binary tree we are limited in the queries we can construct, in future developmen the structs will change from having a Left, Right to having a ds that allows us to not be limited by the number of constraints in our query.
 
-S/Pick/{(made_of & Crafting_recipie)/made_of}
-
-### example arguments (), TO BE DECIDED
-
-arguments could be added to loop operator?
 
 ## Example of internal structure of a query
-
-Lets take an example query af show its internal evaluation
-
-``S/Pickaxe/{obtainedBy/hasInput}*``
-
-This is then converted to a tree structure of operations, where the leafs are edges and.
 
 <!-- Note to readers, this look incredibly like the state machines that regex compiles to -->
 ```mermaid
@@ -464,6 +474,12 @@ graph TD;
 ```
 
 ### An example of evaluation
+
+Lets take an example query of show its internal evaluation
+
+``S/Pickaxe/{obtainedBy/hasInput}*``
+
+This is then converted to a tree structure of operations, where the leafs are edges and nodes .
 
 lets say that we are on edge ``obtainedBy``, and we want to know whats next.
 By looking at the parent we know that we are on the left side of an *traverse*
@@ -490,22 +506,20 @@ type TraverseNode Struct{
 
 // when calling this function we need to know where this was called from, was it our parent, left or right, there for passing a pointer to caller is necessary
 // the function return array of pointers to the leafs/query edges, which can be used to determine the next node(s)
-func (self TraverseNode) nextEdge(caller *Node) []*LeafNode {
+func (self TraverseNode) NextNode(caller *Node) []*LeafNode {
     // if the caller is parent, we should deced into the left branch,
     if caller == self.parent {
-        return self.left.nextEdge(&self)
+        return self.left.NextNode(&self)
     }
     // when the left branch has evaluated it will call us again
     // an we than have to evaluate the right branch
     else if caller == self.left {
-        self.right.nextEdge(&self)
+        self.right.NextNode(&self)
     }
     // when the right brach has evaluated it will call us again
     // we then know we have been fully evaluated and can call our parent saying we are done
     else if caller == self.right {
         self.parent.nextEdege(&self)
-    } else {
-        log.fatal("i dont know what should happen here?")
     }
 }
 
@@ -515,11 +529,9 @@ type LeafNode Struct {
 }
 
 // we are asked what the next edge is, this LeafNode represent that edge
-func (self LeafNode) nextEdge(caller *Node) []*LeafNode {
+func (self LeafNode) NextNode(caller *Node) []*LeafNode {
     if caller == self.parent {
         return [&self]
-    } else {
-        log.fatal("i dont know what should happen here?")
     }
 }
 
@@ -529,27 +541,25 @@ type LoopNode Struct{
     Right   *Node
 }
 
-func (self LoopNode) nextEdge(caller *Node) []*LeafNode {
+func (self LoopNode) NextNode(caller *Node) []*LeafNode {
     // if the caller is parent, the possible outcomes are that we match zero of the edges and move on with the right branch
     // or that we match whatever in the left brach, therefore we return the next edges
     // an therefore return 
     // if this was match one and more instead of zero or more, calling right would not be the right option as it then would progress forward without having matched anything on the left
     // maybe add an + operator which is match one or more?
     if caller == self.parent {
-        return [self.left.nextEdge(&self),self.right.nextEdge(&self)]
+        return [self.left.NextNode(&self),self.right.NextNode(&self)]
     }
     // when the left branch has evaluated it will call us again
     // we can continue the loop so left is an valid option, but we could also exit
     // this leads to the same output as the caller was the parent
     else if caller == self.left {
-        return [self.left.nextEdge(&self),self.right.nextEdge(&self)]
+        return [self.left.NextNode(&self),self.right.NextNode(&self)]
     }
     // when the right brach has evaluated it will call us again
     // we then know we have been fully evaluated and can call our parent saying we are done
     else if caller == self.right {
-        self.parent.nextEdge(&self)
-    } else {
-        log.fatal("i dont know what should happen here?")
+        self.parent.NextNode(&self)
     }
 }
 
@@ -559,21 +569,43 @@ type OrNode Struct{
     Right   *Node
 }
 
-func (self OrNode) nextEdge(caller *Node) []*LeafNode {
+func (self OrNode) NextNode(caller *Node) []*LeafNode {
     // if the parent calls us we could either match each side, so both sides are an alternative
     if caller == self.parent {
-        return [self.left.nextEdge(&self),self.right.nextEdge(&self)]
+        return [self.left.NextNode(&self),self.right.NextNode(&self)]
     }
     // if the left side calls us we have then completed one of the options and are fully evaluated, an the call our parent saying we are done, and let them get the next edge
     else if caller == self.left {
-        self.parent.nextEdge(&self)
+        self.parent.NextNode(&self)
     }
     // same ass above
     else if caller == self.right {
-        self.parent.nextEdge(&self)
-    } else {
-        log.fatal("i dont know what should happen here?")
+        self.parent.NextNode(&self)
     }
 }
-
 ```
+
+## Parsing and constructing the evaluationtree
+When constructiong the evaluationtree the code calls the function grow_tree(str string, parent Node, id *int)
+where it creates nodes according to the operation,
+for example, /,&,|,* that point to other nodes.
+if there is no operation it knows that it is a leaf and constructs a leafnode
+
+when it evaluates groups it follows the operation order withing the group by first treating the group itself as and edge then its content as normal by removing the group block, {}.
+
+## Passing the Query to Different Servers
+
+Since the data might not be stored on the same server,
+we need the ability to send the query to the next server and return the results.
+Each node that is not stored on the server has a ``false node`` with an edge labeled ``pointsToServer``.
+This edge allows us to obtain the contact information needed to forward the query.
+
+The query is then converted from its internal representation to a format suitable for transmission:
+
+``QueryString;NextNode;AlongEdge``
+
+- QueryString: The first part before the ; separator is the query itself, such as ``S/Pickaxe/{obtainedBy/hasInput}*``.
+- NextNode: The second part indicates the intended destination server, for example, ``Cobblestone``.
+- AlongEdge: The final part is an index into the query, indicating which edge within the query is used to reach the NextNode. For instance, an index of 3 would denote the edge ``hasInput``.
+
+This information is sufficient to reconstruct the query and its state. In the current implementation, if state values are missing, the query is assumed to be new. The starting node is the first part of the query, and the edge is the same as the starting node.
