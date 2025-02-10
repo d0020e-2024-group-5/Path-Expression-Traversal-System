@@ -66,7 +66,7 @@ sequenceDiagram
     note left of DB_B: Pickaxe don't have<br/>nodes stone or stick<br/>returns server contact<br/>information.
 
     
-    note right of Tool_company: outgoing querys can be sent in parallel
+    note right of Tool_company: outgoing query's can be sent in parallel
     participant Mason_LTD as Masons LTD
     Tool_company->>+Mason_LTD: Stone/crafted_by*
 
@@ -412,7 +412,7 @@ Pickaxe --> Pickaxe_From_Stick_And_Stone_Recipe --> Common
 Pickaxe --> Mineshaft --> Rare
 ```
 
-``S/Stick/{obtainedBy & foundAt}/rarity`` would return nothing as stick dont have the edge foundAt.
+``S/Stick/{obtainedBy & foundAt}/rarity`` would return nothing as stick don't have the edge foundAt.
 
 ### Example 5, groups {}
 
