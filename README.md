@@ -44,28 +44,28 @@ var data map[string]DataNode    // Hashmap (or dictionary) with pairs of nodenam
 ```
 Reading the ontologies into Go is very simple. Since the ontologies follow a certain standard (Subject, Predicate, Object) we utilize this to read the subject prefix in order to infer the type of object and similarly what attributes it may have to apply them to our hashmap of nodes. Here is some rough pseudo-code on how the parsing works;
 ```go
-		if strings.HasPrefix(line, "minecraft:") { // minecraft:Stick_Bamboo_made_Instance a minecraft:Stick ;
+    if strings.HasPrefix(line, "minecraft:") { // minecraft:Stick_Bamboo_made_Instance a minecraft:Stick ;
 
-			temp := strings.TrimPrefix(line, "minecraft:") // Stick_Bamboo_made_Instance a minecraft:Stick ;
+        temp := strings.TrimPrefix(line, "minecraft:") // Stick_Bamboo_made_Instance a minecraft:Stick ;
 
-			wrd := getFirstWord(temp) // Get the first word in trimmed line; "Stick_Bamboo_made_Instance"
+        wrd := getFirstWord(temp) // Get the first word in trimmed line; "Stick_Bamboo_made_Instance"
 
-            nodeLst[wrd] = ""  // Declare a key "wrd" with value "" in the hashmap "nodeLst"
-        }
+        nodeLst[wrd] = ""  // Declare a key "wrd" with value "" in the hashmap "nodeLst"
+    }
 
-        // Next line;       minecraft:obtainedBy minecraft:Stick_bamboo_recipe_Instance
-        if strings.HasPrefix(line, "minecraft:EdgeName minecraft:TargetName"){
-            var tempEdge DataEdge
-            temp := strings.TrimPrefix(line, "minecraft:") //obtainedBy minecraft:Stick_bamboo_recipe_Instance
-			firstName := getFirstWord(temp) // Get the first word in trimmed line; "obtainedBy"
-            temp := strings.TrimPrefix(temp, "EdgeName minecraft:")
-            secondName := getFirstWord(temp) // Get the second word in trimmed line; "Stick_bamboo_recipe_Instance"
+    // Next line;       minecraft:obtainedBy minecraft:Stick_bamboo_recipe_Instance
+    if strings.HasPrefix(line, "minecraft:EdgeName minecraft:TargetName"){
+        var tempEdge DataEdge
+        temp := strings.TrimPrefix(line, "minecraft:") //obtainedBy minecraft:Stick_bamboo_recipe_Instance
+        firstName := getFirstWord(temp) // Get the first word in trimmed line; "obtainedBy"
+        temp := strings.TrimPrefix(temp, "EdgeName minecraft:")
+        secondName := getFirstWord(temp) // Get the second word in trimmed line; "Stick_bamboo_recipe_Instance"
 
-            tempEdge.EdgeName = firstName
-            tempEdge.TargetName = secondName
+        tempEdge.EdgeName = firstName
+        tempEdge.TargetName = secondName
 
-            nodeLst[wrd] = append(nodeLst[wrd], tempEdge)  // Append tempEdge to array of edges in node "wrd"
-        }
+        nodeLst[wrd] = append(nodeLst[wrd], tempEdge)  // Append tempEdge to array of edges in node "wrd"
+    }
 ```
 
 
