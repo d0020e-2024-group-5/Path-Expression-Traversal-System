@@ -33,10 +33,7 @@ func parse(nodeLst map[string]DataNode) map[string]DataNode { // FUNCTION READS 
 			temp := strings.TrimPrefix(line, "minecraft:")
 
 			wrd := getWrd(temp) // FIRST WORD IN LINE
-			firstWord = wrd
-			
-			//newNode.NodeName = wrd // ASSIGN TO NODENAME
-			
+			firstWord = wrd			
 
 		} else if strings.HasPrefix(line, "	nodeOntology:hasID ") { // CHECK ID
 			temp := strings.TrimPrefix(line, "	nodeOntology:hasID ")
@@ -54,7 +51,7 @@ func parse(nodeLst map[string]DataNode) map[string]DataNode { // FUNCTION READS 
 			} // APPEND THE EDGES TO TUPLE SLICE // APPEND KEY NODE TO MAP OF NODES
 			fmt.Println(i)
 			// CHECK FOR EDGES IN FOLLOWING ELSE IF STATEMENT
-		} else if strings.HasPrefix(line, "    minecraft:obtainedBy") || (strings.HasPrefix(line, "    minecraft:hasInput")) || (strings.HasPrefix(line, "    minecraft:hasOutput") || (strings.HasPrefix(line, "    minecraft:usedInStation"))) {
+		} else if strings.HasPrefix(line, "    minecraft:obtainedBy") || (strings.HasPrefix(line, "    minecraft:hasInput")) || (strings.HasPrefix(line, "    minecraft:hasOutput") || (strings.HasPrefix(line, "    minecraft:usedInStation")) || (strings.HasPrefix(line, "	nodeOntology:pointsToServer"))) {
 
 			if strings.HasPrefix(line, "    minecraft:obtainedBy") {
 				temp := strings.TrimPrefix(line, "    minecraft:obtainedBy minecraft:")
@@ -76,6 +73,11 @@ func parse(nodeLst map[string]DataNode) map[string]DataNode { // FUNCTION READS 
 				wrd := getWrd(temp)
 				tempTuple.EdgeName = "usedInStation"
 				tempTuple.TargetName = wrd
+			} else if strings.HasPrefix(line, "	nodeOntology:pointsToServer"){
+				temp := strings.TrimPrefix(line, "	nodeOntology:pointsToServer minecraft:")
+				wrd := getWrd(temp)
+				tempTuple.EdgeName = "pointsToServer"
+				tempTuple.TargetName = wrd	
 			}
 			
 			if entry, ok := nodeLst[firstWord]; ok {

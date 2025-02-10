@@ -150,17 +150,17 @@ func TestBob() {
 	fmt.Println(TraverseQuery(&q, data))
 }
 func serverHop(edge DataEdge, q *QueryStruct) {
-	if strings.Contains(edge.EdgeName, "pointsToServerA") {
+	if strings.Contains(edge.TargetName, "Server_a") {
 		buff := []byte(q.ToString())
 		fmt.Println("SERVER A HOP")
 		b := bytes.NewBuffer(buff)
 		http.Post("http://a/", "", b)
-	} else if strings.Contains(edge.EdgeName, "pointsToServerB") {
+	} else if strings.Contains(edge.TargetName, "Server_b") {
 		buff := []byte(q.ToString())
 		b := bytes.NewBuffer(buff)
 		fmt.Println("SERVER B HOP")
 		http.Post("http://b/", "", b)
-	} else if strings.Contains(edge.EdgeName, "pointsToServerC") {
+	} else if strings.Contains(edge.TargetName, "Server_c") {
 		buff := []byte(q.ToString())
 		b := bytes.NewBuffer(buff)
 		fmt.Println("SERVER C HOP")
