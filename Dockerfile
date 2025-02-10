@@ -1,7 +1,7 @@
 FROM golang:1.23
 
 # have a dir 
-WORKDIR /usr/app
+WORKDIR /usr/app/
 
 # when modules is used, downlaod stuff to image
 # COPY go.mod go.sum

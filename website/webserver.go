@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 )
@@ -58,6 +59,7 @@ func handleAPI(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleSubmit(w http.ResponseWriter, r *http.Request) {
+	log.Print("api subbmit was requested")
 
 	// checking request method is POST
 	if r.Method != "POST" {
