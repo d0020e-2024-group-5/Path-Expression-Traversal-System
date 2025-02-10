@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 )
 
 var hName string
@@ -23,6 +24,27 @@ func main() {
 	nodeLst = parse(nodeLst)
 	fmt.Printf("gragor")
 	fmt.Println(nodeLst)
+
+	http.HandleFunc("/continue", func(w http.ResponseWriter, r *http.Request) {
+		hname, err := os.Hostname()
+		fmt.Println(hname)
+		//fmt.Println("test")
+		body, err := io.ReadAll(r.Body)
+		strBody := string(body[:])
+		fmt.Printf(strBody)
+		resp, err := http.Get("http://b/contact_c") //Pickaxe/obtainedBy
+
+		// if we got an error send back the error
+		if err != nil {
+			fmt.Fprintf(w, "Got an error %s", err)
+		} else {
+			// copy the response from b and send back
+			io.Copy(w, resp.Body)
+		}
+		// print that we are done
+		fmt.Fprintf(w, "\nclosing")
+	})
+
 	// This request path forwards the request to serve B
 	http.HandleFunc("/contact_b", func(w http.ResponseWriter, r *http.Request) {
 		// get hostname, (in the case its running in docker return the container id)

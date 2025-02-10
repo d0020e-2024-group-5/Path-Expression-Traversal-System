@@ -115,7 +115,7 @@ func RecursiveTraverse(q *QueryStruct, data map[string][]DataEdge, res io.Writer
 	for _, qRec := range q.next(data) {
 		for _, edge := range data[q.NextNode] { // check every edge for "pointsToServerX"
 			serverHop(edge, q)
-			fmt.Println("testa")
+			fmt.Println("test")
 		}
 		//http://(currentserver)/(contact_[pointstoserverX])
 
@@ -154,16 +154,16 @@ func serverHop(edge DataEdge, q *QueryStruct) {
 		buff := []byte(q.ToString())
 		fmt.Println("SERVER A HOP")
 		b := bytes.NewBuffer(buff)
-		http.Post("http://a/", "", b)
+		http.Post("http://a/continue", "", b)
 	} else if strings.Contains(edge.TargetName, "Server_b") {
 		buff := []byte(q.ToString())
 		b := bytes.NewBuffer(buff)
 		fmt.Println("SERVER B HOP")
-		http.Post("http://b/", "", b)
+		http.Post("http://b/continue", "", b)
 	} else if strings.Contains(edge.TargetName, "Server_c") {
 		buff := []byte(q.ToString())
 		b := bytes.NewBuffer(buff)
 		fmt.Println("SERVER C HOP")
-		http.Post("http://c/", "", b)
+		http.Post("http://c/continue", "", b)
 	}
 }
