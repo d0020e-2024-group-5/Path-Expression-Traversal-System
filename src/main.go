@@ -65,5 +65,8 @@ func main() {
 	})
 
 	// create the server and listen to port 80
-	http.ListenAndServe(":80", nil)
+	err := http.ListenAndServe(":80", nil)
+	if err != nil {
+		fmt.Printf("ERROR: %s", err.Error())
+	}
 }

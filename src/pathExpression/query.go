@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"strconv"
 	"strings"
 )
@@ -120,9 +121,36 @@ func TraverseQuery(q *QueryStruct, data map[string][]DataEdge) string {
 
 func RecursiveTraverse(q *QueryStruct, data map[string][]DataEdge, res io.Writer) {
 	for _, qRec := range q.next(data) {
-		// TODO if qRec has an edge "pointsToServer" send query to that server and write result to res
-		fmt.Fprintf(res, "%s-->|%s|%s\n", q.NextNode, qRec.FollowLeaf.Value, qRec.NextNode)
-		RecursiveTraverse(&qRec, data, res)
+		// test if it has en edge that indicates its a false node
+		// TODO error, there might exist a scenario when next node dont exists in our data, it should not happen but we need to be able to handle it
+		edges := data[q.NextNode]
+		isTrueNode := true
+
+		// see if edge with weight "pointsToServer" exist
+		for _, edge := range edges {
+			if edge.EdgeName == "pointsToServer" {
+				isTrueNode = false
+
+				// get the domain of the server
+				for _, server_edge := range data[edge.TargetName] {
+					// if the edge has contact information
+					if server_edge.EdgeName == "hasIP" {
+						q_string := qRec.ToString()
+
+						// TODO error handling
+						resp, _ := http.Post(server_edge.TargetName+"/api/recq", "PETSQ", strings.NewReader(q_string))
+						body := resp.Body
+						defer body.Close()
+						io.Copy(res, body)
+					}
+				}
+			}
+		}
+
+		if isTrueNode {
+			fmt.Fprintf(res, "%s-->|%s|%s\n", q.NextNode, qRec.FollowLeaf.Value, qRec.NextNode)
+			RecursiveTraverse(&qRec, data, res)
+		}
 	}
 }
 
