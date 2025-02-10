@@ -6,7 +6,7 @@ PETS, a system to store linked distributed data with traversal functions
 
 ## Ontologies
 
-An Ontology is a way to describe a relationship with a structure of subject, predicate and object. And our data is therefore a list of these structures which can be describe as following:
+An Ontology is a way to describe a reletionship with a stucture of subject, predicate and object. And our data is therefore a list of these structures which can be describe as following:
 
 ```mermaid
     graph LR;
@@ -20,10 +20,9 @@ We call all subjects and objects nodes and predicates edges.
         Node1 -->|Edge| Node2;
 ```
 
-What we want to do is to search such an ontology structure using a query where this structure is spread over several servers. To do this we split our data in the edges where the edges which transits servers instead internally points to a false node which have information on where the true node is located. 
+What we want to do is to search such an ontology strucure using a queary where this structure is spread over several servers.
 
-To help with testing and similar with our project we have made an example structure based on Minecraft:
- 
+## Parsing
 
 ## Architecture
 
@@ -66,7 +65,7 @@ sequenceDiagram
     note left of DB_B: Pickaxe don't have<br/>nodes stone or stick<br/>returns server contact<br/>information.
 
     
-    note right of Tool_company: outgoing query's can be sent in parallel
+    note right of Tool_company: outgoing querys can be sent in parallel
     participant Mason_LTD as Masons LTD
     Tool_company->>+Mason_LTD: Stone/crafted_by*
 
@@ -433,7 +432,7 @@ Pickaxe --> Pickaxe_From_Stick_And_Stone_Recipe --> Common
 Pickaxe --> Mineshaft --> Rare
 ```
 
-``S/Stick/{obtainedBy & foundAt}/rarity`` would return nothing as stick don't have the edge foundAt.
+``S/Stick/{obtainedBy & foundAt}/rarity`` would return nothing as stick dont have the edge foundAt.
 
 
 ### Example 6, XOR
@@ -451,7 +450,9 @@ Pickaxe --> Mineshaft --> Rare
 
 
 ## Current limitations
-Currently AND, OR and XOR are not implemented due to the program not supporting evaluation between different edges. NextNode does not have acces to other data. With the current implemtation of the three being that of a binary tree we are limited in the queries we can construct, in future developmen the structs will change from having a Left, Right to having a ds that allows us to not be limited by the number of constraints in our query.
+Currently AND, OR and XOR are not implemented due to the program not supporting evaluation between different edges. NextNode does not have acces to other data. With the current implemtation of the three being that of a binary tree we are limited in the queries we can construct, in future developmen the structs will change from having a Left, Right to having a ds that allows us to not be limited by the number of constraints in our query. 
+
+For sprint two we need to implement the missing features as well as add more covering unit tests. To add the features it could be quite an expensive task as it requires a rewrite of two important parts of the program. while adding the unit tess would be cheap unless untill they discover errors.
 
 
 ## Example of internal structure of a query
@@ -488,7 +489,7 @@ lets say that we are on edge ``obtainedBy``, and we want to know whats next.
 By looking at the parent we know that we are on the left side of an *traverse*
 and the next edge is the one on the right of the traverse, ``hasInput``
 
-if whe should get the next node from ``hasInput`` we can again look att the parent
+if whe should get the next node from ``hasInput`` we can again look att the parentO
 and se that we are on the right side of the *traverse*,
 to find the next node we need to look higher, the *traverse*'s parent.
 This gives us the knowledge that we are on the left side of *loop* operator (aka *zero or more*)
