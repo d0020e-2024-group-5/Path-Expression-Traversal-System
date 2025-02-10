@@ -32,15 +32,16 @@ func main() {
 		body, err := io.ReadAll(r.Body)
 		strBody := string(body[:])
 		fmt.Printf(strBody)
-		resp, err := http.Get("http://b/contact_c") //Pickaxe/obtainedBy
+		//resp, err := http.Get("http://b/contact_c") //Pickaxe/obtainedBy
 
 		// if we got an error send back the error
 		if err != nil {
 			fmt.Fprintf(w, "Got an error %s", err)
-		} else {
-			// copy the response from b and send back
-			io.Copy(w, resp.Body)
-		}
+		} 
+		// else {
+		// 	// copy the response from b and send back
+		// 	io.Copy(w, resp.Body)
+		// }
 		// print that we are done
 		fmt.Fprintf(w, "\nclosing")
 	})
