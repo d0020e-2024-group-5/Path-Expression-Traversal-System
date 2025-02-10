@@ -22,7 +22,34 @@ We call all subjects and objects nodes and predicates edges.
 
 What we want to do is to search such an ontology strucure using a queary where this structure is spread over several servers.
 
-## Parsing
+## Parsing the ontolgies into GoLang
+
+Reading the ontologies into Go is very simple. Since the ontologies follow a certain standard (Subject, Predicate, Object) we use this to read the subject prefix in order to infer the type of object.
+```go
+        // Example ontology:
+        
+		if strings.HasPrefix(line, "minecraft:") {
+			temp := strings.TrimPrefix(line, "minecraft:")
+
+			wrd := getWrd(temp) // FIRST WORD IN LINE
+			firstWord = wr		
+
+		} else if strings.HasPrefix(line, "	nodeOntology:hasID ") { // CHECK ID
+			temp := strings.TrimPrefix(line, "	nodeOntology:hasID ")
+			nodeLst[firstWord] = tempN
+			wrd := getWrd(temp) // FIRST WORD IN LINE
+			
+			i, err := strconv.Atoi(wrd) // STRING TO INT
+			if err != nil {
+				fmt.Println("Error reading file:", err)
+			}
+			
+			if entry, ok := nodeLst[wrd]; ok {
+				entry.Edges = append(entry.Edges, tempTuple)
+				nodeLst[wrd] = entry
+			} // APPEND THE EDGES TO TUPLE SLICE // APPEND KEY NODE TO MAP OF NODES
+			fmt.Println(i)
+```
 
 ## Architecture
 
