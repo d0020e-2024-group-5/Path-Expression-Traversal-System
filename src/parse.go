@@ -28,7 +28,8 @@ func parse(nodeLst map[string]DataNode) map[string]DataNode { // FUNCTION READS 
 		line := scanner.Text()
 		if strings.HasPrefix(line, "@prefix") { // SKIP LINES WITH "@PREFIX"
 			continue
-		}
+		} // minecraft:Server_a a nodeOntology:Server ;
+		
 		if strings.HasPrefix(line, "minecraft:") {
 			temp := strings.TrimPrefix(line, "minecraft:")
 
@@ -51,6 +52,14 @@ func parse(nodeLst map[string]DataNode) map[string]DataNode { // FUNCTION READS 
 			} // APPEND THE EDGES TO TUPLE SLICE // APPEND KEY NODE TO MAP OF NODES
 			fmt.Println(i)
 			// CHECK FOR EDGES IN FOLLOWING ELSE IF STATEMENT
+		} else if strings.HasPrefix(line, "	nodeOntology:hasIP "){
+			temp := strings.TrimPrefix(line, "	nodeOntology:hasIP ")
+			nodeLst[firstWord] = tempN
+			wrd := getWrd(temp) // FIRST WORD IN LINE
+			if entry, ok := nodeLst[wrd]; ok {
+				entry.Edges = append(entry.Edges, tempTuple)
+				nodeLst[wrd] = entry
+			}
 		} else if strings.HasPrefix(line, "    minecraft:obtainedBy") || (strings.HasPrefix(line, "    minecraft:hasInput")) || (strings.HasPrefix(line, "    minecraft:hasOutput") || (strings.HasPrefix(line, "    minecraft:usedInStation")) || (strings.HasPrefix(line, "	nodeOntology:pointsToServer"))) {
 
 			if strings.HasPrefix(line, "    minecraft:obtainedBy") {

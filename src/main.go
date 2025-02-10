@@ -5,7 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"strings"
+	//"strings"
 )
 
 var hName string
