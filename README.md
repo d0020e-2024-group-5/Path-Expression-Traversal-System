@@ -4,13 +4,25 @@
 
 PETS, a system to store linked distributed data with traversal functions
 
-## Introduction
+## Ontologies
 
-The solution to the data problem is distribution, but system like distributed hash tables (DHT) have problems regarding ownership of the data.
-DHT and other commercial solutions often have act as a centralized system in most aspects which leaves out the control of where the data is stored,
-PETS is a project which hopes to provde the
+An Ontology is a way to describe a reletionship with a stucture of subject, predicate and object. And our data is therefore a list of these structures which can be describe as following:
 
-## sequence diagram
+```mermaid
+    graph LR;
+        Subject -->|Predicate| Object;
+```
+
+We call all subjects and objects nodes and predicates edges.
+
+```mermaid
+    graph LR;
+        Node1 -->|Edge| Node2;
+```
+
+What we want to do is to search such an ontology strucure using a queary where this structure is spread over several servers.
+
+## Architecture
 
 ```mermaid
 sequenceDiagram
@@ -328,7 +340,7 @@ Server_c_minecraft:Plannks_From_Logs_Recipe_Instance-->|usedInStation|Server_c_m
 
 ## Query structure
 
-The query structure was designed for simplicity and not fines, the goal was an easy way to write path expressions with loops
+The query structure was designed for simplicity and not fines, the goal was an easy way to write path expressions with loops.
 
 ```mermaid
 graph LR;
@@ -358,7 +370,7 @@ To follow a simple path, first have the starting node (s in this case a we have 
 
 The example will start att pickaxe and follow edge `obtainedBy` to `Pickaxe_From_Stick_And_Stone_Recipe`
 where the query will split and go to both `Cobblestone` and `stick`.
-Since this is the end of the query they are returned
+Since this is the end of the query they are returned.
 
 ### Example 2, Loop
 
@@ -373,11 +385,11 @@ Pickaxe --> Pickaxe_From_Stick_And_Stone_Recipe --> Stick --> Stick_From_Planks_
 Pickaxe --> Pickaxe_From_Stick_And_Stone_Recipe --> Cobblestone
 ```
 
-both Cobblestone and Log would be returned
+Where both Cobblestone and Log would be returned.
 
 ### Example 3, Or
 
-allows a path traversal to follow either edge
+Allows a path traversal to follow either edge
 
 ``S/Pickaxe/{obtainedBy/rarity|foundAt}/rarity``
 
@@ -397,7 +409,7 @@ Pickaxe --> Pickaxe_From_Stick_And_Stone_Recipe --> Common
 Pickaxe --> Mineshaft --> Rare
 ```
 
-``S/Stick/{obtainedBy & foundAt}/rarity`` would return nothing as stick dont have the edge foundAt
+``S/Stick/{obtainedBy & foundAt}/rarity`` would return nothing as stick dont have the edge foundAt.
 
 ### Example 5, groups {}
 
@@ -415,7 +427,7 @@ Lets take an example query af show its internal evaluation
 
 ``S/Pickaxe/{obtainedBy/hasInput}*``
 
-This is then converted to a tree structure of operations, where the leafs are edges and
+This is then converted to a tree structure of operations, where the leafs are edges and.
 
 <!-- Note to readers, this look incredibly like the state machines that regex compiles to -->
 ```mermaid
@@ -449,7 +461,7 @@ to find the next node we need to look higher, the *traverse*'s parent.
 This gives us the knowledge that we are on the left side of *loop* operator (aka *zero or more*)
 We then have two possible options continue right or redo the left side.
 by evaluating the left side we get ``obtainedBy`` again, showing us that the *loop* works.
-the right sides gives us NULL, the end of the query an valid position to return
+the right sides gives us NULL, the end of the query an valid position to return.
 
 ## go style pseudo code
 
@@ -549,4 +561,5 @@ func (self OrNode) nextEdge(caller *Node) []*LeafNode {
         log.fatal("i dont know what should happen here?")
     }
 }
+
 ```
