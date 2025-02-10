@@ -107,7 +107,7 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 
 func sendQuery(queryString string) string {
 
-	q, _ := pathExpression.BobTheBuilder(queryString, nodeLst)
+	q, _ := pathExpression.BobTheBuilder(queryString)
 	s := pathExpression.TraverseQuery(&q, nodeLst)
 	println(s)
 	return s
