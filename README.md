@@ -6,8 +6,8 @@ PETS, a system to store linked distributed data with traversal functions
 
 ## Introduction
 
-Our system is designed to navigate and retrieve information from linked ontologies using path expressions. It enables users to traverse decentralized data structures by following relationships defined in path expressions, allowing for multilevel hierarchical exploration. 
-The system helps users efficiently access and analyze linked data. For example in a supply chain context, it can model the entire distribution network of a specific item by retrieving manufacturer data at each stage. This provides transparency, traceability, and deeper insights into complex data relationships. 
+Our system is designed to navigate and retrieve information from linked ontologies using path expressions. It enables users to traverse decentralized data structures by following relationships defined in path expressions, allowing for multilevel hierarchical exploration.
+The system helps users efficiently access and analyze linked data. For example in a supply chain context, it can model the entire distribution network of a specific item by retrieving manufacturer data at each stage. This provides transparency, traceability, and deeper insights into complex data relationships.
 Our solution is valuable for businesses, researchers, and data analysts who needs to explore and make sense of decentralized, linked data in a clear ond structured way.
 
 ## Ontologies
@@ -31,6 +31,7 @@ What we want to do is to search such an ontology strucure using a queary where t
 ## Parsing the ontologies into GoLang
 
 For this parsing function, nodes have been defined as struct containing an array (or slices in GoLang) with edges to the node. We also create a struct for edges with the properties "EdgeName" and "TargetName" with each property denoting how an item is obtained respectively what the edge is pointing to. One server can then save all these nodes in a hashmap (dictionary) with the key being the node name and the value, the DataNode struct.
+
 ```go
 type DataNode struct {
     Edges []DataEdge
@@ -42,7 +43,9 @@ type DataEdge struct { // minecraft:obtainedBy minecraft:Stick_bamboo_recipe_Ins
 
 var data map[string]DataNode    // Hashmap (or dictionary) with pairs of nodenames and DataNode
 ```
+
 Reading the ontologies into Go is very simple. Since the ontologies follow a certain standard (Subject, Predicate, Object) we utilize this to read the subject prefix in order to infer the type of object and similarly what attributes it may have to apply them to our hashmap of nodes. Here is some rough pseudo-code on how the parsing works;
+
 ```go
     if strings.HasPrefix(line, "minecraft:") { // minecraft:Stick_Bamboo_made_Instance a minecraft:Stick ;
 
@@ -67,7 +70,6 @@ Reading the ontologies into Go is very simple. Since the ontologies follow a cer
         nodeLst[wrd] = append(nodeLst[wrd], tempEdge)  // Append tempEdge to array of edges in node "wrd"
     }
 ```
-
 
 ## Architecture
 
@@ -419,11 +421,9 @@ The example will start att pickaxe and follow edge `obtainedBy` to `Pickaxe_From
 where the query will split and go to both `Cobblestone` and `stick`.
 Since this is the end of the query they are returned.
 
-
-
 ### Example 2, groups {}
 
-In the above example the query each operation was evaluated left to right, in some cases this might not be desierd when using more complex operators such a loop (aka match zero or more)
+In the above example the query each operation was evaluated left to right, in some cases this might not be desired when using more complex operators such a loop (aka match zero or more)
 
 ``S/Pick/made_of/Crafting_recipie*``
 ``S/Pick/{made_of/Crafting_recipie}*``
@@ -431,24 +431,23 @@ In the above example the query each operation was evaluated left to right, in so
 In other cases we might want to do more complex
 operations, for exapmle an AND or an XOR operation between edges, those are explained in further examples.
 
-
 <!-- ### example arguments (), TO BE DECIDED
 
 arguments could be added to loop operator? -->
 
-
 ### Example 3, Loop
 
-Looping expressions, matching more than once, allowing for following a path of unknown length. The syntax is the to add a star around a group ``{...}*`` or if only a singel edge requeris looping the group can be omited
+Looping expressions, matching more than once, allowing for following a path of unknown length. The syntax is the to add a star around a group ``{...}*`` or if only a single edge requires looping the group can be omitted
 
 ``S/Pickaxe/{obtainedBy/hasInput}*``
 
-will loop down by the edges obtainedBy/hasInput untill it reaches the end
+will loop down by the edges obtainedBy/hasInput until it reaches the end
 
 ```text
 Pickaxe --> Pickaxe_From_Stick_And_Stone_Recipe --> Stick --> Stick_From_Planks_Recipe --> Plank --> Plank_From_Logs_Recipe --> Log
 Pickaxe --> Pickaxe_From_Stick_And_Stone_Recipe --> Cobblestone
 ```
+
 Where both Cobblestone and Log would be returned.
 
 ``S/Pickaxe/{obtainedBy/hasInput}*/rarity``
@@ -479,7 +478,6 @@ Pickaxe --> Mineshaft --> Rare
 
 ``S/Stick/{obtainedBy & foundAt}/rarity`` would return nothing as stick dont have the edge foundAt.
 
-
 ### Example 6, XOR
 
 Allows the query to continue, only if one of the edges exist
@@ -493,12 +491,11 @@ Pickaxe --> Mineshaft --> Rare
 
 ``S/Stick/{obtainedBy ^ foundAt}/rarity`` would go down obtainedBy as it does not have the edge foundAt
 
-
 ## Current limitations
-Currently AND, OR and XOR are not implemented due to the program not supporting evaluation between different edges. NextNode does not have acces to other data. With the current implemtation of the three being that of a binary tree we are limited in the queries we can construct, in future developmen the structs will change from having a Left, Right to having a ds that allows us to not be limited by the number of constraints in our query. 
+
+Currently AND, OR and XOR are not implemented due to the program not supporting evaluation between different edges. NextNode does not have acces to other data. With the current implemtation of the three being that of a binary tree we are limited in the queries we can construct, in future developmen the structs will change from having a Left, Right to having a ds that allows us to not be limited by the number of constraints in our query.
 
 For sprint two we need to implement the missing features as well as add more covering unit tests. To add the features it could be quite an expensive task as it requires a rewrite of two important parts of the program. while adding the unit tess would be cheap unless untill they discover errors.
-
 
 ## Example of internal structure of a query
 
@@ -634,15 +631,35 @@ func (self OrNode) NextNode(caller *Node) []*LeafNode {
 }
 ```
 
-## Parsing and constructing the evaluationtree
-When constructiong the evaluationtree the code calls the function grow_tree(str string, parent Node, id *int)
+## Parsing and constructing the evaluationTree
+
+When constructing the evaluationTree the code calls the function grow_tree(str string, parent Node, id *int)
 where it creates nodes according to the operation,
 for example, /,&,|,* that point to other nodes.
 if there is no operation it knows that it is a leaf and constructs a leafnode
 
 when it evaluates groups it follows the operation order withing the group by first treating the group itself as and edge then its content as normal by removing the group block, {}.
 
-## Passing the Query to Different Servers
+## The query wrapper
+
+The evaluation tree, on its own, does not provide complete utility.
+Therefore, a wrapper is constructed to include additional information necessary for graph traversal.
+This wrapper specifies the next node to traverse and the edge along which to traverse.
+
+With the aid of the evaluation tree, the next edges and subsequent nodes can be determined, and the traversal path can be updated,
+provided we have access to the graph.
+This process may necessitate splitting the query into multiple sub-queries in certain cases.
+By applying this approach recursively, we can effectively navigate the graph.
+
+Currently, the wrapper, which is responsible for initializing values and invoking the grow tree function,
+lacks error handling and query syntax validation. For a system like this to be useful,
+stability is crucial, which is currently not the case.
+
+Implementing error handling for simple syntax errors is relatively straightforward.
+However, more advanced error handling may require additional time due to potential edge cases,
+particularly those involving Unicode.
+
+### Passing the query to dirent servers
 
 Since the data might not be stored on the same server,
 we need the ability to send the query to the next server and return the results.
@@ -658,6 +675,8 @@ The query is then converted from its internal representation to a format suitabl
 - AlongEdge: The final part is an index into the query, indicating which edge within the query is used to reach the NextNode. For instance, an index of 3 would denote the edge ``hasInput``.
 
 This information is sufficient to reconstruct the query and its state. In the current implementation, if state values are missing, the query is assumed to be new. The starting node is the first part of the query, and the edge is the same as the starting node.
+
+<!-- something something error handling -->
 
 ## Webserver
 
