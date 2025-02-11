@@ -4,12 +4,6 @@
 
 PETS, a system to store linked distributed data with traversal functions
 
-## Introduction
-
-Our system is designed to navigate and retrieve information from linked ontologies using path expressions. It enables users to traverse decentralized data structures by following relationships defined in path expressions, allowing for multilevel hierarchical exploration.
-The system helps users efficiently access and analyze linked data. For example in a supply chain context, it can model the entire distribution network of a specific item by retrieving manufacturer data at each stage. This provides transparency, traceability, and deeper insights into complex data relationships.
-Our solution is valuable for businesses, researchers, and data analysts who needs to explore and make sense of decentralized, linked data in a clear ond structured way.
-
 ## Ontologies
 
 An Ontology is a way to describe a reletionship with a stucture of subject, predicate and object. And our data is therefore a list of these structures which can be describe as following:
@@ -27,124 +21,6 @@ We call all subjects and objects nodes and predicates edges.
 ```
 
 What we want to do is to search such an ontology strucure using a queary where this structure is spread over several servers.
-
-## Parsing the ontologies into GoLang
-
-For this parsing function, nodes have been defined as struct containing an array (or slices in GoLang) with edges to the node. We also create a struct for edges with the properties "EdgeName" and "TargetName" with each property denoting how an item is obtained respectively what the edge is pointing to. One server can then save all these nodes in a hashmap (dictionary) with the key being the node name and the value, the DataNode struct.
-
-```go
-type DataNode struct {
-    Edges []DataEdge
-}
-type DataEdge struct { // minecraft:obtainedBy minecraft:Stick_bamboo_recipe_Instance
-    EdgeName   string  // obtainedBy
-    TargetName string  // Stick_bamboo_recipe_Instance
-}
-
-var nodeLst map[string]DataNode    // Hashmap (or dictionary) with pairs of nodenames and DataNode
-```
-
-Reading the ontologies into Go is very simple. Since the ontologies follow a certain standard (Subject, Predicate, Object) we utilize this to read the subject prefix in order to infer the type of object and similarly what attributes it may have to apply them to our hashmap of nodes. Here is some rough pseudo-code on how the parsing works;
-
-```go
-    if strings.HasPrefix(line, "minecraft:") { // minecraft:Stick_Bamboo_made_Instance a minecraft:Stick ;
-
-        temp := strings.TrimPrefix(line, "minecraft:") // Stick_Bamboo_made_Instance a minecraft:Stick ;
-
-        wrd := getFirstWord(temp) // Get the first word in trimmed line; "Stick_Bamboo_made_Instance"
-
-        nodeLst[wrd] = ""  // Declare a key "wrd" with value "" in the hashmap "nodeLst"
-    }
-
-    // Next line;       minecraft:obtainedBy minecraft:Stick_bamboo_recipe_Instance
-    if strings.HasPrefix(line, "minecraft:EdgeName minecraft:TargetName"){
-        var tempEdge DataEdge
-        temp := strings.TrimPrefix(line, "minecraft:") //obtainedBy minecraft:Stick_bamboo_recipe_Instance
-        firstName := getFirstWord(temp) // Get the first word in trimmed line; "obtainedBy"
-        temp := strings.TrimPrefix(temp, "EdgeName minecraft:")
-        secondName := getFirstWord(temp) // Get the second word in trimmed line; "Stick_bamboo_recipe_Instance"
-
-        tempEdge.EdgeName = firstName
-        tempEdge.TargetName = secondName
-
-        nodeLst[wrd] = append(nodeLst[wrd], tempEdge)  // Append tempEdge to array of edges in node "wrd"
-    }
-```
-
-## Architecture
-
-```mermaid
-sequenceDiagram
-    participant API
-    participant cent as Central server
-
-    note over API: where request start
-
-
-    note over cent: A server which listens to http request<br/>and answer/forward queries.<br/>All servers are of this type, but their<br/>databases very<br/>and the central database is quite<br/>different with only one node*.
-
-    API->>+cent: Pick/crafted_by*
-    note left of cent: sent over http api
-
-    loop until not stored
-        create participant DB_A as DB
-        cent->>DB_A: 
-        note over DB_A: This database is just a node<br/>which edges point to items in other servers
-        destroy DB_A
-        DB_A->>cent: 
-    end
-    note left of DB_A: won't loop since only one node
-
-
-
-    participant Tool_company as The tool company
-    cent->>+Tool_company: Pick/crafted_by*
-
-
-    loop until not stored
-        create participant DB_B as DB
-        Tool_company->> DB_B: 
-        note over DB_B: A graph data base<br/>keeps track of nodes<br/>and relations between them.<br/>Also have node to denote<br/>when to pass the query to<br/>different server.
-        destroy DB_B
-        DB_B->>Tool_company: 
-    end
-
-    note left of DB_B: Pickaxe don't have<br/>nodes stone or stick<br/>returns server contact<br/>information.
-
-    
-    note right of Tool_company: outgoing querys can be sent in parallel
-    participant Mason_LTD as Masons LTD
-    Tool_company->>+Mason_LTD: Stone/crafted_by*
-
-
-    loop until not stored
-        create participant DB_C as DB
-        Mason_LTD->>DB_C: 
-        destroy DB_C 
-        DB_C->>Mason_LTD: 
-    end
-    note left of DB_C: Stone don't have crafted by<br/>and is att end of query, return stone
-
-
-    Mason_LTD->>-Tool_company: Data of Stone
-
-    participant Wood_INC as Wood INC
-
-    Tool_company->>+Wood_INC: Stick/crafted_by*
-    loop until not stored
-        create participant DB_D as DB
-        Wood_INC->>DB_D: 
-        destroy DB_D
-        DB_D->>Wood_INC: 
-    end
-    note left of DB_D: This query can be resolved<br/>without traversing to other<br/>servers<br/>Stick -> Plank -> Log
-
-    Wood_INC->>-Tool_company: Data of Log
-    Tool_company->>-cent: [Data of Stone, Data of Log]
-    cent->>-API: [Data of Stone, Data of Log]
-
-```
-<!-- Explain in words what happens in the sequence diagram -->
 
 ## Node ontologies
 
@@ -386,6 +262,132 @@ Server_c_minecraft:Plannks_From_Logs_Recipe_Instance-->|hasInput|Server_c_minecr
 Server_c_minecraft:Plannks_From_Logs_Recipe_Instance-->|hasOutput|Server_c_minecraft:Plank_Instance
 Server_c_minecraft:Plannks_From_Logs_Recipe_Instance-->|usedInStation|Server_c_minecraft:CraftingTable_Instance
 ```
+
+## Introduction
+
+Our system is designed to navigate and retrieve information from linked ontologies using path expressions. It enables users to traverse decentralized data structures by following relationships defined in path expressions, allowing for multilevel hierarchical exploration.
+The system helps users efficiently access and analyze linked data. For example in a supply chain context, it can model the entire distribution network of a specific item by retrieving manufacturer data at each stage. This provides transparency, traceability, and deeper insights into complex data relationships.
+Our solution is valuable for businesses, researchers, and data analysts who needs to explore and make sense of decentralized, linked data in a clear ond structured way. 
+
+## Parsing the ontologies into GoLang
+
+For this parsing function, nodes have been defined as struct containing an array (or slices in GoLang) with edges to the node. We also create a struct for edges with the properties "EdgeName" and "TargetName" with each property denoting how an item is obtained respectively what the edge is pointing to. One server can then save all these nodes in a hashmap (dictionary) with the key being the node name and the value, the DataNode struct.
+
+```go
+type DataNode struct {
+    Edges []DataEdge
+}
+type DataEdge struct { // minecraft:obtainedBy minecraft:Stick_bamboo_recipe_Instance
+    EdgeName   string  // obtainedBy
+    TargetName string  // Stick_bamboo_recipe_Instance
+}
+
+var nodeLst map[string]DataNode    // Hashmap (or dictionary) with pairs of nodenames and DataNode
+```
+
+Reading the ontologies into Go is very simple. Since the ontologies follow a certain standard (Subject, Predicate, Object) we utilize this to read the subject prefix in order to infer the type of object and similarly what attributes it may have to apply them to our hashmap of nodes. Here is some rough pseudo-code on how the parsing works;
+
+```go
+    if strings.HasPrefix(line, "minecraft:") { // minecraft:Stick_Bamboo_made_Instance a minecraft:Stick ;
+
+        temp := strings.TrimPrefix(line, "minecraft:") // Stick_Bamboo_made_Instance a minecraft:Stick ;
+
+        wrd := getFirstWord(temp) // Get the first word in trimmed line; "Stick_Bamboo_made_Instance"
+
+        nodeLst[wrd] = ""  // Declare a key "wrd" with value "" in the hashmap "nodeLst"
+    }
+
+    // Next line;       minecraft:obtainedBy minecraft:Stick_bamboo_recipe_Instance
+    if strings.HasPrefix(line, "minecraft:EdgeName minecraft:TargetName"){
+        var tempEdge DataEdge
+        temp := strings.TrimPrefix(line, "minecraft:") //obtainedBy minecraft:Stick_bamboo_recipe_Instance
+        firstName := getFirstWord(temp) // Get the first word in trimmed line; "obtainedBy"
+        temp := strings.TrimPrefix(temp, "EdgeName minecraft:")
+        secondName := getFirstWord(temp) // Get the second word in trimmed line; "Stick_bamboo_recipe_Instance"
+
+        tempEdge.EdgeName = firstName
+        tempEdge.TargetName = secondName
+
+        nodeLst[wrd] = append(nodeLst[wrd], tempEdge)  // Append tempEdge to array of edges in node "wrd"
+    }
+```
+
+## Architecture
+
+```mermaid
+sequenceDiagram
+    participant API
+    participant cent as Central server
+
+    note over API: where request start
+
+
+    note over cent: A server which listens to http request<br/>and answer/forward queries.<br/>All servers are of this type, but their<br/>databases very<br/>and the central database is quite<br/>different with only one node*.
+
+    API->>+cent: Pick/crafted_by*
+    note left of cent: sent over http api
+
+    loop until not stored
+        create participant DB_A as DB
+        cent->>DB_A: 
+        note over DB_A: This database is just a node<br/>which edges point to items in other servers
+        destroy DB_A
+        DB_A->>cent: 
+    end
+    note left of DB_A: won't loop since only one node
+
+
+
+    participant Tool_company as The tool company
+    cent->>+Tool_company: Pick/crafted_by*
+
+
+    loop until not stored
+        create participant DB_B as DB
+        Tool_company->> DB_B: 
+        note over DB_B: A graph data base<br/>keeps track of nodes<br/>and relations between them.<br/>Also have node to denote<br/>when to pass the query to<br/>different server.
+        destroy DB_B
+        DB_B->>Tool_company: 
+    end
+
+    note left of DB_B: Pickaxe don't have<br/>nodes stone or stick<br/>returns server contact<br/>information.
+
+    
+    note right of Tool_company: outgoing querys can be sent in parallel
+    participant Mason_LTD as Masons LTD
+    Tool_company->>+Mason_LTD: Stone/crafted_by*
+
+
+    loop until not stored
+        create participant DB_C as DB
+        Mason_LTD->>DB_C: 
+        destroy DB_C 
+        DB_C->>Mason_LTD: 
+    end
+    note left of DB_C: Stone don't have crafted by<br/>and is att end of query, return stone
+
+
+    Mason_LTD->>-Tool_company: Data of Stone
+
+    participant Wood_INC as Wood INC
+
+    Tool_company->>+Wood_INC: Stick/crafted_by*
+    loop until not stored
+        create participant DB_D as DB
+        Wood_INC->>DB_D: 
+        destroy DB_D
+        DB_D->>Wood_INC: 
+    end
+    note left of DB_D: This query can be resolved<br/>without traversing to other<br/>servers<br/>Stick -> Plank -> Log
+
+    Wood_INC->>-Tool_company: Data of Log
+    Tool_company->>-cent: [Data of Stone, Data of Log]
+    cent->>-API: [Data of Stone, Data of Log]
+
+```
+<!-- Explain in words what happens in the sequence diagram -->
+
+
 
 ## Query structure
 
