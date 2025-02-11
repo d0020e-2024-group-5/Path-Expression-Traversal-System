@@ -40,7 +40,7 @@ type DataEdge struct { // minecraft:obtainedBy minecraft:Stick_bamboo_recipe_Ins
     TargetName string  // Stick_bamboo_recipe_Instance
 }
 
-var data map[string]DataNode    // Hashmap (or dictionary) with pairs of nodenames and DataNode
+var nodeLst map[string]DataNode    // Hashmap (or dictionary) with pairs of nodenames and DataNode
 ```
 Reading the ontologies into Go is very simple. Since the ontologies follow a certain standard (Subject, Predicate, Object) we utilize this to read the subject prefix in order to infer the type of object and similarly what attributes it may have to apply them to our hashmap of nodes. Here is some rough pseudo-code on how the parsing works;
 ```go
