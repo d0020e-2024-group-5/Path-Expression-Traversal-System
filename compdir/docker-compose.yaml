@@ -4,11 +4,21 @@ services:
         # this is also our entry point as its is mapped to an external port
         build: ../.
         image: PETS/app_v1
-        ports:
-            - "80:80"
+        container_name: serverA
+        volumes:
+            - ./../Example Data/Server A/Example Data_A.ttl:/usr/app/shared_volume/data.ttl
     b:
         # same as a but no contact to outside
         image: PETS/app_v1
+        container_name: serverB
+        volumes:
+            - ./../Example Data/Server B/Example Data_B.ttl:/usr/app/shared_volume/data.ttl
     c:
+
         # same as a but no contact to outside
         image: PETS/app_v1
+        container_name: serverC
+        volumes:
+            - ./../Example Data/Server C/Example Data_C.ttl:/usr/app/shared_volume/data.ttl
+        ports:
+            - "80:80"
