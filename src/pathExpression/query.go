@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -123,13 +124,11 @@ func RecursiveTraverse(q *QueryStruct, data map[string][]DataEdge, res io.Writer
 	for _, qRec := range q.next(data) {
 		// test if it has en edge that indicates its a false node
 		// TODO error, there might exist a scenario when next node dont exists in our data, it should not happen but we need to be able to handle it
-		edges := data[q.NextNode]
-		isTrueNode := true
+		edges := data[qRec.NextNode]
 
 		// see if edge with weight "pointsToServer" exist
 		for _, edge := range edges {
 			if edge.EdgeName == "pointsToServer" {
-				isTrueNode = false
 
 				// get the domain of the server
 				for _, server_edge := range data[edge.TargetName] {
@@ -138,7 +137,10 @@ func RecursiveTraverse(q *QueryStruct, data map[string][]DataEdge, res io.Writer
 						q_string := qRec.ToString()
 
 						// TODO error handling
-						resp, _ := http.Post(server_edge.TargetName+"/api/recq", "PETSQ", strings.NewReader(q_string))
+						resp, err := http.Post("http://"+server_edge.TargetName+"/api/recq", "PETSQ", strings.NewReader(q_string))
+						if err != nil {
+							log.Fatalf("error on passing to server: %s", err.Error())
+						}
 						body := resp.Body
 						defer body.Close()
 						io.Copy(res, body)
@@ -146,11 +148,10 @@ func RecursiveTraverse(q *QueryStruct, data map[string][]DataEdge, res io.Writer
 				}
 			}
 		}
+		// TODO, change arrow type if its a false node
+		fmt.Fprintf(res, "%s-->|%s|%s\n", q.NextNode, qRec.FollowLeaf.Value, qRec.NextNode)
+		RecursiveTraverse(&qRec, data, res)
 
-		if isTrueNode {
-			fmt.Fprintf(res, "%s-->|%s|%s\n", q.NextNode, qRec.FollowLeaf.Value, qRec.NextNode)
-			RecursiveTraverse(&qRec, data, res)
-		}
 	}
 }
 

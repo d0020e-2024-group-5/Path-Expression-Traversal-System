@@ -18,19 +18,19 @@ minecraft:Log_Instance a minecraft:Log ;
 
 minecraft:Pickaxe_Instance_Henry a minecraft:Pickaxe ;
 	nodeOntology:hasID 4 ;
-    minecraft:obtainedBy minecraft:PickaxeRecipe_Instance .
+	minecraft:obtainedBy minecraft:PickaxeRecipe_Instance .
 	
 minecraft:Pickaxe_Instance_Gustav a minecraft:Pickaxe ;
 	nodeOntology:hasID 5 .
 
 minecraft:Server_a a nodeOntology:Server ;
-	nodeOntology:hasIP "1.1.1.1" .	
+	nodeOntology:hasIP a .	
 
 minecraft:Server_b a nodeOntology:Server ;
-	nodeOntology:hasIP "2.2.2.2" .
+	nodeOntology:hasIP b .
 
 minecraft:Server_c a nodeOntology:Server ;	
-	nodeOntology:hasIP "3.3.3.3" .
+	nodeOntology:hasIP c .
 
 
 minecraft:Plank_Instance a minecraft:Plank ;
@@ -45,11 +45,11 @@ minecraft:CraftingTable_Instance a minecraft:CraftingTable ;
 # Recipe Instance: Pickaxe_From_Stick_And_Stone_Recipe 
 minecraft:PickaxeRecipe_Instance a minecraft:Pickaxe_From_Stick_And_Stone_Recipe ;
 	nodeOntology:hasID 9 ;
-    minecraft:hasInput minecraft:Stick_Plank_made_Instance  ;
+	minecraft:hasInput minecraft:Stick_Plank_made_Instance  ;
 	minecraft:hasInput minecraft:Stick_Bamboo_made_Instance ;
-    minecraft:hasInput minecraft:Cobblestone_Bob ;
-    minecraft:hasOutput minecraft:Pickaxe_Instance_Henry ;
-    minecraft:usedInStation minecraft:CraftingTable_Instance .
+	minecraft:hasInput minecraft:Cobblestone_Bob ;
+	minecraft:hasOutput minecraft:Pickaxe_Instance_Henry ;
+	minecraft:usedInStation minecraft:CraftingTable_Instance .
 
 # Recipe Instance: Stick_recipie_bamboo
 minecraft:Stick_bamboo_recipe_Instance a minecraft:Stick_From_Bamboo_Recipe ;
@@ -59,6 +59,6 @@ minecraft:Stick_bamboo_recipe_Instance a minecraft:Stick_From_Bamboo_Recipe ;
 # Recipe Instance: Plank_recipie_Log
 minecraft:Plannks_From_Logs_Recipe_Instance a minecraft:Plannks_From_Logs_Recipe ;
 	nodeOntology:hasID 13 ;
-    minecraft:hasInput minecraft:Log_Instance ;
-    minecraft:hasOutput minecraft:Plank_Instance ;
-    minecraft:usedInStation minecraft:CraftingTable_Instance .
+	minecraft:hasInput minecraft:Log_Instance ;
+	minecraft:hasOutput minecraft:Plank_Instance ;
+	minecraft:usedInStation minecraft:CraftingTable_Instance .

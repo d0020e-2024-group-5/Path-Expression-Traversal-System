@@ -40,46 +40,39 @@ func Parse() map[string][]p.DataEdge { // FUNCTION READS DATA FILE LINE BY LINE,
 
 			//newNode.NodeName = wrd // ASSIGN TO NODENAME
 
-		} else if strings.HasPrefix(line, "	nodeOntology:hasID ") { // CHECK ID
+			// } else if strings.HasPrefix(line, "	nodeOntology:hasID ") { // CHECK ID
 
-			temp := strings.TrimPrefix(line, "	nodeOntology:hasID ")
+			temp = strings.TrimPrefix(line, "	nodeOntology:hasID ")
 			_, ok := nodeLst[firstWord]
 			if !ok {
 				nodeLst[firstWord] = make([]p.DataEdge, 0)
 			}
-			wrd := getWrd(temp) // FIRST WORD IN LINE
+			wrd = getWrd(temp) // FIRST WORD IN LINE
 
 			if entry, ok := nodeLst[wrd]; ok {
 				entry = append(entry, tempTuple)
 				nodeLst[wrd] = entry
 			} // APPEND THE EDGES TO TUPLE SLICE // APPEND KEY NODE TO MAP OF NODES
 			// CHECK FOR EDGES IN FOLLOWING ELSE IF STATEMENT
-		} else if strings.HasPrefix(line, "	nodeOntology:hasIP ") {
-			temp := strings.TrimPrefix(line, "	nodeOntology:hasIP ")
-			wrd := getWrd(temp) // FIRST WORD IN LINE
-			if entry, ok := nodeLst[wrd]; ok {
-				entry = append(entry, tempTuple)
-				nodeLst[wrd] = entry
-			}
-		} else if strings.HasPrefix(line, "    minecraft:obtainedBy") || (strings.HasPrefix(line, "    minecraft:hasInput")) || (strings.HasPrefix(line, "    minecraft:hasOutput") || (strings.HasPrefix(line, "    minecraft:usedInStation")) || (strings.HasPrefix(line, "	nodeOntology:pointsToServer"))) {
+		} else if strings.HasPrefix(line, "	minecraft:obtainedBy") || (strings.HasPrefix(line, "	minecraft:hasInput")) || (strings.HasPrefix(line, "	minecraft:hasOutput") || (strings.HasPrefix(line, "	minecraft:usedInStation")) || (strings.HasPrefix(line, "	nodeOntology:pointsToServer")) || (strings.HasPrefix(line, "	nodeOntology:hasIP"))) {
 
-			if strings.HasPrefix(line, "    minecraft:obtainedBy") {
-				temp := strings.TrimPrefix(line, "    minecraft:obtainedBy minecraft:")
+			if strings.HasPrefix(line, "	minecraft:obtainedBy") {
+				temp := strings.TrimPrefix(line, "	minecraft:obtainedBy minecraft:")
 				wrd := getWrd(temp)
 				tempTuple.EdgeName = "obtainedBy"
 				tempTuple.TargetName = wrd
-			} else if strings.HasPrefix(line, "    minecraft:hasInput") {
-				temp := strings.TrimPrefix(line, "    minecraft:hasInput minecraft:")
+			} else if strings.HasPrefix(line, "	minecraft:hasInput") {
+				temp := strings.TrimPrefix(line, "	minecraft:hasInput minecraft:")
 				wrd := getWrd(temp)
 				tempTuple.EdgeName = "hasInput"
 				tempTuple.TargetName = wrd
-			} else if strings.HasPrefix(line, "    minecraft:hasOutput") {
-				temp := strings.TrimPrefix(line, "    minecraft:hasOutput minecraft:")
+			} else if strings.HasPrefix(line, "	minecraft:hasOutput") {
+				temp := strings.TrimPrefix(line, "	minecraft:hasOutput minecraft:")
 				wrd := getWrd(temp)
 				tempTuple.EdgeName = "hasOutput"
 				tempTuple.TargetName = wrd
-			} else if strings.HasPrefix(line, "    minecraft:usedInStation") {
-				temp := strings.TrimPrefix(line, "    minecraft:usedInStation minecraft:")
+			} else if strings.HasPrefix(line, "	minecraft:usedInStation") {
+				temp := strings.TrimPrefix(line, "	minecraft:usedInStation minecraft:")
 				wrd := getWrd(temp)
 				tempTuple.EdgeName = "usedInStation"
 				tempTuple.TargetName = wrd
@@ -87,6 +80,11 @@ func Parse() map[string][]p.DataEdge { // FUNCTION READS DATA FILE LINE BY LINE,
 				temp := strings.TrimPrefix(line, "	nodeOntology:pointsToServer minecraft:")
 				wrd := getWrd(temp)
 				tempTuple.EdgeName = "pointsToServer"
+				tempTuple.TargetName = wrd
+			} else if strings.HasPrefix(line, "	nodeOntology:hasIP") {
+				temp := strings.TrimPrefix(line, "	nodeOntology:hasIP ")
+				wrd := getWrd(temp)
+				tempTuple.EdgeName = "hasIP"
 				tempTuple.TargetName = wrd
 			}
 

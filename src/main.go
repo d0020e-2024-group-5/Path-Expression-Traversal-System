@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"pets/parse"
 	"pets/pathExpression"
+	"strings"
 
 	"github.com/TyphonHill/go-mermaid/diagrams/flowchart"
 )
@@ -25,26 +27,28 @@ var nodeLst = map[string][]pathExpression.DataEdge{} // NODE HASHMAP WITH A TUPL
 func main() {
 	nodeLst = parse.Parse()
 
-	// EXAMPLE REMOVE ME LATER
-	q, _ := pathExpression.BobTheBuilder("Pickaxe_Instance_Henry/{obtainedBy/hasInput}*")
-	s := pathExpression.TraverseQuery(&q, nodeLst)
-	println(s)
-	// END EXAMPLE
-	//http.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
-	//	fmt.Fprint(w, sendQuery("hello"))
-	//})
-
 	http.HandleFunc("/", handler) // servers the main HTML file
 
 	http.HandleFunc("/api/submit", handleSubmit) // API endpoint to handle form submission
 
-	fmt.Printf("Server is running on http://localhost:80")
+	http.HandleFunc("/api/recq", queryHandler)
 
 	// create the server and listen to port 80
 	err := http.ListenAndServe(":80", nil)
 	if err != nil {
 		fmt.Printf("ERROR: %s", err.Error())
 	}
+}
+
+func queryHandler(w http.ResponseWriter, r *http.Request) {
+	b := strings.Builder{}
+	full, _ := io.ReadAll(r.Body)
+	b.Write(full)
+	log.Printf("Received request: \n%s", b.String())
+
+	q, _ := pathExpression.BobTheBuilder(b.String())
+	log.Printf("parsed request: \n%s", q.DebugToString())
+	pathExpression.RecursiveTraverse(&q, nodeLst, w)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -55,9 +59,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	//}
 
 	// reads the html file
-	html, err := os.ReadFile("../website/index.html")
+	html, err := os.ReadFile("./src/index.html")
 	if err != nil {
-		fmt.Fprintf(w, "Error: %v", err)
+		fmt.Fprintf(w, "Error: %v\n", err)
+		tmp, _ := os.Getwd()
+		fmt.Fprintf(w, "PWD %s", tmp)
 		return
 	}
 
@@ -95,7 +101,6 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 	//	return
 	//}
 	res := sendQuery(requestData.Data)
-	fmt.Println("Received from client:", res)
 
 	// create a response containging the recieived data
 	response := ResponseData{Message: res}
@@ -109,7 +114,7 @@ func sendQuery(queryString string) string {
 
 	q, _ := pathExpression.BobTheBuilder(queryString)
 	s := pathExpression.TraverseQuery(&q, nodeLst)
-	println(s)
+	// println(s)
 	return s
 }
 

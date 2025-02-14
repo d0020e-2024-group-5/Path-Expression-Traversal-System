@@ -1,3 +1,0 @@
-hostName: "a"
-nodeAttributes: ["sticks", "planks"]
-edges: ["b","c"]
