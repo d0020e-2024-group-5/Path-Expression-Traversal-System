@@ -10,7 +10,7 @@ import (
 // returns the leaf nodes that are next in the query
 type Node interface {
 	NextNode(Node) []*LeafNode
-	GetLeaf(Node, int) *LeafNode
+	GetLeaf(int) *LeafNode
 }
 
 // A Traverse Node represent a traversal from right to left
@@ -39,13 +39,13 @@ type RootNode struct {
 	Child Node
 }
 
-func (r *RootNode) GetLeaf(caller Node, id int) *LeafNode {
-	return r.Child.GetLeaf(r, id)
+func (r *RootNode) GetLeaf(id int) *LeafNode {
+	return r.Child.GetLeaf(id)
 }
 
-func (t *TraverseNode) GetLeaf(caller Node, id int) *LeafNode {
-	tmp1 := t.Left.GetLeaf(t, id)
-	tmp2 := t.Right.GetLeaf(t, id)
+func (t *TraverseNode) GetLeaf(id int) *LeafNode {
+	tmp1 := t.Left.GetLeaf(id)
+	tmp2 := t.Right.GetLeaf(id)
 
 	if tmp1 != nil {
 		return tmp1
@@ -56,9 +56,9 @@ func (t *TraverseNode) GetLeaf(caller Node, id int) *LeafNode {
 	}
 }
 
-func (l *LoopNode) GetLeaf(caller Node, id int) *LeafNode {
-	tmp1 := l.Left.GetLeaf(l, id)
-	tmp2 := l.Right.GetLeaf(l, id)
+func (l *LoopNode) GetLeaf(id int) *LeafNode {
+	tmp1 := l.Left.GetLeaf(id)
+	tmp2 := l.Right.GetLeaf(id)
 
 	if tmp1 != nil {
 		return tmp1
@@ -69,7 +69,7 @@ func (l *LoopNode) GetLeaf(caller Node, id int) *LeafNode {
 	}
 }
 
-func (l *LeafNode) GetLeaf(caller Node, id int) *LeafNode {
+func (l *LeafNode) GetLeaf(id int) *LeafNode {
 	if l.ID == id {
 		return l
 	}
@@ -77,6 +77,7 @@ func (l *LeafNode) GetLeaf(caller Node, id int) *LeafNode {
 }
 
 // Passes next node to child with required info
+// TODO error can occur when a child calls this function
 func (r *RootNode) NextNode(caller Node) []*LeafNode {
 	return r.Child.NextNode(r)
 }
