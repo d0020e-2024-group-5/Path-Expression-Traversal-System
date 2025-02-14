@@ -6,7 +6,7 @@ PETS, a system to store linked distributed data with traversal functions
 
 ## Ontologies
 
-An Ontology is a way to describe a reletionship with a stucture of subject, predicate and object. And our data is therefore a list of these structures which can be describe as following:
+An Ontology is a way to describe a relationship with a structure of subject, predicate and object. And our data is therefore a list of these structures which can be describe as following:
 
 ```mermaid
     graph LR;
@@ -20,7 +20,7 @@ We call all subjects and objects nodes and predicates edges.
         Node1 -->|Edge| Node2;
 ```
 
-What we want to do is to search such an ontology strucure using a queary where this structure is spread over several servers.
+What we want to do is to search such an ontology structure using a query where this structure is spread over several servers. When we split an edge over different server we do that by making the first node point to a false node where that node contains all the information to navigate to the true node on the other server. 
 
 ## Node ontologies
 
