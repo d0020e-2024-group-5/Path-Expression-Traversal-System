@@ -7,10 +7,6 @@ minecraft:Stick_Bamboo_made_Instance a minecraft:Stick ;
 	nodeOntology:hasID 2 ;
 	minecraft:obtainedBy minecraft:Stick_bamboo_recipe_Instance .
 
-
-minecraft:Server_a a nodeOntology:Server ;
-	nodeOntology:hasIP a .	
-
 minecraft:Bamboo_Instance a nodeOntology:NodeFalse ;
 	nodeOntology:hasID 6 .
 	

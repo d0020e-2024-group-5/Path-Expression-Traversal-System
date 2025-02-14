@@ -29,9 +29,6 @@ minecraft:Server_a a nodeOntology:Server ;
 minecraft:Server_b a nodeOntology:Server ;
 	nodeOntology:hasIP b .
 
-minecraft:Server_c a nodeOntology:Server ;	
-	nodeOntology:hasIP c .
-
 
 minecraft:Plank_Instance a minecraft:Plank ;
 	nodeOntology:hasID 7 ;
@@ -50,11 +47,6 @@ minecraft:PickaxeRecipe_Instance a minecraft:Pickaxe_From_Stick_And_Stone_Recipe
 	minecraft:hasInput minecraft:Cobblestone_Bob ;
 	minecraft:hasOutput minecraft:Pickaxe_Instance_Henry ;
 	minecraft:usedInStation minecraft:CraftingTable_Instance .
-
-# Recipe Instance: Stick_recipie_bamboo
-minecraft:Stick_bamboo_recipe_Instance a minecraft:Stick_From_Bamboo_Recipe ;
-	nodeOntology:hasID 10 ;
-	nodeOntology:pointsToServer minecraft:Server_a .
 
 # Recipe Instance: Plank_recipie_Log
 minecraft:Plannks_From_Logs_Recipe_Instance a minecraft:Plannks_From_Logs_Recipe ;

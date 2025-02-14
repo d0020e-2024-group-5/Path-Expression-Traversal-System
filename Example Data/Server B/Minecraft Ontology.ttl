@@ -10,17 +10,17 @@ minecraft: a owl:Ontology ;
 
 # Main Classes
 minecraft:Item a nodeOntology:Node ;
-    rdfs:subClassOf minecraft:Node ;
+    rdfs:subClassOf nodeOntology:Node ;
     rdfs:label "Item" ;
     rdfs:comment "Represents any craftable or collectible item in Minecraft." .
 
 minecraft:Recipe a nodeOntology:Node ;
-    rdfs:subClassOf minecraft:Node ;
+    rdfs:subClassOf nodeOntology:Node ;
     rdfs:label "Recipe" ;
     rdfs:comment "Represents a crafting recipe in Minecraft." .
 
 minecraft:CraftingStation a nodeOntology:Node ;
-    rdfs:subClassOf minecraft:Node ;
+    rdfs:subClassOf nodeOntology:Node ;
     rdfs:label "Crafting Station" ;
     rdfs:comment "Represents a station where crafting occurs." .
 

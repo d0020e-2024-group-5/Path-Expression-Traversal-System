@@ -9,9 +9,6 @@ minecraft:Stick_Plank_made_Instance a minecraft:Stick ;
 minecraft:Server_a a nodeOntology:Server ;
 	nodeOntology:hasIP a .	
 
-minecraft:Server_b a nodeOntology:Server ;
-	nodeOntology:hasIP b .
-
 minecraft:Server_c a nodeOntology:Server ;	
 	nodeOntology:hasIP c .
 
