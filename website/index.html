@@ -9,12 +9,13 @@
     <!--<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>-->
     <title>Webserver</title>
 </head>
-<body>
+<body id="body">
 
 <div class="flex-container">
     <input type="text" id="input" placeholder="Enter something..." oninput="checkInput()">
     <button onclick="sendData()">Send</button>
-   
+    <button id="dark" onclick="darkMode()">Light</button>
+    
 </div>
 <div class="flex-container">
     <p id="response"></p>
@@ -94,6 +95,21 @@ function checkInput() {
 //import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.esm.min.mjs';
 //mermaid.initialize({ startOnLoad: true});
 
+const button = document.getElementById("dark");
+
+function darkMode() {
+    if (document.body.style.background === "white") {
+        document.body.style.background = "rgb(59, 59, 59)";
+        document.getElementById("response").style.color = 'white';
+        button.textContent = "Light"
+    } else {
+        document.body.style.background = "white"
+        document.getElementById("response").style.color = 'black';
+        button.textContent = "Dark"
+    }
+    
+}
+
 </script>
 
 <style>
@@ -116,6 +132,13 @@ button {
     border-radius: 25px;
 }
 
+body {
+    background-color: rgb(59, 59, 59);
+}
+
+#response {
+    color: white;
+}
 </style>
 
 </body>
