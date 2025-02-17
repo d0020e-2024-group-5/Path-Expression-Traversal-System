@@ -44,6 +44,11 @@ func Parse() map[string][]p.DataEdge { // FUNCTION READS DATA FILE LINE BY LINE,
 			wrd := getWrd(temp) // FIRST WORD IN LINE
 			firstWord = wrd
 
+			_, ok := nodeLst[firstWord]
+			if !ok {
+				nodeLst[firstWord] = make([]p.DataEdge, 0)
+			}
+			//wrd = getWrd(temp) // FIRST WORD IN LINE
 			first = false
 			fmt.Println(firstWord)
 		} else { // set node attributes/edges
