@@ -39,7 +39,7 @@ func Parse() map[string][]DataEdge { // FUNCTION READS DATA FILE LINE BY LINE, C
 
 	file, err := os.Open("./shared_volume/data.ttl") // READ DATA FILE
 	if err != nil {
-		//log.Printf("can't open data.ttl, fallback to Example Data_C.ttl: %s", err.Error())
+		log.Printf("can't open data.ttl, fallback to Example Data_C.ttl: %s", err.Error())
 		file, err = os.Open("./../Example Data/Server C/Example Data_C.ttl")
 		if err != nil {
 			log.Fatalf("cant open fallback data: %s", err.Error())
