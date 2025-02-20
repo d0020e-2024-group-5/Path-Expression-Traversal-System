@@ -5,15 +5,41 @@ import (
 	"fmt"
 	"log"
 	"os"
-	p "pets/pathExpression"
 	"strings"
 )
 
-func Parse() map[string][]p.DataEdge { // FUNCTION READS DATA FILE LINE BY LINE, CHECKING PREFIX KEYWORDS BEFORE APPENDING RELEVANT NODES AND EDGES TO THE NODE HASHMAP "nodeLst"
+type DataNode struct {
+	Name string
+	// Id int id is not required since this is kept track off in the map
+	edges []DataEdge
+}
+type DataEdge struct {
+	EdgeName   string
+	TargetName string
+}
+
+func GetNodeEdgesID(node string) []DataEdge {
+	var nodeLst = Parse()
+	for _, edges := range nodeLst {
+		for _, edge := range edges {
+			if edge.EdgeName == "hasID" && edge.TargetName == node {
+				return edges
+			}
+		}
+	}
+	fmt.Println("Node not found")
+	return nil
+}
+
+func GetNodeEdgesString(node string) []DataEdge {
+	return Parse()[node]
+}
+
+func Parse() map[string][]DataEdge { // FUNCTION READS DATA FILE LINE BY LINE, CHECKING PREFIX KEYWORDS BEFORE APPENDING RELEVANT NODES AND EDGES TO THE NODE HASHMAP "nodeLst"
 
 	file, err := os.Open("./shared_volume/data.ttl") // READ DATA FILE
 	if err != nil {
-		log.Printf("can't open data.ttl, fallback to Example Data_c.ttl: %s", err.Error())
+		log.Printf("can't open data.ttl, fallback to Example Data_C.ttl: %s", err.Error())
 		file, err = os.Open("./../Example Data/Server C/Example Data_C.ttl")
 		if err != nil {
 			log.Fatalf("cant open fallback data: %s", err.Error())
@@ -21,82 +47,65 @@ func Parse() map[string][]p.DataEdge { // FUNCTION READS DATA FILE LINE BY LINE,
 	}
 
 	defer file.Close()
-	nodeLst := make(map[string][]p.DataEdge)
-	var tempTuple p.DataEdge
+	nodeLst := make(map[string][]DataEdge)
+	var tempTuple DataEdge
 	var firstWord string
+	var first bool = true
 	scanner := bufio.NewScanner(file) // READ ONTOLOGY LINE BY LINE
 	for scanner.Scan() {
-
 		line := scanner.Text()
-		if strings.HasPrefix(line, "@prefix") { // SKIP LINES WITH "@PREFIX"
+		if strings.HasPrefix(line, "@prefix") || strings.HasPrefix(line, "#") {
+			first = true
 			continue
-		} // minecraft:Server_a a nodeOntology:Server ;
-
-		if strings.HasPrefix(line, "minecraft:") {
-			temp := strings.TrimPrefix(line, "minecraft:")
+		}
+		if len(strings.TrimSpace(line)) == 0 { // checks empty lines
+			continue
+		}
+		if first { // initialize node
+			//fmt.Println(line)
+			i := strings.Index(line, ":") + 1
+			temp := line[i:]
 
 			wrd := getWrd(temp) // FIRST WORD IN LINE
 			firstWord = wrd
 
-			//newNode.NodeName = wrd // ASSIGN TO NODENAME
-
-			// } else if strings.HasPrefix(line, "	nodeOntology:hasID ") { // CHECK ID
-
-			temp = strings.TrimPrefix(line, "	nodeOntology:hasID ")
 			_, ok := nodeLst[firstWord]
 			if !ok {
-				nodeLst[firstWord] = make([]p.DataEdge, 0)
+				nodeLst[firstWord] = make([]DataEdge, 0)
 			}
-			wrd = getWrd(temp) // FIRST WORD IN LINE
-
-			if entry, ok := nodeLst[wrd]; ok {
-				entry = append(entry, tempTuple)
-				nodeLst[wrd] = entry
-			} // APPEND THE EDGES TO TUPLE SLICE // APPEND KEY NODE TO MAP OF NODES
-			// CHECK FOR EDGES IN FOLLOWING ELSE IF STATEMENT
-		} else if strings.HasPrefix(line, "	minecraft:obtainedBy") || (strings.HasPrefix(line, "	minecraft:hasInput")) || (strings.HasPrefix(line, "	minecraft:hasOutput") || (strings.HasPrefix(line, "	minecraft:usedInStation")) || (strings.HasPrefix(line, "	nodeOntology:pointsToServer")) || (strings.HasPrefix(line, "	nodeOntology:hasIP"))) {
-
-			if strings.HasPrefix(line, "	minecraft:obtainedBy") {
-				temp := strings.TrimPrefix(line, "	minecraft:obtainedBy minecraft:")
-				wrd := getWrd(temp)
-				tempTuple.EdgeName = "obtainedBy"
+			//wrd = getWrd(temp) // FIRST WORD IN LINE
+			first = false
+			//fmt.Println(firstWord)
+		} else { // set node attributes/edges
+			i := strings.Index(line, ":") + 1
+			temp := line[i:]
+			wrd := getWrd(temp)
+			tempTuple.EdgeName = wrd
+			//fmt.Println(wrd)
+			if !strings.Contains(temp, ":") {
+				temp = strings.TrimPrefix(temp, (wrd + " "))
+				wrd = getWrd(temp)
 				tempTuple.TargetName = wrd
-			} else if strings.HasPrefix(line, "	minecraft:hasInput") {
-				temp := strings.TrimPrefix(line, "	minecraft:hasInput minecraft:")
-				wrd := getWrd(temp)
-				tempTuple.EdgeName = "hasInput"
+				//fmt.Println("id: " + wrd)
+			} else {
+				i = strings.Index(temp, ":") + 1
+				temp = temp[i:]
+				wrd = getWrd(temp)
 				tempTuple.TargetName = wrd
-			} else if strings.HasPrefix(line, "	minecraft:hasOutput") {
-				temp := strings.TrimPrefix(line, "	minecraft:hasOutput minecraft:")
-				wrd := getWrd(temp)
-				tempTuple.EdgeName = "hasOutput"
-				tempTuple.TargetName = wrd
-			} else if strings.HasPrefix(line, "	minecraft:usedInStation") {
-				temp := strings.TrimPrefix(line, "	minecraft:usedInStation minecraft:")
-				wrd := getWrd(temp)
-				tempTuple.EdgeName = "usedInStation"
-				tempTuple.TargetName = wrd
-			} else if strings.HasPrefix(line, "	nodeOntology:pointsToServer") {
-				temp := strings.TrimPrefix(line, "	nodeOntology:pointsToServer minecraft:")
-				wrd := getWrd(temp)
-				tempTuple.EdgeName = "pointsToServer"
-				tempTuple.TargetName = wrd
-			} else if strings.HasPrefix(line, "	nodeOntology:hasIP") {
-				temp := strings.TrimPrefix(line, "	nodeOntology:hasIP ")
-				wrd := getWrd(temp)
-				tempTuple.EdgeName = "hasIP"
-				tempTuple.TargetName = wrd
+				//fmt.Println("not id: " + wrd)
 			}
 
 			if entry, ok := nodeLst[firstWord]; ok {
 				entry = append(entry, tempTuple)
 				nodeLst[firstWord] = entry
+				//fmt.Println("NODE LIST: ")
 			} // APPEND THE EDGES TO TUPLE SLICE
 		}
 		if strings.HasSuffix(line, ";") {
 			continue // NEXT LINE IN SAME NODE
 		} else if strings.HasSuffix(line, ".") { // END OF NODE
 			// APPEND TO LIST OF NODES
+			first = true
 			firstWord = "" // EMPTY NODE (NEW NODE)
 		} else {
 			continue // NEWLINE/EMPTY SPACE
@@ -105,6 +114,10 @@ func Parse() map[string][]p.DataEdge { // FUNCTION READS DATA FILE LINE BY LINE,
 	if err := scanner.Err(); err != nil {
 		fmt.Println("Error reading file:", err)
 	}
+	//for k, v := range nodeLst {
+	//fmt.Printf("%s: %v\n", k, v)
+	//fmt.Println("-----------------")
+	//}
 	return nodeLst
 }
 func getWrd(w string) string { // GETS THE FIRST WORD SEPARETED BY A SPACE

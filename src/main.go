@@ -22,11 +22,14 @@ type ResponseData struct {
 	Message string `json:"message"`
 }
 
-var nodeLst = map[string][]pathExpression.DataEdge{} // NODE HASHMAP WITH A TUPLE LIST (EDGES) AS VALUE
+var nodeLst = map[string][]parse.DataEdge{} // NODE HASHMAP WITH A TUPLE LIST (EDGES) AS VALUE
 
 func main() {
 	nodeLst = parse.Parse()
-
+	for k, v := range nodeLst {
+		fmt.Printf("%s: %v\n", k, v)
+		fmt.Println("-----------------")
+	}
 	http.HandleFunc("/", handler) // servers the main HTML file
 
 	http.HandleFunc("/api/submit", handleSubmit) // API endpoint to handle form submission
