@@ -663,12 +663,33 @@ particularly those involving Unicode.
 
 ### Passing the query to dirent servers
 
+To pass data and queries to different servers an common protocol is needed, this is described bellow
+
+#### The Common Header
+
+The common header for all queries Include general information that is needed for the system.
+These include an magic to determine if its acutely an PETS query, Query type, an identifying UUID and TTL.
+The body to this header is determined by the type.
+
+There might be further changes to this standard to include multiple variable with authorizations tokens in further development. This would allow advanced functions such as to hide internal paths to non authorized users, but still propagate the query thru the network.
+
+```mermaid
+packet-beta
+title PETS common header
+0-31: "Magic 'PETS' "
+32-47: "PETS Type"
+48-63: "TTL"
+64-191: "Query identifier (UUID)"
+```
+
+#### Payload for recursive mermaid query (type 0x1)
+
 Since the data might not be stored on the same server,
 we need the ability to send the query to the next server and return the results.
 Each node that is not stored on the server has a ``false node`` with an edge labeled ``pointsToServer``.
 This edge allows us to obtain the contact information needed to forward the query.
 
-The query is then converted from its internal representation to a format suitable for transmission:
+The query is then converted from its internal representation to a format suitable for transmission in the payload, in this case a simple string:
 
 ``QueryString;NextNode;AlongEdge``
 
@@ -680,6 +701,7 @@ This information is sufficient to reconstruct the query and its state. In the cu
 
 <!-- something something error handling -->
 
+The return value when resving such an recust should be valid
 ## Webserver
 
 A webserver is beneficial for our system because it acts as a bridge between users and the linked data processing. It allows us to interact with our system from anywhere using a simple HTTP request and it provides a unified interface for querying and retrieving linked data.
