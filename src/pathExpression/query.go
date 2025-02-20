@@ -1,6 +1,8 @@
 package pathExpression
 
 import (
+	"bytes"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
@@ -9,6 +11,8 @@ import (
 	"pets/parse"
 	"strconv"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 // preprocesses the query
@@ -21,59 +25,132 @@ func preprocessQuery(inp string) string {
 
 // struct to represent all the info we need in the query
 type QueryStruct struct {
-	Query       string    // the query as a string
-	RootPointer *RootNode // pointer to the tree
-	FollowLeaf  *LeafNode // the path that should be taken to the next node
-	NextNode    string    // the name of the node next node
+	// the query as a string, pointer to allow for faster copy, as its only read and not write, no write conflict can occur.
+	// this might not be necessary as its possible to build the string from the tree
+	Query *string
+	// A time to live counter, if this reaches zero the query will return error and not traverse any further
+	TimeToLive uint16
+	// The id of the query, used mostly for logging purposes
+	QueryID uuid.UUID
+	// pointer to the tree
+	RootPointer *RootNode
+	// the path that should be taken to the next node
+	FollowLeaf *LeafNode
+	// the name of the node next node
+	NextNode string
 }
 
-// creates and returns QueryStruct from a query string
-// TODO when input query as multiple lines update NextNode and FollowLeaf accordingly
-func BobTheBuilder(input_query string) (QueryStruct, error) {
+// This function reads the required data from the stream to create a Query struct object
+// The structure of the API is ass follows
+// "PETS" // 32bits (4bytes) used as magic to confirm this is a PETS query
+// Type of query 16 bits (2bytes) (network order)
+// TTL 16 bits (2 bytes) (network order)
+// QueryID 128 bits (16bytes), an uuid
+// NOTE that the 6 first bytes needs to have been read for this to work
+func QueryStructFromStream(stream *io.Reader) (QueryStruct, error) {
+
+	var q QueryStruct
+
+	// read the ttl and uuid
+	ttl, id, err := getTTLandUUID(stream)
+	q.TimeToLive = ttl
+	q.QueryID = id
+	if err != nil {
+		return q, err
+	}
+	// this is cursed syntax
+	return q, readPayloadToQuery(stream, &q)
+
+}
+
+// this functions reads 2 bytes as network order uint16 as the ttl,
+// it then reads 16 bytes of data and converts that to an valid uuid
+func getTTLandUUID(stream *io.Reader) (uint16, uuid.UUID, error) {
+	var read_uuid uuid.UUID
+	var ttl uint16
+
+	var rawuint16 [2]byte
+	_, err := io.ReadFull(*stream, rawuint16[:])
+	if err != nil {
+		return ttl, read_uuid, err
+	}
+	ttl = binary.BigEndian.Uint16(rawuint16[:])
+
+	// read the query id
+	var raw_uuid [16]byte
+	_, err = io.ReadFull(*stream, raw_uuid[:])
+	if err != nil {
+		return ttl, read_uuid, err
+	}
+
+	// convert to uuid
+	read_uuid, err = uuid.FromBytes(raw_uuid[:])
+	if err != nil {
+		return ttl, read_uuid, err
+	}
+
+	return ttl, read_uuid, nil
+}
+
+// read the payload and update the query structs fields
+func readPayloadToQuery(stream *io.Reader, query *QueryStruct) error {
+
+	// read the payload
+	full, err := io.ReadAll(*stream)
+	if err != nil {
+		return err
+	}
+
+	// convert payload to a string
+	stringPayloadBuilder := strings.Builder{}
+	_, err = stringPayloadBuilder.Write(full)
+	if err != nil {
+		return err
+	}
+
 	// pre process query, remove spaces and change
-	input_query = preprocessQuery(input_query)
+	input_query := preprocessQuery(stringPayloadBuilder.String())
+
 	// split query on separators ";"
 	components := strings.Split(input_query, ";")
 
+	// add the query
+	query.Query = &components[0]
+
+	// create the evaluation tree
 	id_int := 0
-	root := RootNode{}
-	tmp := grow_tree(components[0], &root, &id_int)
-	root.Child = tmp
+	query.RootPointer = &RootNode{}
+	tmp := grow_tree(components[0], query.RootPointer, &id_int)
+	query.RootPointer.Child = tmp
 
-	// construct the tree
-	q := QueryStruct{}
-	q.Query = components[0]
-	q.RootPointer = &root
-
-	// TODO this need to be changed to being conditione if we have passed in the leaf node in the input_query
 	if len(components) == 3 {
 		i, err := strconv.Atoi(components[2])
 		if err != nil {
-			return q, err
+			return err
 		}
-		q.FollowLeaf = root.GetLeaf(i)
-		q.NextNode = components[1]
+		query.FollowLeaf = query.RootPointer.GetLeaf(i)
+		query.NextNode = components[1]
 
 	} else if len(components) == 1 {
 
-		q.FollowLeaf = root.NextNode(nil)[0]
+		query.FollowLeaf = query.RootPointer.NextNode(nil)[0]
 		// TODO this need to be changed to being conditione if we have passed in the next node in the input_query
 		// TODO error handling, we cant be sure that the first "operator" is traverse and therefore might get a multiple return
-		q.NextNode = q.FollowLeaf.Value
+		query.NextNode = query.FollowLeaf.Value
 	} else {
-		return q, errors.New("amount of 'lines' in query is not 1 or 3")
+		return errors.New("amount of 'lines' in query is not 1 or 3")
 	}
 
-	return q, nil
+	return nil
 }
 
 // This function converts the queryStruct to an string which could be passed on to another server
 func (q *QueryStruct) ToString() string {
-	return fmt.Sprintf("%s;%s;%d", q.Query, q.NextNode, q.FollowLeaf.ID)
+	return fmt.Sprintf("%s;%s;%d", *q.Query, q.NextNode, q.FollowLeaf.ID)
 }
 
 func (q *QueryStruct) DebugToString() string {
-	return fmt.Sprintf("%s\nNextNode: %s\nFollowingEdge: %d (%s)", q.Query, q.NextNode, q.FollowLeaf.ID, q.FollowLeaf.Value)
+	return fmt.Sprintf("%s\nNextNode: %s\nFollowingEdge: %d (%s)", *q.Query, q.NextNode, q.FollowLeaf.ID, q.FollowLeaf.Value)
 }
 
 // this function evolutes the query and with the help of the data and return new queries which have traversed one step
@@ -161,50 +238,60 @@ func TestBob() {
 	}
 	fmt.Printf("%v\n\n", data)
 
-	q, _ := BobTheBuilder("s/pickaxe/{obtainedBy/hasInput}*")
+	// create a header of ttl = 100 and an uuid
+	header := make([]byte, 0, 32)
+	binary.BigEndian.AppendUint16(header, 100)
+	qid, _ := uuid.New().MarshalBinary()
+	header = append(header, qid...)
+
+	payload := strings.NewReader("s/pickaxe/{obtainedBy/hasInput}*")
+
+	stream := io.MultiReader(bytes.NewReader(header), payload)
+
+	q, _ := QueryStructFromStream(&stream)
 	fmt.Printf("%s\n\n", q.DebugToString())
 
 	fmt.Println(TraverseQuery(&q, data))
 }
 
-func TestBob2() {
-	data := map[string][]parse.DataEdge{
-		"s": {
-			{"pickaxe", "pickaxe"},
-		},
-		"pickaxe": {
-			{"obtainedBy", "Pickaxe_From_Stick_And_Stone_Recipe"},
-		},
-		"Pickaxe_From_Stick_And_Stone_Recipe": {
-			{"hasInput", "Stick"},
-			{"hasInput", "Cobblestone"},
-		},
-	}
+// func TestBob2() {
+// 	data := map[string][]DataEdge{
+// 		"s": {
+// 			{"pickaxe", "pickaxe"},
+// 		},
+// 		"pickaxe": {
+// 			{"obtainedBy", "Pickaxe_From_Stick_And_Stone_Recipe"},
+// 		},
+// 		"Pickaxe_From_Stick_And_Stone_Recipe": {
+// 			{"hasInput", "Stick"},
+// 			{"hasInput", "Cobblestone"},
+// 		},
+// 	}
 
-	q, _ := BobTheBuilder("s/pickaxe/{obtainedBy/hasInput}*")
-	// fmt.Printf("%s\n\n", q.DebugToString())
+// 	q, _ := BobTheBuilder("s/pickaxe/{obtainedBy/hasInput}*")
+// 	// fmt.Printf("%s\n\n", q.DebugToString())
 
-	q = q.next(data)[0]
-	fmt.Printf("%s\n\n", q.DebugToString())
+// 	q = q.next(data)[0]
+// 	fmt.Printf("%s\n\n", q.DebugToString())
 
-	q = q.next(data)[0]
-	fmt.Printf("%s\n\n", q.DebugToString())
+// 	q = q.next(data)[0]
+// 	fmt.Printf("%s\n\n", q.DebugToString())
 
-	q = q.next(data)[0]
-	fmt.Printf("%s\n\n", q.DebugToString())
+// 	q = q.next(data)[0]
+// 	fmt.Printf("%s\n\n", q.DebugToString())
 
-	fmt.Println("=================================")
+// 	fmt.Println("=================================")
 
-	q, _ = BobTheBuilder("s/pickaxe/{obtainedBy/hasInput}*")
-	// fmt.Printf("%s\n\n", q.DebugToString())
+// 	q, _ = BobTheBuilder("s/pickaxe/{obtainedBy/hasInput}*")
+// 	// fmt.Printf("%s\n\n", q.DebugToString())
 
-	q, _ = BobTheBuilder(q.next(data)[0].ToString())
-	fmt.Printf("%s\n\n", q.DebugToString())
+// 	q, _ = BobTheBuilder(q.next(data)[0].ToString())
+// 	fmt.Printf("%s\n\n", q.DebugToString())
 
-	q, _ = BobTheBuilder(q.next(data)[0].ToString())
-	fmt.Printf("%s\n\n", q.DebugToString())
+// 	q, _ = BobTheBuilder(q.next(data)[0].ToString())
+// 	fmt.Printf("%s\n\n", q.DebugToString())
 
-	q, _ = BobTheBuilder(q.next(data)[0].ToString())
-	fmt.Printf("%s\n\n", q.DebugToString())
+// 	q, _ = BobTheBuilder(q.next(data)[0].ToString())
+// 	fmt.Printf("%s\n\n", q.DebugToString())
 
-}
+// }

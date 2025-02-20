@@ -1,17 +1,22 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
+
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"pets/parse"
 	"pets/pathExpression"
+
 	"strings"
 
 	"github.com/TyphonHill/go-mermaid/diagrams/flowchart"
+	"github.com/google/uuid"
 )
 
 type RequestData struct {
@@ -44,12 +49,15 @@ func main() {
 }
 
 func queryHandler(w http.ResponseWriter, r *http.Request) {
-	b := strings.Builder{}
-	full, _ := io.ReadAll(r.Body)
-	b.Write(full)
-	log.Printf("Received request: \n%s", b.String())
 
-	q, _ := pathExpression.BobTheBuilder(b.String())
+	header := make([]byte, 0, 32)
+	header = binary.BigEndian.AppendUint16(header, 100)
+	qid, _ := uuid.New().MarshalBinary()
+	header = append(header, qid...)
+
+	stream := io.MultiReader(bytes.NewReader(header), r.Body)
+
+	q, _ := pathExpression.QueryStructFromStream(&stream)
 	log.Printf("parsed request: \n%s", q.DebugToString())
 	pathExpression.RecursiveTraverse(&q, nodeLst, w)
 }
@@ -105,7 +113,7 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 	//}
 	res := sendQuery(requestData.Data)
 
-	// create a response containging the recieived data
+	// create a response containing the received data
 	response := ResponseData{Message: res}
 
 	// set response content type to JSON and send it back
@@ -113,11 +121,23 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+// this functions creates an header with an ttl = 100 and an uuid
 func sendQuery(queryString string) string {
 
-	q, _ := pathExpression.BobTheBuilder(queryString)
+	// create a header of ttl = 100 and an uuid
+	header := make([]byte, 0, 32)
+	header = binary.BigEndian.AppendUint16(header, 100)
+	qid, _ := uuid.New().MarshalBinary()
+	header = append(header, qid...)
+
+	payload := strings.NewReader(queryString)
+
+	stream := io.MultiReader(bytes.NewReader(header), payload)
+
+	q, _ := pathExpression.QueryStructFromStream(&stream)
+
 	s := pathExpression.TraverseQuery(&q, nodeLst)
-	// println(s)
+	println(s)
 	return s
 }
 
