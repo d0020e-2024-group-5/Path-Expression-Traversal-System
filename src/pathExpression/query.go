@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"pets/dbComm"
 	"strconv"
 	"strings"
 )
@@ -86,7 +87,7 @@ func (q *QueryStruct) DebugToString() string {
 }
 
 // this function evolutes the query and with the help of the data and return new queries which have traversed one step
-func (q *QueryStruct) next(data map[string][]DataEdge) []QueryStruct {
+func (q *QueryStruct) next(data map[string][]dbComm.DataEdge) []QueryStruct {
 	nextQ := make([]QueryStruct, 0)
 
 	// for each edge we want to follow
@@ -114,13 +115,13 @@ func (q *QueryStruct) next(data map[string][]DataEdge) []QueryStruct {
 
 // this function takes an query struct and traverses the data.
 // Returns the path the query in mermaid format
-func TraverseQuery(q *QueryStruct, data map[string][]DataEdge) string {
+func TraverseQuery(q *QueryStruct, data map[string][]dbComm.DataEdge) string {
 	sBuilder := new(strings.Builder)
 	RecursiveTraverse(q, data, sBuilder)
 	return sBuilder.String()
 }
 
-func RecursiveTraverse(q *QueryStruct, data map[string][]DataEdge, res io.Writer) {
+func RecursiveTraverse(q *QueryStruct, data map[string][]dbComm.DataEdge, res io.Writer) {
 	for _, qRec := range q.next(data) {
 		// test if it has en edge that indicates its a false node
 		// TODO error, there might exist a scenario when next node dont exists in our data, it should not happen but we need to be able to handle it
@@ -156,7 +157,7 @@ func RecursiveTraverse(q *QueryStruct, data map[string][]DataEdge, res io.Writer
 }
 
 func TestBob() {
-	data := map[string][]DataEdge{
+	data := map[string][]dbComm.DataEdge{
 		"s": {
 			{"pickaxe", "pickaxe"},
 		},
@@ -177,7 +178,7 @@ func TestBob() {
 }
 
 func TestBob2() {
-	data := map[string][]DataEdge{
+	data := map[string][]dbComm.DataEdge{
 		"s": {
 			{"pickaxe", "pickaxe"},
 		},

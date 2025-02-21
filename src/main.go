@@ -7,9 +7,10 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"pets/parse"
+	"pets/dbComm"
 	"pets/pathExpression"
 	"strings"
+	"text/template/parse"
 
 	"github.com/TyphonHill/go-mermaid/diagrams/flowchart"
 )
@@ -22,7 +23,7 @@ type ResponseData struct {
 	Message string `json:"message"`
 }
 
-var nodeLst = map[string][]pathExpression.DataEdge{} // NODE HASHMAP WITH A TUPLE LIST (EDGES) AS VALUE
+var nodeLst = map[string][]dbComm.DataEdge{} // NODE HASHMAP WITH A TUPLE LIST (EDGES) AS VALUE
 
 func main() {
 	nodeLst = parse.Parse()
