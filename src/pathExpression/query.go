@@ -15,6 +15,8 @@ import (
 	"github.com/google/uuid"
 )
 
+var PetsMermaidQueryHeader = [...]byte{'P', 'E', 'T', 'S', 0x00, 0x01}
+
 // preprocesses the query
 func preprocessQuery(inp string) string {
 	//remove whitespace
@@ -69,6 +71,7 @@ func getTTLandUUID(stream *io.Reader) (uint16, uuid.UUID, error) {
 	var read_uuid uuid.UUID
 	var ttl uint16
 
+	// TODO rewrite to binary.decode
 	var rawuint16 [2]byte
 	_, err := io.ReadFull(*stream, rawuint16[:])
 	if err != nil {
@@ -228,10 +231,10 @@ func RecursiveTraverse(q *QueryStruct, data map[string][]parse.DataEdge, res io.
 				for _, server_edge := range data[edge.TargetName] {
 					// if the edge has contact information
 					if server_edge.EdgeName == "hasIP" {
-						q_string := qRec.toString()
 
-						// TODO error handling
-						resp, err := http.Post("http://"+server_edge.TargetName+"/api/recq", "PETSQ", strings.NewReader(q_string))
+						stream := io.MultiReader(bytes.NewReader(PetsMermaidQueryHeader[:]), qRec.ToReader())
+
+						resp, err := http.Post("http://"+server_edge.TargetName+"/api/recq", "PETSQ", stream)
 						if err != nil {
 							log.Fatalf("error on passing to server: %s", err.Error())
 						}

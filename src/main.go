@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"reflect"
 
 	"io"
 	"log"
@@ -50,13 +51,35 @@ func main() {
 
 func queryHandler(w http.ResponseWriter, r *http.Request) {
 
-	header := make([]byte, 0, 32)
-	header = binary.BigEndian.AppendUint16(header, 100)
-	qid, _ := uuid.New().MarshalBinary()
-	header = append(header, qid...)
+	// read the first 4 bytes
+	var redMagic [4]byte
+	_, err := io.ReadFull(r.Body, redMagic[:])
+	if err != nil {
+		fmt.Fprintf(w, "%% error reading: %s", err.Error())
+		return
+	}
 
-	stream := io.MultiReader(bytes.NewReader(header), r.Body)
+	// if this
+	if !reflect.DeepEqual(redMagic[:], pathExpression.PetsMermaidQueryHeader[:4]) {
+		fmt.Fprint(w, "%% Bad magic")
+		return
+	}
 
+	// read the type
+	var petsType uint16
+	err = binary.Read(r.Body, binary.BigEndian, &petsType)
+	if err != nil {
+		fmt.Fprintf(w, "%% error reading type: %s", err.Error())
+		return
+	}
+
+	if petsType != 1 {
+		fmt.Fprint(w, "%% types other than recursive mermaid is not implemented")
+		return
+
+	}
+
+	stream := io.Reader(r.Body)
 	q, _ := pathExpression.QueryStructFromStream(&stream)
 	log.Printf("parsed request: \n%s", q.DebugToString())
 	pathExpression.RecursiveTraverse(&q, nodeLst, w)
