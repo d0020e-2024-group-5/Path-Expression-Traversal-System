@@ -144,18 +144,42 @@ func readPayloadToQuery(stream *io.Reader, query *QueryStruct) error {
 	return nil
 }
 
+// Returns a reader with ttl uuid, and payload.
+// type and magic are NOT included
+func (q *QueryStruct) ToReader() io.Reader {
+	header := make([]byte, 0, 18)
+	header = binary.BigEndian.AppendUint16(header, q.TimeToLive)
+	// TODO this can error
+	qidBin, _ := q.QueryID.MarshalBinary()
+	header = append(header, qidBin...)
+	payload := q.toString()
+	ret := io.MultiReader(bytes.NewReader(header), strings.NewReader(payload))
+	return ret
+}
+
 // This function converts the queryStruct to an string which could be passed on to another server
-func (q *QueryStruct) ToString() string {
+func (q *QueryStruct) toString() string {
 	return fmt.Sprintf("%s;%s;%d", *q.Query, q.NextNode, q.FollowLeaf.ID)
 }
 
 func (q *QueryStruct) DebugToString() string {
-	return fmt.Sprintf("%s\nNextNode: %s\nFollowingEdge: %d (%s)", *q.Query, q.NextNode, q.FollowLeaf.ID, q.FollowLeaf.Value)
+	sb := strings.Builder{}
+	fmt.Fprintf(&sb, "UUID: %s\n", q.QueryID.URN())
+	fmt.Fprintf(&sb, "TTL: %d\n", q.TimeToLive)
+	sb.WriteString(*q.Query)
+	fmt.Fprintf(&sb, "\nNextNode: %s\n", q.NextNode)
+	fmt.Fprintf(&sb, "FollowingEdge: %d (%s)", q.FollowLeaf.ID, q.FollowLeaf.Value)
+	return sb.String()
 }
 
 // this function evolutes the query and with the help of the data and return new queries which have traversed one step
 func (q *QueryStruct) next(data map[string][]parse.DataEdge) []QueryStruct {
 	nextQ := make([]QueryStruct, 0)
+
+	// if the query has no traverses left return no new queryStructs
+	if q.TimeToLive == 0 {
+		return nextQ
+	}
 
 	// for each edge we want to follow
 	for _, follow_edge := range q.FollowLeaf.NextNode(nil) {
@@ -168,6 +192,8 @@ func (q *QueryStruct) next(data map[string][]parse.DataEdge) []QueryStruct {
 				// create a new query with new current leaf
 				// and next node
 				copy := QueryStruct{
+					QueryID:     q.QueryID,
+					TimeToLive:  q.TimeToLive - 1,
 					Query:       q.Query,
 					RootPointer: q.RootPointer,
 					FollowLeaf:  follow_edge,
@@ -202,7 +228,7 @@ func RecursiveTraverse(q *QueryStruct, data map[string][]parse.DataEdge, res io.
 				for _, server_edge := range data[edge.TargetName] {
 					// if the edge has contact information
 					if server_edge.EdgeName == "hasIP" {
-						q_string := qRec.ToString()
+						q_string := qRec.toString()
 
 						// TODO error handling
 						resp, err := http.Post("http://"+server_edge.TargetName+"/api/recq", "PETSQ", strings.NewReader(q_string))
@@ -222,76 +248,3 @@ func RecursiveTraverse(q *QueryStruct, data map[string][]parse.DataEdge, res io.
 
 	}
 }
-
-func TestBob() {
-	data := map[string][]parse.DataEdge{
-		"s": {
-			{"pickaxe", "pickaxe"},
-		},
-		"pickaxe": {
-			{"obtainedBy", "Pickaxe_From_Stick_And_Stone_Recipe"},
-		},
-		"Pickaxe_From_Stick_And_Stone_Recipe": {
-			{"hasInput", "Stick"},
-			{"hasInput", "Cobblestone"},
-		},
-	}
-	fmt.Printf("%v\n\n", data)
-
-	// create a header of ttl = 100 and an uuid
-	header := make([]byte, 0, 32)
-	binary.BigEndian.AppendUint16(header, 100)
-	qid, _ := uuid.New().MarshalBinary()
-	header = append(header, qid...)
-
-	payload := strings.NewReader("s/pickaxe/{obtainedBy/hasInput}*")
-
-	stream := io.MultiReader(bytes.NewReader(header), payload)
-
-	q, _ := QueryStructFromStream(&stream)
-	fmt.Printf("%s\n\n", q.DebugToString())
-
-	fmt.Println(TraverseQuery(&q, data))
-}
-
-// func TestBob2() {
-// 	data := map[string][]DataEdge{
-// 		"s": {
-// 			{"pickaxe", "pickaxe"},
-// 		},
-// 		"pickaxe": {
-// 			{"obtainedBy", "Pickaxe_From_Stick_And_Stone_Recipe"},
-// 		},
-// 		"Pickaxe_From_Stick_And_Stone_Recipe": {
-// 			{"hasInput", "Stick"},
-// 			{"hasInput", "Cobblestone"},
-// 		},
-// 	}
-
-// 	q, _ := BobTheBuilder("s/pickaxe/{obtainedBy/hasInput}*")
-// 	// fmt.Printf("%s\n\n", q.DebugToString())
-
-// 	q = q.next(data)[0]
-// 	fmt.Printf("%s\n\n", q.DebugToString())
-
-// 	q = q.next(data)[0]
-// 	fmt.Printf("%s\n\n", q.DebugToString())
-
-// 	q = q.next(data)[0]
-// 	fmt.Printf("%s\n\n", q.DebugToString())
-
-// 	fmt.Println("=================================")
-
-// 	q, _ = BobTheBuilder("s/pickaxe/{obtainedBy/hasInput}*")
-// 	// fmt.Printf("%s\n\n", q.DebugToString())
-
-// 	q, _ = BobTheBuilder(q.next(data)[0].ToString())
-// 	fmt.Printf("%s\n\n", q.DebugToString())
-
-// 	q, _ = BobTheBuilder(q.next(data)[0].ToString())
-// 	fmt.Printf("%s\n\n", q.DebugToString())
-
-// 	q, _ = BobTheBuilder(q.next(data)[0].ToString())
-// 	fmt.Printf("%s\n\n", q.DebugToString())
-
-// }
