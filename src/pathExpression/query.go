@@ -15,9 +15,11 @@ import (
 	"github.com/google/uuid"
 )
 
+// The first 6 bytes of a recursive mermaid query, a 4 byte magic "PETS"
+// and an big endian u16 with the query type of 1, representing recursive mermaid
 var PetsMermaidQueryHeader = [...]byte{'P', 'E', 'T', 'S', 0x00, 0x01}
 
-// preprocesses the query
+// preprocesses the query, removes all white spaces and converts */ to *
 func preprocessQuery(inp string) string {
 	//remove whitespace
 	inp = strings.Replace(inp, "*/", "*", -1)
@@ -25,7 +27,9 @@ func preprocessQuery(inp string) string {
 	return inp
 }
 
-// struct to represent all the info we need in the query
+// Struct to represent all the info we need in the query.
+// It Has the methods, ToReader, used for sending the query to other servers.
+// Also has the function next, which return zero or more queries where the new queries have traversed one step.
 type QueryStruct struct {
 	// the query as a string, pointer to allow for faster copy, as its only read and not write, no write conflict can occur.
 	// this might not be necessary as its possible to build the string from the tree
@@ -35,11 +39,11 @@ type QueryStruct struct {
 	// The id of the query, used mostly for logging purposes
 	QueryID uuid.UUID
 	// pointer to the tree
-	RootPointer *RootNode
+	rootPointer *RootNode
 	// the path that should be taken to the next node
-	FollowLeaf *LeafNode
+	followLeaf *LeafNode
 	// the name of the node next node
-	NextNode string
+	nextNode string
 }
 
 // This function reads the required data from the stream to create a Query struct object
@@ -71,13 +75,11 @@ func getTTLandUUID(stream *io.Reader) (uint16, uuid.UUID, error) {
 	var read_uuid uuid.UUID
 	var ttl uint16
 
-	// TODO rewrite to binary.decode
-	var rawuint16 [2]byte
-	_, err := io.ReadFull(*stream, rawuint16[:])
+	// read the TTL from the stream
+	err := binary.Read(*stream, binary.BigEndian, &ttl)
 	if err != nil {
 		return ttl, read_uuid, err
 	}
-	ttl = binary.BigEndian.Uint16(rawuint16[:])
 
 	// read the query id
 	var raw_uuid [16]byte
@@ -122,24 +124,24 @@ func readPayloadToQuery(stream *io.Reader, query *QueryStruct) error {
 
 	// create the evaluation tree
 	id_int := 0
-	query.RootPointer = &RootNode{}
-	tmp := grow_tree(components[0], query.RootPointer, &id_int)
-	query.RootPointer.Child = tmp
+	query.rootPointer = &RootNode{}
+	tmp := grow_tree(components[0], query.rootPointer, &id_int)
+	query.rootPointer.Child = tmp
 
 	if len(components) == 3 {
 		i, err := strconv.Atoi(components[2])
 		if err != nil {
 			return err
 		}
-		query.FollowLeaf = query.RootPointer.GetLeaf(i)
-		query.NextNode = components[1]
+		query.followLeaf = query.rootPointer.GetLeaf(i)
+		query.nextNode = components[1]
 
 	} else if len(components) == 1 {
 
-		query.FollowLeaf = query.RootPointer.NextNode(nil)[0]
+		query.followLeaf = query.rootPointer.NextNode(nil)[0]
 		// TODO this need to be changed to being conditione if we have passed in the next node in the input_query
 		// TODO error handling, we cant be sure that the first "operator" is traverse and therefore might get a multiple return
-		query.NextNode = query.FollowLeaf.Value
+		query.nextNode = query.followLeaf.Value
 	} else {
 		return errors.New("amount of 'lines' in query is not 1 or 3")
 	}
@@ -162,33 +164,37 @@ func (q *QueryStruct) ToReader() io.Reader {
 
 // This function converts the queryStruct to an string which could be passed on to another server
 func (q *QueryStruct) toString() string {
-	return fmt.Sprintf("%s;%s;%d", *q.Query, q.NextNode, q.FollowLeaf.ID)
+	return fmt.Sprintf("%s;%s;%d", *q.Query, q.nextNode, q.followLeaf.ID)
 }
 
+// this function returns a string which contains information useful for debugging.
+// URN format of the id, TTL, query as string, nextnode as string, the follow edge id (and its value)
 func (q *QueryStruct) DebugToString() string {
 	sb := strings.Builder{}
 	fmt.Fprintf(&sb, "UUID: %s\n", q.QueryID.URN())
 	fmt.Fprintf(&sb, "TTL: %d\n", q.TimeToLive)
 	sb.WriteString(*q.Query)
-	fmt.Fprintf(&sb, "\nNextNode: %s\n", q.NextNode)
-	fmt.Fprintf(&sb, "FollowingEdge: %d (%s)", q.FollowLeaf.ID, q.FollowLeaf.Value)
+	fmt.Fprintf(&sb, "\nNextNode: %s\n", q.nextNode)
+	fmt.Fprintf(&sb, "FollowingEdge: %d (%s)", q.followLeaf.ID, q.followLeaf.Value)
 	return sb.String()
 }
 
-// this function evolutes the query and with the help of the data and return new queries which have traversed one step
+// this function evolutes the query and with the help of the data and return new queries which have traversed one step.
+// Note that if TTL == 0, then it returns an empty list (will be changed to return error later)
 func (q *QueryStruct) next(data map[string][]parse.DataEdge) []QueryStruct {
 	nextQ := make([]QueryStruct, 0)
 
 	// if the query has no traverses left return no new queryStructs
 	if q.TimeToLive == 0 {
+		// TODO make this return error
 		return nextQ
 	}
 
 	// for each edge we want to follow
-	for _, follow_edge := range q.FollowLeaf.NextNode(nil) {
+	for _, follow_edge := range q.followLeaf.NextNode(nil) {
 
 		// for each edge that exist from node
-		for _, exist_edge := range data[q.NextNode] {
+		for _, exist_edge := range data[q.nextNode] {
 
 			// if it exist and we want to follow it
 			if follow_edge.Value == exist_edge.EdgeName {
@@ -198,9 +204,9 @@ func (q *QueryStruct) next(data map[string][]parse.DataEdge) []QueryStruct {
 					QueryID:     q.QueryID,
 					TimeToLive:  q.TimeToLive - 1,
 					Query:       q.Query,
-					RootPointer: q.RootPointer,
-					FollowLeaf:  follow_edge,
-					NextNode:    exist_edge.TargetName,
+					rootPointer: q.rootPointer,
+					followLeaf:  follow_edge,
+					nextNode:    exist_edge.TargetName,
 				}
 				nextQ = append(nextQ, copy)
 			}
@@ -209,21 +215,25 @@ func (q *QueryStruct) next(data map[string][]parse.DataEdge) []QueryStruct {
 	return nextQ
 }
 
-// this function takes an query struct and traverses the data.
-// Returns the path the query in mermaid format
+// this function takes an query struct and traverses the data adn traverses to other servers if necessary.
+// Returns the path the query in mermaid format, errors that occurred during evaluation will be converted to valid mermaid
 func TraverseQuery(q *QueryStruct, data map[string][]parse.DataEdge) string {
 	sBuilder := new(strings.Builder)
 	RecursiveTraverse(q, data, sBuilder)
 	return sBuilder.String()
 }
 
+// This recursively (depth first) traverses the query.
+// If the path encounters a "false node" it will traverse to the server that it points to.
+// TODO error that are encounter will be written as valid mermaid and have an edge to the queries nextnode
 func RecursiveTraverse(q *QueryStruct, data map[string][]parse.DataEdge, res io.Writer) {
 	for _, qRec := range q.next(data) {
 		// test if it has en edge that indicates its a false node
 		// TODO error, there might exist a scenario when next node dont exists in our data, it should not happen but we need to be able to handle it
-		edges := data[qRec.NextNode]
+		edges := data[qRec.nextNode]
 
 		// see if edge with weight "pointsToServer" exist
+		// TODO break this out to own function
 		for _, edge := range edges {
 			if edge.EdgeName == "pointsToServer" {
 
@@ -234,7 +244,8 @@ func RecursiveTraverse(q *QueryStruct, data map[string][]parse.DataEdge, res io.
 
 						stream := io.MultiReader(bytes.NewReader(PetsMermaidQueryHeader[:]), qRec.ToReader())
 
-						resp, err := http.Post("http://"+server_edge.TargetName+"/api/recq", "PETSQ", stream)
+						resp, err := http.Post("http://"+server_edge.TargetName+"/api/pets", "PETSQ", stream)
+						// TODO write error as valid mermaid
 						if err != nil {
 							log.Fatalf("error on passing to server: %s", err.Error())
 						}
@@ -246,7 +257,7 @@ func RecursiveTraverse(q *QueryStruct, data map[string][]parse.DataEdge, res io.
 			}
 		}
 		// TODO, change arrow type if its a false node
-		fmt.Fprintf(res, "%s-->|%s|%s\n", q.NextNode, qRec.FollowLeaf.Value, qRec.NextNode)
+		fmt.Fprintf(res, "%s-->|%s|%s\n", q.nextNode, qRec.followLeaf.Value, qRec.nextNode)
 		RecursiveTraverse(&qRec, data, res)
 
 	}

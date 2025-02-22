@@ -5,14 +5,17 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	p "pets/parse"
 	"strings"
 	"testing"
 
 	"github.com/google/uuid"
 )
 
-func TestBob(t *testing.T) {
-	data := map[string][]DataEdge{
+// This functions traverse the data and sees if the resulting mermaid matches the expected outcome
+// TODO, make the companions ignore the order of the mermaid
+func TestTraversal(t *testing.T) {
+	data := map[string][]p.DataEdge{
 		"s": {
 			{"pickaxe", "pickaxe"},
 		},
@@ -54,10 +57,14 @@ func TestBob(t *testing.T) {
 	}
 }
 
-func TestTraversalSingleStep(t *testing.T) {
+// This function test if traversal without converting from reader and back
+// outputs the same path as acutely doing the conversion.
+// The propose of this is to se if sending to other server is viable as
+// to send to another server requires it to be converted to a format that could be sent over the network
+func TestTraversalWithToReader(t *testing.T) {
 
 	// test data
-	data := map[string][]DataEdge{
+	data := map[string][]p.DataEdge{
 		"s": {
 			{"pickaxe", "pickaxe"},
 		},
@@ -89,19 +96,19 @@ func TestTraversalSingleStep(t *testing.T) {
 	internal_steps := make([]string, 0, 10)
 
 	// add starting point
-	internal_steps = append(internal_steps, qStart.NextNode)
+	internal_steps = append(internal_steps, qStart.nextNode)
 
 	// walk once and add step
 	q := qStart.next(data)[0]
-	internal_steps = append(internal_steps, q.NextNode)
+	internal_steps = append(internal_steps, q.nextNode)
 
 	// walk once and add step
 	q = q.next(data)[0]
-	internal_steps = append(internal_steps, q.NextNode)
+	internal_steps = append(internal_steps, q.nextNode)
 
 	// walk once and add step
 	q = q.next(data)[0]
-	internal_steps = append(internal_steps, q.NextNode)
+	internal_steps = append(internal_steps, q.nextNode)
 
 	// ================================
 	// Repeat but convert back and forth
@@ -109,7 +116,7 @@ func TestTraversalSingleStep(t *testing.T) {
 	server_steps := make([]string, 0, 10)
 
 	// add starting point
-	server_steps = append(server_steps, qStart.NextNode)
+	server_steps = append(server_steps, qStart.nextNode)
 
 	// walk once and add step
 	r := qStart.ToReader()
@@ -118,7 +125,7 @@ func TestTraversalSingleStep(t *testing.T) {
 		t.Fatal(err)
 	}
 	q = q.next(data)[0]
-	server_steps = append(server_steps, q.NextNode)
+	server_steps = append(server_steps, q.nextNode)
 
 	// walk once and add step
 	r = q.ToReader()
@@ -127,7 +134,7 @@ func TestTraversalSingleStep(t *testing.T) {
 		t.Fatal(err)
 	}
 	q = q.next(data)[0]
-	server_steps = append(server_steps, q.NextNode)
+	server_steps = append(server_steps, q.nextNode)
 
 	// walk once and add step
 	r = q.ToReader()
@@ -136,7 +143,7 @@ func TestTraversalSingleStep(t *testing.T) {
 		t.Fatal(err)
 	}
 	q = q.next(data)[0]
-	server_steps = append(server_steps, q.NextNode)
+	server_steps = append(server_steps, q.nextNode)
 
 	// ================================
 	// compare result

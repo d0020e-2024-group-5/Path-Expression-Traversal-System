@@ -36,11 +36,14 @@ func main() {
 		fmt.Printf("%s: %v\n", k, v)
 		fmt.Println("-----------------")
 	}
-	http.HandleFunc("/", handler) // servers the main HTML file
+	// servers the main HTML file
+	http.HandleFunc("/", handler)
 
-	http.HandleFunc("/api/submit", handleSubmit) // API endpoint to handle form submission
+	// API endpoint to handle form submission
+	http.HandleFunc("/api/submit", handleSubmit)
 
-	http.HandleFunc("/api/recq", queryHandler)
+	// handle PETS request
+	http.HandleFunc("/api/pets", queryHandler)
 
 	// create the server and listen to port 80
 	err := http.ListenAndServe(":80", nil)
@@ -59,7 +62,7 @@ func queryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// if this
+	// if this magic doesn't match
 	if !reflect.DeepEqual(redMagic[:], pathExpression.PetsMermaidQueryHeader[:4]) {
 		fmt.Fprint(w, "%% Bad magic")
 		return
@@ -73,10 +76,10 @@ func queryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// if the type is not recursive mermaid, then write the error
 	if petsType != 1 {
 		fmt.Fprint(w, "%% types other than recursive mermaid is not implemented")
 		return
-
 	}
 
 	stream := io.Reader(r.Body)
