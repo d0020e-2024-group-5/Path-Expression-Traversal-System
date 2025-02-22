@@ -243,7 +243,7 @@ func RecursiveTraverse(q *QueryStruct, data map[string][]parse.DataEdge, res io.
 					if server_edge.EdgeName == "hasIP" {
 
 						stream := io.MultiReader(bytes.NewReader(PetsMermaidQueryHeader[:]), qRec.ToReader())
-
+						log.Printf("query following querydata to %s \n%s", server_edge.TargetName, qRec.DebugToString())
 						resp, err := http.Post("http://"+server_edge.TargetName+"/api/pets", "PETSQ", stream)
 						// TODO write error as valid mermaid
 						if err != nil {

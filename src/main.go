@@ -153,7 +153,9 @@ func sendQuery(queryString string) string {
 	// create a header of ttl = 100 and an uuid
 	header := make([]byte, 0, 32)
 	header = binary.BigEndian.AppendUint16(header, 100)
-	qid, _ := uuid.New().MarshalBinary()
+	tmp := uuid.New()
+	log.Printf("Created query with id %s", tmp.URN())
+	qid, _ := tmp.MarshalBinary()
 	header = append(header, qid...)
 
 	payload := strings.NewReader(queryString)
