@@ -7,7 +7,7 @@ minecraft:Stick_Plank_made_Instance a minecraft:Stick ;
 	minecraft:obtainedBy minecraft:Stick_Planks_recipe_Instance .
 
 minecraft:Server_a a nodeOntology:Server ;
-	nodeOntology:hasIP a .	
+	nodeOntology:hasIP a .
 
 minecraft:Server_c a nodeOntology:Server ;	
 	nodeOntology:hasIP c .
