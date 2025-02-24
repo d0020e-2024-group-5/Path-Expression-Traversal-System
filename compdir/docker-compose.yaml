@@ -22,3 +22,8 @@ services:
             - ./../Example Data/Server C/Example Data_C.ttl:/usr/app/shared_volume/data.ttl
         ports:
             - "80:80"
+    aDB:
+        image: ontotext/graphdb:10.7.0
+        container_name: graphDB_A
+    
+    

@@ -10,7 +10,6 @@ import (
 	"pets/dbComm"
 	"pets/pathExpression"
 	"strings"
-	"text/template/parse"
 
 	"github.com/TyphonHill/go-mermaid/diagrams/flowchart"
 )
@@ -26,8 +25,7 @@ type ResponseData struct {
 var nodeLst = map[string][]dbComm.DataEdge{} // NODE HASHMAP WITH A TUPLE LIST (EDGES) AS VALUE
 
 func main() {
-	nodeLst = parse.Parse()
-
+	fmt.Println(dbComm.DBGetNodeEdgesString("nodeOntology:hasID", nil))
 	http.HandleFunc("/", handler) // servers the main HTML file
 
 	http.HandleFunc("/api/submit", handleSubmit) // API endpoint to handle form submission
