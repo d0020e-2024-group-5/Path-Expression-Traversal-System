@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"pets/parse"
+	"pets/pathExpression/mermaidError"
 	"strconv"
 	"strings"
 
@@ -184,12 +185,6 @@ func (q *QueryStruct) DebugToString() string {
 func (q *QueryStruct) next(data map[string][]parse.DataEdge) []QueryStruct {
 	nextQ := make([]QueryStruct, 0)
 
-	// if the query has no traverses left return no new queryStructs
-	if q.TimeToLive == 0 {
-		// TODO make this return error
-		return nextQ
-	}
-
 	// for each edge we want to follow
 	for _, follow_edge := range q.followLeaf.NextNode(nil) {
 
@@ -227,6 +222,12 @@ func TraverseQuery(q *QueryStruct, data map[string][]parse.DataEdge) string {
 // If the path encounters a "false node" it will traverse to the server that it points to.
 // TODO error that are encounter will be written as valid mermaid and have an edge to the queries nextnode
 func RecursiveTraverse(q *QueryStruct, data map[string][]parse.DataEdge, res io.Writer) {
+	// if Time to live is zero write error
+	if q.TimeToLive == 0 {
+		mermaidError.MermaidErrorEdge(res, q.nextNode, " ", fmt.Sprintf("Time to live expired\n%s(%s)", strings.ReplaceAll(q.toString(), ";", "\n"), q.followLeaf.Value))
+		return
+	}
+
 	for _, qRec := range q.next(data) {
 		// test if it has en edge that indicates its a false node
 		// TODO error, there might exist a scenario when next node dont exists in our data, it should not happen but we need to be able to handle it
@@ -259,6 +260,5 @@ func RecursiveTraverse(q *QueryStruct, data map[string][]parse.DataEdge, res io.
 		// TODO, change arrow type if its a false node
 		fmt.Fprintf(res, "%s-->|%s|%s\n", q.nextNode, qRec.followLeaf.Value, qRec.nextNode)
 		RecursiveTraverse(&qRec, data, res)
-
 	}
 }
