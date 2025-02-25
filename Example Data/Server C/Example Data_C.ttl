@@ -24,7 +24,7 @@ minecraft:Pickaxe_Instance_Gustav a minecraft:Pickaxe ;
 	nodeOntology:hasID 5 .
 
 minecraft:Server_a a nodeOntology:Server ;
-	nodeOntology:hasIP a .	
+	nodeOntology:hasIP a .
 
 minecraft:Server_b a nodeOntology:Server ;
 	nodeOntology:hasIP b .
