@@ -1,0 +1,10 @@
+[INFO ] 2025-02-25 10:29:22,439 [main | c.o.g.Config] Using 'jar:file:/opt/graphdb/dist/lib/graphdb-application-common-10.7.0.jar!/com/ontotext/graphdb/logback.xml' as logback's configuration file
+[INFO ] 2025-02-25 10:29:23,087 [main | c.o.g.s.GraphDB] Starting GraphDB in workbench mode.
+[INFO ] 2025-02-25 10:29:39,142 [main | c.o.g.Config] GraphDB Home directory: /opt/graphdb/home
+[INFO ] 2025-02-25 10:29:39,149 [main | c.o.g.Config] GraphDB Config directory: /opt/graphdb/home/conf
+[INFO ] 2025-02-25 10:29:39,157 [main | c.o.g.Config] GraphDB Data directory: /opt/graphdb/home/data
+[INFO ] 2025-02-25 10:29:39,163 [main | c.o.g.Config] GraphDB Work directory: /opt/graphdb/home/work
+[INFO ] 2025-02-25 10:29:39,166 [main | c.o.g.Config] GraphDB Logs directory: /opt/graphdb/home/logs
+[INFO ] 2025-02-25 10:29:40,704 [main | c.o.f.c.s.r.GraphDBRpcServer] Started gRPC server on port 7300 successfully
+[INFO ] 2025-02-25 10:29:46,799 [main | c.o.g.s.GraphDB] Started GraphDB in workbench mode at port 7200.
+[INFO ] 2025-02-25 10:30:31,111 [Thread-3 | c.o.g.s.GraphDB] Stopping GraphDB.

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 )
@@ -46,10 +47,8 @@ func DBGetNodeEdgesString(node string, prefix []string) ([]DataEdge, error) {
 		}
 		prefixStr += "PREFIX " + str + "\n"
 	}
-	// feel free to change the hostname
-	fmt.Println(prefixStr)
-	//prefixStr = ""
-	hostname := "http://localhost:7200" + "/repositories/ServerA"
+	fmt.Println(" Hoasname: ", os.Getenv("GRAPHDB_HOSTNAME"), " Repository: ", os.Getenv("GRAPHDB_REPOSITORY"))
+	hostname := "http://" + os.Getenv("GRAPHDB_HOSTNAME") + ":7200" + "/repositories/" + os.Getenv("GRAPHDB_REPOSITORY") + "?query="
 	// sql injection might be possible here
 	query := prefixStr + "\n" + "SELECT ?p ?o WHERE { <" + node + "> ?p ?o } LIMIT 100"
 	fmt.Println(query)
