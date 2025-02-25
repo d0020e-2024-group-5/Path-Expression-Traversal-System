@@ -16,17 +16,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// 1. Time to live error
-// 2. edge points to not found
-// type queryError struct {
-// 	errType  int
-// 	asString string
-// }
-
-// func (e *queryError) Error() string {
-// 	return e.asString
-// }
-
 // The first 6 bytes of a recursive mermaid query, a 4 byte magic "PETS"
 // and an big endian u16 with the query type of 1, representing recursive mermaid
 var PetsMermaidQueryHeader = [...]byte{'P', 'E', 'T', 'S', 0x00, 0x01}
