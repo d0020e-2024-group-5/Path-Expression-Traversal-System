@@ -1,6 +1,10 @@
 @prefix minecraft: <http://example.org/minecraft#> .
 @prefix nodeOntology: <http://example.org/NodeOntology#> .
 
+# server Instances
+minecraft:Server_b a nodeOntology:Server ;
+	nodeOntology:hasIP b .
+
 # Instances of Items
 
 minecraft:Stick_Bamboo_made_Instance a minecraft:Stick ;
@@ -9,7 +13,6 @@ minecraft:Stick_Bamboo_made_Instance a minecraft:Stick ;
 
 minecraft:Bamboo_Instance a nodeOntology:NodeFalse ;
 	nodeOntology:hasID 6 .
-	
 	
 # Crafting Station Instance
 minecraft:CraftingTable_Instance a minecraft:CraftingTable ;
@@ -20,4 +23,16 @@ minecraft:Stick_bamboo_recipe_Instance a minecraft:Stick_From_Bamboo_Recipe ;
 	nodeOntology:hasID 10 ;
 	minecraft:hasInput minecraft:Bamboo_Instance ;
 	minecraft:hasOutput minecraft:Stick_Bamboo_made_Instance ;
+	minecraft:usedInStation minecraft:CraftingTable_Instance .
+
+
+# Plank_from_Bamboo_Instance
+minecraft:Plank_from_Bamboo_Instance a minecraft:Plank_from_Bamboo ;
+	nodeOntology:hasID 14 ;
+	nodeOntology:pointsToServer minecraft:Server_b .
+
+minecraft:Plank_from_bamboo_recipe_Instance a minecraft:Plank_from_bamboo_recipe;
+	nodeOntology:hasID 15 ;
+	minecraft:hasInput minecraft:Bamboo_Instance ;
+	minecraft:hasOutput minecraft:Plank_from_Bamboo_Instance ;
 	minecraft:usedInStation minecraft:CraftingTable_Instance .
