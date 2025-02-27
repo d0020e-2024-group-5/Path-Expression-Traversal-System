@@ -390,7 +390,8 @@ func split_q(str string) [3]string {
 	// TODO add test in the beginning if an non operator is after an closing bracket, example "}h" or before and opening bracket "a{"
 	panic("something went wrong, no operators to split on")
 }
-func isValid(str string) error { // checks for invalid operator combinations
+// Checks for invalid operator combinations and returns nil if no invalid combination is found.
+func isValid(str string) error { 
 	operands := "/^*&|"	// current available operands
 	index := strings.IndexAny(str, operands)
 	if (string(str[index]) != "/"){	// if first operand isn't a traverse (/)
