@@ -1,0 +1,2 @@
+[INFO ] 2025-02-26 15:24:51,453 [import-task-PETSrep-1 | c.o.t.m.MonitorRepositoryConnection] Parallel mode requested but it is disabled globally. Using serial mode instead.
+[INFO ] 2025-02-26 15:34:07,252 [import-task-PETSrep-1 | c.o.t.m.MonitorRepositoryConnection] Parallel mode requested but it is disabled globally. Using serial mode instead.

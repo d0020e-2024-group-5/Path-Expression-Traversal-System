@@ -25,7 +25,7 @@ type DataEdge struct {
 // The prefix is a list of strings that are used as prefixes in the query (can be empty)
 func DBGetNodeEdgesString(node string, prefix []string) ([]DataEdge, error) {
 	//sql injection protection
-	re := regexp.MustCompile(`\s|{|}|\.|\n|,|;`)
+	re := regexp.MustCompile(`\s|{|}|\s\.|\n|,|;`)
 	if re.MatchString(node) {
 		return nil, fmt.Errorf("sql injection protection node. ")
 	}
@@ -48,9 +48,9 @@ func DBGetNodeEdgesString(node string, prefix []string) ([]DataEdge, error) {
 		prefixStr += "PREFIX " + str + "\n"
 	}
 	fmt.Println(" Hoasname: ", os.Getenv("GRAPHDB_HOSTNAME"), " Repository: ", os.Getenv("GRAPHDB_REPOSITORY"))
-	hostname := "http://" + os.Getenv("GRAPHDB_HOSTNAME") + ":7200" + "/repositories/" + os.Getenv("GRAPHDB_REPOSITORY") + "?query="
+	hostname := "http://" + os.Getenv("GRAPHDB_HOSTNAME") + ":7200" + "/repositories/" + os.Getenv("GRAPHDB_REPOSITORY")
 	// sql injection might be possible here
-	query := prefixStr + "\n" + "SELECT ?p ?o WHERE { <" + node + "> ?p ?o } LIMIT 100"
+	query := prefixStr + "SELECT ?p ?o WHERE { " + node + " ?p ?o } limit 100"
 	fmt.Println(query)
 	reqBody := []byte("query=" + query)
 	req, err := http.NewRequest("POST", hostname, bytes.NewBuffer(reqBody))

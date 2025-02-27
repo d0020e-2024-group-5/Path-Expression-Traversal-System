@@ -1,0 +1,47 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix nodeOntology: <http://example.org/NodeOntology#> .
+
+
+nodeOntology: a owl:Ontology ;
+    rdfs:comment "An RDFS Ontology for PETS's node System." ;
+    rdfs:label "PETS's node Ontology" .
+
+nodeOntology:Server a owl:Class ;
+	rdfs:comment "A way to another server" ;
+    rdfs:label "Server" .
+
+nodeOntology:Node a owl:Class ;
+    rdfs:label "Node" ;
+    rdfs:comment "Represents all nodes in the database system." .	
+
+nodeOntology:NodeTrue a owl:Class ;
+    rdfs:subClassOf nodeOntology:Node;
+    rdfs:label "NodeTrue" ;
+    rdfs:comment "Represents all nodes in the same database system." .
+
+nodeOntology:NodeFalse a owl:Class ;
+    rdfs:subClassOf nodeOntology:Node;
+    rdfs:label "NodeFalse" ;
+    rdfs:comment "Represents all nodes in other database system." .
+
+#Define_properties
+
+nodeOntology:pointsToNode a rdf:Property ;
+    rdfs:domain nodeOntology:Node ;
+    rdfs:range nodeOntology:Node ;
+    rdfs:comment "Links a Node to a Node ".
+
+nodeOntology:pointsToServer a rdf:pointsToNode ;
+    rdfs:domain nodeOntology:NodeFalse ;
+    rdfs:range nodeOntology:Server ;
+    rdfs:comment "Links a Node to a Server ".
+
+nodeOntology:hasIP a rdfs:Property ;
+	rdfs:domain nodeOntology:Server ;
+	rdfs:range xsd:string . # store IP addres as String
+	
+nodeOntology:hasID a rdfs:Property ;
+	rdfs:domain nodeOntology:Node ;
+	rdfs:range xsd:int  . # store ID addres as String

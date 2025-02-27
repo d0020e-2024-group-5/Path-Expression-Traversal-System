@@ -2,30 +2,28 @@ services:
     cDB:
         image: ontotext/graphdb:10.7.0
         container_name: graphDB_C
-
+        restart: always
         ports:
             - "7202:7200"
         volumes:
-            - ./../Example Data/Server C:/opt/graphdb/home
-            - ./../Example Data/repo-config.ttl:/root/graphdb-import/repo-config.ttl
+            - ./../graphDBdata/repC/:/root/graphdb-import
     bDB:
         image: ontotext/graphdb:10.7.0
-        container_name: graphDB_B
+        container_name: graphdb_B
+        restart: always
         ports:
             - "7201:7200"
         volumes:
-            - ./../Example Data/Server B:/opt/graphdb/home
-            - ./../Example Data/repo-config.ttl:/opt/graphdb-import/repo-config.ttl
+            - ./../graphDBdata/repB/:/opt/graphdb/home
         
     aDB:
         image: ontotext/graphdb:10.7.0
         container_name: graphDB_A
+        restart: always
         ports:
             - "7200:7200"
         volumes:
-            - ./../Example Data/Server A:/opt/graphdb/home
-            - ./../Example Data/repo-config.ttl:/root/graphdb-import/repo-config.ttl
-        
+            - ./../graphDBdata/repC/:/root/graphdb-import
 
     a:
         # Build our go application with hostname "a", 
@@ -37,7 +35,7 @@ services:
             - ./../Example Data/Server A/Example Data_A.ttl:/usr/app/shared_volume/data.ttl
         environment:
             GRAPHDB_HOSTNAME: "aDB"
-            GRAPHDB_REPOSITORY: "PETSdata"
+            GRAPHDB_REPOSITORY: "PETSrep"
 
     b:
         # same as a but no contact to outside
@@ -47,7 +45,7 @@ services:
             - ./../Example Data/Server B/Example Data_B.ttl:/usr/app/shared_volume/data.ttl
         environment:
             GRAPHDB_HOSTNAME: "bDB"
-            GRAPHDB_REPOSITORY: "PETSdata"
+            GRAPHDB_REPOSITORY: "PETSrep"
         depends_on:
              bDB:
                 condition: service_started
@@ -61,6 +59,6 @@ services:
         ports:
             - "80:80"
         environment:
-            GRAPHDB_HOSTNAME: cDB
-            GRAPHDB_REPOSITORY: "PETSdata"
+            GRAPHDB_HOSTNAME: "cDB"
+            GRAPHDB_REPOSITORY: "PETSrep"
         

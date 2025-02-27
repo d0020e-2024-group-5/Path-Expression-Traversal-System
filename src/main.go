@@ -25,8 +25,8 @@ type ResponseData struct {
 var nodeLst = map[string][]dbComm.DataEdge{} // NODE HASHMAP WITH A TUPLE LIST (EDGES) AS VALUE
 
 func main() {
-	//time.Sleep(120 * time.Second)
-	fmt.Println(dbComm.DBGetNodeEdgesString("nodeOntology:hasID", nil))
+	var prefixList = []string{"minecraft: <http://example.org/minecraft#>"}
+	fmt.Println(dbComm.DBGetNodeEdgesString("minecraft:obtainedBy", prefixList))
 	http.HandleFunc("/", handler) // servers the main HTML file
 
 	http.HandleFunc("/api/submit", handleSubmit) // API endpoint to handle form submission
