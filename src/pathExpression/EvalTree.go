@@ -2,6 +2,7 @@ package pathExpression
 
 import (
 	"regexp"
+	"slices"
 	"strings"
 )
 
@@ -9,7 +10,7 @@ import (
 // it add the possibility to query for the next node
 // returns the leaf nodes that are next in the query
 type Node interface {
-	NextNode(Node) []*LeafNode
+	NextNode(Node, []string) []*LeafNode
 	GetLeaf(int) *LeafNode
 }
 
@@ -32,6 +33,25 @@ type LoopNode struct {
 	Parent Node
 	Left   Node
 	Right  Node
+}
+
+// Struct representing the OR node operator
+type ORNode struct {
+	Parent Node
+	Left Node 
+	Right Node
+}
+
+type ANDNode struct {
+	Parent Node
+	Left Node
+	Right Node
+}
+
+type XORNode struct {
+	Parent Node
+	Left Node 
+	Right Node
 }
 
 // The root of a query tree, passes next node to child with required info
@@ -69,6 +89,45 @@ func (l *LoopNode) GetLeaf(id int) *LeafNode {
 	}
 }
 
+func (o *ORNode) GetLeaf(id int) *LeafNode {
+	tmp1 := o.Left.GetLeaf(id)
+	tmp2 := o.Right.GetLeaf(id)
+
+	if tmp1 != nil {
+		return tmp1
+	} else if tmp2 != nil {
+		return tmp2
+	} else {
+		return nil
+	}
+}
+
+func (a *ANDNode) GetLeaf(id int) *LeafNode {
+	tmp1 := a.Left.GetLeaf(id)
+	tmp2 := a.Right.GetLeaf(id)
+
+	if tmp1 != nil {
+		return tmp1
+	} else if tmp2 != nil {
+		return tmp2
+	} else {
+		return nil
+	}
+}
+
+func (x *XORNode) GetLeaf(id int) *LeafNode {
+	tmp1 := x.Left.GetLeaf(id)
+	tmp2 := x.Right.GetLeaf(id)
+
+	if tmp1 != nil {
+		return tmp1
+	} else if tmp2 != nil {
+		return tmp2
+	} else {
+		return nil
+	}
+}
+
 func (l *LeafNode) GetLeaf(id int) *LeafNode {
 	if l.ID == id {
 		return l
@@ -76,34 +135,39 @@ func (l *LeafNode) GetLeaf(id int) *LeafNode {
 	return nil
 }
 
+
+
+
+
+
+
 // Passes next node to child with required info
 // TODO error can occur when a child calls this function
-func (r *RootNode) NextNode(caller Node) []*LeafNode {
-	return r.Child.NextNode(r)
+func (r *RootNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
+	return r.Child.NextNode(r, availablePaths)
 }
 
 // node that implements the traverse function.
 // If left node calls traverse, continue to right tree
 // if right tree calls, branch has been evaluated and call next tree on parent
-func (t *TraverseNode) NextNode(caller Node) []*LeafNode {
+func (t *TraverseNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	var leafs []*LeafNode
 
 	if caller == t.Parent { // Pointer comparison to avoid same value struct bug
 		// if the caller is parent, we should deced into the left branch,
 		// t.Left.NextNode(t)
-		leafs = append(leafs, t.Left.NextNode(t)...)
+		leafs = append(leafs, t.Left.NextNode(t, availablePaths)...)
 
 	} else if caller == t.Left {
 		// when the left branch has evaluated it will call us again
 		// an we than have to evaluate the right branch
 		// t.Right.NextNode(t)
-		leafs = append(leafs, t.Right.NextNode(t)...)
+		leafs = append(leafs, t.Right.NextNode(t, availablePaths)...)
 
 	} else if caller == t.Right {
 		// when the right brach has evaluated it will call us again
 		// we then know we have been fully evaluated and can call our parent saying we are done
-		t.Parent.NextNode(t)
-		leafs = append(leafs, t.Parent.NextNode(t)...)
+		leafs = append(leafs, t.Parent.NextNode(t, availablePaths)...)
 
 	} else {
 		panic("i dont know what should happen here1?")
@@ -114,20 +178,20 @@ func (t *TraverseNode) NextNode(caller Node) []*LeafNode {
 // we want to have an looping behavior, when left is done evaluating we want to repeat it which means
 // when left calls an we evaluate left again, but exiting the loop is also viable si right should also evaluate.
 // right is the exit so when right is done pass ask parent for next node
-func (l *LoopNode) NextNode(caller Node) []*LeafNode {
+func (l *LoopNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	var leafs []*LeafNode
 	if caller == l.Parent {
-		tmp1 := l.Left.NextNode(l)
-		tmp2 := l.Right.NextNode(l)
+		tmp1 := l.Left.NextNode(l, availablePaths)
+		tmp2 := l.Right.NextNode(l, availablePaths)
 		leafs = append(leafs, tmp1...)
 		leafs = append(leafs, tmp2...)
 	} else if caller == l.Left {
-		tmp1 := l.Left.NextNode(l)
-		tmp2 := l.Right.NextNode(l)
+		tmp1 := l.Left.NextNode(l, availablePaths)
+		tmp2 := l.Right.NextNode(l, availablePaths)
 		leafs = append(leafs, tmp1...)
 		leafs = append(leafs, tmp2...)
 	} else if caller == l.Right {
-		tmp1 := l.Parent.NextNode(l)
+		tmp1 := l.Parent.NextNode(l, availablePaths)
 		leafs = append(leafs, tmp1...)
 	} else {
 		panic("loopnode nextnode panic")
@@ -135,12 +199,74 @@ func (l *LoopNode) NextNode(caller Node) []*LeafNode {
 	return leafs
 }
 
+
+
+func (o *ORNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
+	var leafs []*LeafNode
+
+	if caller == o.Parent {
+		leafs = append(leafs, o.Left.NextNode(o, availablePaths)...)
+		leafs = append(leafs, o.Right.NextNode(o, availablePaths)...)
+	} else {
+		leafs = append(leafs, o.Parent.NextNode(o, availablePaths)...)
+	}
+	return leafs
+}
+
+func (a *ANDNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
+	var leafs []*LeafNode
+	if caller == a.Parent {
+		leafs = append(leafs, a.Left.NextNode(a, availablePaths)...)
+		leafs = append(leafs, a.Right.NextNode(a, availablePaths)...)
+		
+		for _, leaf := range leafs{
+			isPath := slices.Contains(availablePaths, leaf.Value)
+			// if path is not an available path return empty array
+			if !isPath {
+				var tmp []*LeafNode
+				return tmp
+			}
+		}
+	} else {
+		leafs = append(leafs, a.Parent.NextNode(a, availablePaths)...)
+	}
+	return leafs	
+}
+
+func (x *XORNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
+	var leafs []*LeafNode
+	if caller == x.Parent {
+		leafs = append(leafs, x.Left.NextNode(x, availablePaths)...)
+		leafs = append(leafs, x.Right.NextNode(x, availablePaths)...)
+
+		numOfPaths := 0
+		for _, leaf := range leafs{
+			isPath := slices.Contains(availablePaths, leaf.Value)
+			// if path is not an available path return empty array
+			if isPath {numOfPaths += 1}
+		}
+		if numOfPaths == 1 {
+			for _, leaf := range leafs {
+				isPath := slices.Contains(availablePaths, leaf.Value)
+				if isPath {
+					var tmp []*LeafNode
+					tmp = append(tmp, leaf)
+					return tmp
+				}
+			}
+		}
+	} else {
+		leafs = append(leafs, x.Parent.NextNode(x, availablePaths)...)
+	}
+	return leafs
+}
+
 // This node represents an edge in the query
-func (l *LeafNode) NextNode(caller Node) []*LeafNode {
+func (l *LeafNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	if caller == l.Parent {
 		return []*LeafNode{l}
 	} else if caller == nil {
-		return l.Parent.NextNode(l)
+		return l.Parent.NextNode(l, availablePaths)
 	} else {
 		panic("leafnode nextnode panic")
 	}
@@ -148,7 +274,7 @@ func (l *LeafNode) NextNode(caller Node) []*LeafNode {
 
 // creates a branch where the top node has the given parent.
 // return a the top node
-func grow_tree(str string, parent Node, id *int) Node {
+func grow_tree(str string, parent Node, id *int) (Node, error) {
 	// split the string to a left operator and right part
 	// this functions takes into account brackets {}
 	parts := split_q(str)
@@ -159,17 +285,17 @@ func grow_tree(str string, parent Node, id *int) Node {
 	if operator == "/" {
 		t := TraverseNode{}
 		t.Parent = parent
-		t.Left = grow_tree(Left, &t, id)
-		t.Right = grow_tree(Right, &t, id)
-		return &t
+		t.Left, _ = grow_tree(Left, &t, id)
+		t.Right, _ = grow_tree(Right, &t, id)
+		return &t, nil
 
 		// if the operator is loop (aka match zero or more) create a loop node
 	} else if operator == "*" {
 		l := LoopNode{}
 		l.Parent = parent
-		l.Left = grow_tree(Left, &l, id)
-		l.Right = grow_tree(Right, &l, id)
-		return &l
+		l.Left, _ = grow_tree(Left, &l, id)
+		l.Right, _ = grow_tree(Right, &l, id)
+		return &l, nil
 
 		// if the operator is "0" this indicates that the parsing resulted in only a left side
 		// this means this is an leaf node
@@ -178,13 +304,16 @@ func grow_tree(str string, parent Node, id *int) Node {
 		tmp := *id
 		tmp++
 		*id = tmp
-		return &l
+		return &l, nil
 
 		// No operator matched
 	} else {
 		panic("invalid operator")
 	}
 }
+
+
+
 
 // if the passed string contains a valid operator,
 // note that this returns true even for operators that are planed but not implanted
