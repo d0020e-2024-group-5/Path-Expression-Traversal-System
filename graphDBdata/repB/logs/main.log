@@ -2338,3 +2338,4 @@ Was expecting one of:
 [INFO ] 2025-02-27 13:54:10,406 [repositories/PETSrep | o.e.r.h.s.r.n.NamespacesController] GET namespace list
 [INFO ] 2025-02-27 13:54:10,482 [repositories/PETSrep | o.e.r.h.s.r.TupleQueryResultView] Request for query 3392903 is finished
 [INFO ] 2025-02-27 13:55:18,048 [repositories/PETSrep | c.o.g.s.h.GraphDBQueryResultHandler] POST query -968456518
+[INFO ] 2025-02-27 13:55:18,107 [repositories/PETSrep | c.o.g.s.TupleQueryResultView] Request for query -968456518 is finished
