@@ -109,6 +109,7 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 
 	// checking request method is POST
 	if r.Method != "POST" {
+		fmt.Println("hnadleSubmit invalid request method")
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
@@ -116,6 +117,7 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 	// read the request body
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
+		fmt.Println("handleSubmit error reading request body")
 		http.Error(w, "Error reading request body", http.StatusInternalServerError)
 		return
 	}
@@ -125,9 +127,27 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 	var requestData RequestData
 	err = json.Unmarshal(body, &requestData)
 	if err != nil {
+		fmt.Println("handleSubmit error parsing JSON")
 		http.Error(w, "Error parsing JSON", http.StatusBadRequest)
 		return
 	}
+
+	if requestData.Data == "" {
+		fmt.Println("handleSubmit error empty request data")
+		http.Error(w, "empty request data", http.StatusBadRequest)
+		return
+	}
+
+	res, err := sendQuery(requestData.Data)
+	if err != nil {
+		fmt.Println("error processing query")
+		response := ResponseData{Message: "error: invalid query format"}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+	fmt.Println("res: " + res)
 
 	//if requestData.Data == "mermaid" {
 	//	mermaid(w, r)
