@@ -72,6 +72,7 @@ graph TD;
 
         Plank_Instance -->|obtainedBy| Plannks_From_Logs_Recipe_Instance
 
+        Plank_from_Bamboo_Instance -->|obtainedBy| Plank_from_bamboo_recipe_Instance
 
         PickaxeRecipe_Instance -->|hasInput| Stick_Plank_made_Instance
         PickaxeRecipe_Instance -->|hasInput| Stick_Bamboo_made_Instance
@@ -84,12 +85,17 @@ graph TD;
         Stick_bamboo_recipe_Instance -->|usedInStation| CraftingTable_Instance
 
         Stick_Planks_recipe_Instance -->|hasInput| Plank_Instance
+        Stick_Planks_recipe_Instance -->|hasInput| Plank_from_Bamboo_Instance
         Stick_Planks_recipe_Instance -->|hasOutput| Stick_Plank_made_Instance
         Stick_Planks_recipe_Instance -->|usedInStation| CraftingTable_Instance
 
         Plannks_From_Logs_Recipe_Instance -->|hasInput| Log_Instance
         Plannks_From_Logs_Recipe_Instance -->|hasOutput| Plank_Instance
         Plannks_From_Logs_Recipe_Instance -->|usedInStation| CraftingTable_Instance
+
+        Plank_from_bamboo_recipe_Instance-->|hasInput|Bamboo_Instance
+        Plank_from_bamboo_recipe_Instance-->|hasOutput|Plank_from_Bamboo_Instance
+        Plank_from_bamboo_recipe_Instance-->|usedInStation|CraftingTable_Instance
 ```
 
 ### Node ontologies distributed
@@ -97,9 +103,9 @@ graph TD;
 ```mermaid
 graph TD;
 
-        root
 
         subgraph Server A
+            Plank_from_bamboo_recipe_Instance
             Stick_Bamboo_made_Instance
             Stick_bamboo_recipe_Instance
             Bamboo_Instance
@@ -107,6 +113,7 @@ graph TD;
         end
 
         subgraph Server B
+            Plank_from_Bamboo_Instance
             Plank_Instance
             Stick_Plank_made_Instance
             Stick_Planks_recipe_Instance
@@ -120,9 +127,6 @@ graph TD;
             Log_Instance
         end
 
-        root -->|Pickaxe_Instance_Henry| Pickaxe_Instance_Henry
-        root -->|Cobblestone_Bob| Cobblestone_Bob
-
         Stick_Plank_made_Instance -->|obtainedBy| Stick_Planks_recipe_Instance
 
         Stick_Bamboo_made_Instance -->|obtainedBy| Stick_bamboo_recipe_Instance
@@ -132,6 +136,7 @@ graph TD;
 
         Plank_Instance -->|obtainedBy| Plannks_From_Logs_Recipe_Instance
 
+        Plank_from_Bamboo_Instance -->|obtainedBy| Plank_from_bamboo_recipe_Instance
 
         PickaxeRecipe_Instance -->|hasInput| Stick_Plank_made_Instance
         PickaxeRecipe_Instance -->|hasInput| Stick_Bamboo_made_Instance
@@ -144,12 +149,17 @@ graph TD;
         Stick_bamboo_recipe_Instance -->|usedInStation| CraftingTable_Instance
 
         Stick_Planks_recipe_Instance -->|hasInput| Plank_Instance
+        Stick_Planks_recipe_Instance -->|hasInput| Plank_from_Bamboo_Instance
         Stick_Planks_recipe_Instance -->|hasOutput| Stick_Plank_made_Instance
         Stick_Planks_recipe_Instance -->|usedInStation| CraftingTable_Instance
 
         Plannks_From_Logs_Recipe_Instance -->|hasInput| Log_Instance
         Plannks_From_Logs_Recipe_Instance -->|hasOutput| Plank_Instance
         Plannks_From_Logs_Recipe_Instance -->|usedInStation| CraftingTable_Instance
+
+        Plank_from_bamboo_recipe_Instance-->|hasInput|Bamboo_Instance
+        Plank_from_bamboo_recipe_Instance-->|hasOutput|Plank_from_Bamboo_Instance
+        Plank_from_bamboo_recipe_Instance-->|usedInStation|CraftingTable_Instance
 ```
 
 ### Truly distributed data
@@ -157,13 +167,13 @@ graph TD;
 ```mermaid
 graph TD;
 subgraph Server_a
+Server_a_minecraft:Server_b[(Server_b)]
+end
+
+subgraph Server_a
 Server_a_minecraft:Stick_Bamboo_made_Instance([Stick_Bamboo_made_Instance])
 end
 Server_a_minecraft:Stick_Bamboo_made_Instance-->|obtainedBy|Server_a_minecraft:Stick_bamboo_recipe_Instance
-
-subgraph Server_a
-Server_a_minecraft:Server_a[(Server_a)]
-end
 
 subgraph Server_a
 Server_a_minecraft:Bamboo_Instance([Bamboo_Instance])
@@ -180,6 +190,19 @@ Server_a_minecraft:Stick_bamboo_recipe_Instance-->|hasInput|Server_a_minecraft:B
 Server_a_minecraft:Stick_bamboo_recipe_Instance-->|hasOutput|Server_a_minecraft:Stick_Bamboo_made_Instance
 Server_a_minecraft:Stick_bamboo_recipe_Instance-->|usedInStation|Server_a_minecraft:CraftingTable_Instance
 
+subgraph Server_a
+Server_a_minecraft:Plank_from_Bamboo_Instance[Plank_from_Bamboo_Instance]
+end
+Server_a_minecraft:Plank_from_Bamboo_Instance-->|inter_server|Server_b_minecraft:Plank_from_Bamboo_Instance
+Server_a_minecraft:Plank_from_Bamboo_Instance-->|pointsToServer|Server_a_minecraft:Server_b
+
+subgraph Server_a
+Server_a_minecraft:Plank_from_bamboo_recipe_Instance([Plank_from_bamboo_recipe_Instance])
+end
+Server_a_minecraft:Plank_from_bamboo_recipe_Instance-->|hasInput|Server_a_minecraft:Bamboo_Instance
+Server_a_minecraft:Plank_from_bamboo_recipe_Instance-->|hasOutput|Server_a_minecraft:Plank_from_Bamboo_Instance
+Server_a_minecraft:Plank_from_bamboo_recipe_Instance-->|usedInStation|Server_a_minecraft:CraftingTable_Instance
+
 subgraph Server_b
 Server_b_minecraft:Stick_Plank_made_Instance([Stick_Plank_made_Instance])
 end
@@ -187,10 +210,6 @@ Server_b_minecraft:Stick_Plank_made_Instance-->|obtainedBy|Server_b_minecraft:St
 
 subgraph Server_b
 Server_b_minecraft:Server_a[(Server_a)]
-end
-
-subgraph Server_b
-Server_b_minecraft:Server_b[(Server_b)]
 end
 
 subgraph Server_b
@@ -212,6 +231,7 @@ subgraph Server_b
 Server_b_minecraft:Stick_Planks_recipe_Instance([Stick_Planks_recipe_Instance])
 end
 Server_b_minecraft:Stick_Planks_recipe_Instance-->|hasInput|Server_b_minecraft:Plank_Instance
+Server_b_minecraft:Stick_Planks_recipe_Instance-->|hasInput|Server_b_minecraft:Plank_from_Bamboo_Instance
 Server_b_minecraft:Stick_Planks_recipe_Instance-->|hasOutput|Server_b_minecraft:Stick_Plank_made_Instance
 Server_b_minecraft:Stick_Planks_recipe_Instance-->|usedInStation|Server_b_minecraft:CraftingTable_Instance
 
@@ -220,6 +240,17 @@ Server_b_minecraft:Plannks_From_Logs_Recipe_Instance[Plannks_From_Logs_Recipe_In
 end
 Server_b_minecraft:Plannks_From_Logs_Recipe_Instance-->|inter_server|Server_c_minecraft:Plannks_From_Logs_Recipe_Instance
 Server_b_minecraft:Plannks_From_Logs_Recipe_Instance-->|pointsToServer|Server_b_minecraft:Server_c
+
+subgraph Server_b
+Server_b_minecraft:Plank_from_Bamboo_Instance([Plank_from_Bamboo_Instance])
+end
+Server_b_minecraft:Plank_from_Bamboo_Instance-->|obtainedBy|Server_b_minecraft:Plank_from_bamboo_recipe_Instance
+
+subgraph Server_b
+Server_b_minecraft:Plank_from_bamboo_recipe_Instance[Plank_from_bamboo_recipe_Instance]
+end
+Server_b_minecraft:Plank_from_bamboo_recipe_Instance-->|inter_server|Server_a_minecraft:Plank_from_bamboo_recipe_Instance
+Server_b_minecraft:Plank_from_bamboo_recipe_Instance-->|pointsToServer|Server_b_minecraft:Server_a
 
 subgraph Server_c
 Server_c_minecraft:Stick_Plank_made_Instance[Stick_Plank_made_Instance]
@@ -259,10 +290,6 @@ Server_c_minecraft:Server_b[(Server_b)]
 end
 
 subgraph Server_c
-Server_c_minecraft:Server_c[(Server_c)]
-end
-
-subgraph Server_c
 Server_c_minecraft:Plank_Instance[Plank_Instance]
 end
 Server_c_minecraft:Plank_Instance-->|inter_server|Server_b_minecraft:Plank_Instance
@@ -282,12 +309,6 @@ Server_c_minecraft:PickaxeRecipe_Instance-->|hasInput|Server_c_minecraft:Stick_B
 Server_c_minecraft:PickaxeRecipe_Instance-->|hasInput|Server_c_minecraft:Cobblestone_Bob
 Server_c_minecraft:PickaxeRecipe_Instance-->|hasOutput|Server_c_minecraft:Pickaxe_Instance_Henry
 Server_c_minecraft:PickaxeRecipe_Instance-->|usedInStation|Server_c_minecraft:CraftingTable_Instance
-
-subgraph Server_c
-Server_c_minecraft:Stick_bamboo_recipe_Instance[Stick_bamboo_recipe_Instance]
-end
-Server_c_minecraft:Stick_bamboo_recipe_Instance-->|inter_server|Server_a_minecraft:Stick_bamboo_recipe_Instance
-Server_c_minecraft:Stick_bamboo_recipe_Instance-->|pointsToServer|Server_c_minecraft:Server_a
 
 subgraph Server_c
 Server_c_minecraft:Plannks_From_Logs_Recipe_Instance([Plannks_From_Logs_Recipe_Instance])
