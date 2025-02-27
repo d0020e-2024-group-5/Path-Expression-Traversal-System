@@ -14,11 +14,36 @@ type Node interface {
 	GetLeaf(int) *LeafNode
 }
 
+// The root of a query tree, passes next node to child with required info
+type RootNode struct {
+	Child Node
+}
+
 // A Traverse Node represent a traversal from right to left
 type TraverseNode struct {
 	Parent Node
-	Left   Node
-	Right  Node
+	children []Node 
+}
+// Struct representing a loop in the query structure
+type LoopNode struct {
+	Parent Node
+	children []Node 
+}
+
+// Struct representing the OR node operator
+type ORNode struct {
+	Parent Node
+	children []Node 
+}
+
+type ANDNode struct {
+	Parent Node
+	children []Node 
+}
+
+type XORNode struct {
+	Parent Node
+	children []Node 
 }
 
 // A leaf node represent en edge in the query, these are also the leafs in the evaluation tree
@@ -28,104 +53,64 @@ type LeafNode struct {
 	ID     int
 }
 
-// Struct representing a loop in the query structure
-type LoopNode struct {
-	Parent Node
-	Left   Node
-	Right  Node
-}
-
-// Struct representing the OR node operator
-type ORNode struct {
-	Parent Node
-	Left Node 
-	Right Node
-}
-
-type ANDNode struct {
-	Parent Node
-	Left Node
-	Right Node
-}
-
-type XORNode struct {
-	Parent Node
-	Left Node 
-	Right Node
-}
-
-// The root of a query tree, passes next node to child with required info
-type RootNode struct {
-	Child Node
-}
 
 func (r *RootNode) GetLeaf(id int) *LeafNode {
 	return r.Child.GetLeaf(id)
 }
 
 func (t *TraverseNode) GetLeaf(id int) *LeafNode {
-	tmp1 := t.Left.GetLeaf(id)
-	tmp2 := t.Right.GetLeaf(id)
-
-	if tmp1 != nil {
-		return tmp1
-	} else if tmp2 != nil {
-		return tmp2
-	} else {
-		return nil
+	// returns the first node where id matches or nil
+	for i, _ := range t.children {
+		tmp := t.children[i].GetLeaf(id)
+		if tmp != nil {
+			return tmp
+		}
 	}
+	return nil
 }
 
 func (l *LoopNode) GetLeaf(id int) *LeafNode {
-	tmp1 := l.Left.GetLeaf(id)
-	tmp2 := l.Right.GetLeaf(id)
-
-	if tmp1 != nil {
-		return tmp1
-	} else if tmp2 != nil {
-		return tmp2
-	} else {
-		return nil
+	// returns the first node where id matches or nil
+	for i, _ := range l.children {
+		tmp := l.children[i].GetLeaf(id)
+		if tmp != nil {
+			return tmp
+		}
 	}
+	return nil
 }
 
 func (o *ORNode) GetLeaf(id int) *LeafNode {
-	tmp1 := o.Left.GetLeaf(id)
-	tmp2 := o.Right.GetLeaf(id)
-
-	if tmp1 != nil {
-		return tmp1
-	} else if tmp2 != nil {
-		return tmp2
-	} else {
-		return nil
+	// returns the first node where id matches or nil
+	for i, _ := range o.children {
+		tmp := o.children[i].GetLeaf(id)
+		if tmp != nil {
+			return tmp
+		}
 	}
+	return nil
 }
 
 func (a *ANDNode) GetLeaf(id int) *LeafNode {
-	tmp1 := a.Left.GetLeaf(id)
-	tmp2 := a.Right.GetLeaf(id)
-
-	if tmp1 != nil {
-		return tmp1
-	} else if tmp2 != nil {
-		return tmp2
-	} else {
-		return nil
+	// returns the first node where id matches or nil
+	for i, _ := range a.children {
+		tmp := a.children[i].GetLeaf(id)
+		if tmp != nil {
+			return tmp
+		}
 	}
+	return nil
 }
 
 func (x *XORNode) GetLeaf(id int) *LeafNode {
-	tmp1 := x.Left.GetLeaf(id)
-	tmp2 := x.Right.GetLeaf(id)
-
-	if tmp1 != nil {
-		return tmp1
-	} else if tmp2 != nil {
-		return tmp2
-	} else {
-		return nil
+	// returns the first node where id matches or nil
+	for i, _ := range x.children {
+		tmp := x.children[i].GetLeaf(id)
+		if tmp != nil {
+			return tmp
+		}
 	}
+	return nil
 }
 
 func (l *LeafNode) GetLeaf(id int) *LeafNode {
@@ -152,25 +137,22 @@ func (r *RootNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 // if right tree calls, branch has been evaluated and call next tree on parent
 func (t *TraverseNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	var leafs []*LeafNode
-
-	if caller == t.Parent { // Pointer comparison to avoid same value struct bug
-		// if the caller is parent, we should deced into the left branch,
-		// t.Left.NextNode(t)
-		leafs = append(leafs, t.Left.NextNode(t, availablePaths)...)
-
-	} else if caller == t.Left {
-		// when the left branch has evaluated it will call us again
-		// an we than have to evaluate the right branch
-		// t.Right.NextNode(t)
-		leafs = append(leafs, t.Right.NextNode(t, availablePaths)...)
-
-	} else if caller == t.Right {
-		// when the right brach has evaluated it will call us again
-		// we then know we have been fully evaluated and can call our parent saying we are done
+	// if caller is parent we check the "first" node
+	if caller == t.Parent {
+		leafs = append(leafs, t.children[0].NextNode(t, availablePaths)...)
+	// then we check all the following children
+	} else if caller != t.children[len(t.children)-1] {
+		for i, n := range t.children {
+			if caller == n {
+				leafs = append(leafs, t.children[i+1].NextNode(t, availablePaths)...)
+				break
+			}
+		}
+	// untill we reach the last chil where we call the parent
+	} else if caller == t.children[len(t.children)-1] {
 		leafs = append(leafs, t.Parent.NextNode(t, availablePaths)...)
-
 	} else {
-		panic("i dont know what should happen here1?")
+		panic("Should not happen!")
 	}
 	return leafs
 }
@@ -180,45 +162,90 @@ func (t *TraverseNode) NextNode(caller Node, availablePaths []string) []*LeafNod
 // right is the exit so when right is done pass ask parent for next node
 func (l *LoopNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	var leafs []*LeafNode
+	// if caller == l.Parent {
+	// 	tmp1 := l.Left.NextNode(l, availablePaths)
+	// 	tmp2 := l.Right.NextNode(l, availablePaths)
+	// 	leafs = append(leafs, tmp1...)
+	// 	leafs = append(leafs, tmp2...)
+	// } else if caller == l.Left {
+	// 	tmp1 := l.Left.NextNode(l, availablePaths)
+	// 	tmp2 := l.Right.NextNode(l, availablePaths)
+	// 	leafs = append(leafs, tmp1...)
+	// 	leafs = append(leafs, tmp2...)
+	// } else if caller == l.Right {
+	// 	tmp1 := l.Parent.NextNode(l, availablePaths)
+	// 	leafs = append(leafs, tmp1...)
+	// } else {
+	// 	panic("loopnode nextnode panic")
+	// }
+
+	// if caller is parent we return all children paths
 	if caller == l.Parent {
-		tmp1 := l.Left.NextNode(l, availablePaths)
-		tmp2 := l.Right.NextNode(l, availablePaths)
-		leafs = append(leafs, tmp1...)
-		leafs = append(leafs, tmp2...)
-	} else if caller == l.Left {
-		tmp1 := l.Left.NextNode(l, availablePaths)
-		tmp2 := l.Right.NextNode(l, availablePaths)
-		leafs = append(leafs, tmp1...)
-		leafs = append(leafs, tmp2...)
-	} else if caller == l.Right {
-		tmp1 := l.Parent.NextNode(l, availablePaths)
-		leafs = append(leafs, tmp1...)
+		for i, _ := range l.children {
+			leafs = append(leafs, l.children[i].NextNode(l, availablePaths)...)
+		}
+	// if caller is not last child we return all childrens paths
+	} else if caller != l.children[len(l.children)-1] {
+		for i, _ := range l.children {
+			leafs = append(leafs, l.children[i].NextNode(l, availablePaths)...)
+		}
+	// if child is last child we call parents nextnode
+	} else if caller == l.children[len(l.children)-1] {
+		leafs = append(leafs, l.Parent.NextNode(l, availablePaths)...)
 	} else {
-		panic("loopnode nextnode panic")
+		panic("Should not happen!")
 	}
 	return leafs
 }
 
-
-
 func (o *ORNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	var leafs []*LeafNode
 
+	// if caller == o.Parent {
+	// 	leafs = append(leafs, o.Left.NextNode(o, availablePaths)...)
+	// 	leafs = append(leafs, o.Right.NextNode(o, availablePaths)...)
+	// } else {
+	// 	leafs = append(leafs, o.Parent.NextNode(o, availablePaths)...)
+	// }
+
+	// if caller is parent return all childrens paths
 	if caller == o.Parent {
-		leafs = append(leafs, o.Left.NextNode(o, availablePaths)...)
-		leafs = append(leafs, o.Right.NextNode(o, availablePaths)...)
+		for i, _ := range o.children {
+			leafs = append(leafs, o.children[i].NextNode(o, availablePaths)...)
+		}
+	// if caller is any of the children return parents nextnode
 	} else {
 		leafs = append(leafs, o.Parent.NextNode(o, availablePaths)...)
 	}
+
 	return leafs
 }
 
 func (a *ANDNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	var leafs []*LeafNode
-	if caller == a.Parent {
-		leafs = append(leafs, a.Left.NextNode(a, availablePaths)...)
-		leafs = append(leafs, a.Right.NextNode(a, availablePaths)...)
+	// if caller == a.Parent {
+	// 	leafs = append(leafs, a.Left.NextNode(a, availablePaths)...)
+	// 	leafs = append(leafs, a.Right.NextNode(a, availablePaths)...)
 		
+	// 	for _, leaf := range leafs{
+	// 		isPath := slices.Contains(availablePaths, leaf.Value)
+	// 		// if path is not an available path return empty array
+	// 		if !isPath {
+	// 			var tmp []*LeafNode
+	// 			return tmp
+	// 		}
+	// 	}
+	// } else {
+	// 	leafs = append(leafs, a.Parent.NextNode(a, availablePaths)...)
+	// }
+	
+	// if caller return all paths, if path does not exist return empty slice
+	if caller == a.Parent {
+		for i, _ := range a.children {
+			leafs = append(leafs, a.children[i].NextNode(a, availablePaths)...)
+		}
+
+		// check if leafs.value exist as an available path
 		for _, leaf := range leafs{
 			isPath := slices.Contains(availablePaths, leaf.Value)
 			// if path is not an available path return empty array
@@ -235,9 +262,35 @@ func (a *ANDNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 
 func (x *XORNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	var leafs []*LeafNode
+	// if caller == x.Parent {
+	// 	leafs = append(leafs, x.Left.NextNode(x, availablePaths)...)
+	// 	leafs = append(leafs, x.Right.NextNode(x, availablePaths)...)
+
+	// 	numOfPaths := 0
+	// 	for _, leaf := range leafs{
+	// 		isPath := slices.Contains(availablePaths, leaf.Value)
+	// 		// if path is not an available path return empty array
+	// 		if isPath {numOfPaths += 1}
+	// 	}
+	// 	if numOfPaths == 1 {
+	// 		for _, leaf := range leafs {
+	// 			isPath := slices.Contains(availablePaths, leaf.Value)
+	// 			if isPath {
+	// 				var tmp []*LeafNode
+	// 				tmp = append(tmp, leaf)
+	// 				return tmp
+	// 			}
+	// 		}
+	// 	}
+	// } else {
+	// 	leafs = append(leafs, x.Parent.NextNode(x, availablePaths)...)
+	// }
+
+	// if parent called returns the the one path that exists if that is the only path
 	if caller == x.Parent {
-		leafs = append(leafs, x.Left.NextNode(x, availablePaths)...)
-		leafs = append(leafs, x.Right.NextNode(x, availablePaths)...)
+		for i, _ := range x.children {
+			leafs = append(leafs, x.children[i].NextNode(x, availablePaths)...)
+		}
 
 		numOfPaths := 0
 		for _, leaf := range leafs{
@@ -255,6 +308,7 @@ func (x *XORNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 				}
 			}
 		}
+	// else call parents nextnode
 	} else {
 		leafs = append(leafs, x.Parent.NextNode(x, availablePaths)...)
 	}
