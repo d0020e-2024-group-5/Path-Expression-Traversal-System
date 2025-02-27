@@ -22,29 +22,34 @@ type RootNode struct {
 // A Traverse Node represent a traversal from right to left
 type TraverseNode struct {
 	Parent Node
-	children []Node 
+	Children []Node 
 }
 // Struct representing a loop in the query structure
 type LoopNode struct {
 	Parent Node
-	children []Node 
+	Children []Node 
 }
 
 // Struct representing the OR node operator
 type ORNode struct {
 	Parent Node
-	children []Node 
+	Children []Node 
 }
 
 type ANDNode struct {
 	Parent Node
-	children []Node 
+	Children []Node 
 }
 
 type XORNode struct {
 	Parent Node
-	children []Node 
+	Children []Node 
 }
+
+// type PNode struct {
+// 	Parent Node
+// 	Children []Node
+// }
 
 // A leaf node represent en edge in the query, these are also the leafs in the evaluation tree
 type LeafNode struct {
@@ -53,15 +58,15 @@ type LeafNode struct {
 	ID     int
 }
 
-
+// getleaf does DFS and returns *leafnode with matching id
 func (r *RootNode) GetLeaf(id int) *LeafNode {
 	return r.Child.GetLeaf(id)
 }
 
 func (t *TraverseNode) GetLeaf(id int) *LeafNode {
 	// returns the first node where id matches or nil
-	for i, _ := range t.children {
-		tmp := t.children[i].GetLeaf(id)
+	for i, _ := range t.Children {
+		tmp := t.Children[i].GetLeaf(id)
 		if tmp != nil {
 			return tmp
 		}
@@ -71,8 +76,8 @@ func (t *TraverseNode) GetLeaf(id int) *LeafNode {
 
 func (l *LoopNode) GetLeaf(id int) *LeafNode {
 	// returns the first node where id matches or nil
-	for i, _ := range l.children {
-		tmp := l.children[i].GetLeaf(id)
+	for i, _ := range l.Children {
+		tmp := l.Children[i].GetLeaf(id)
 		if tmp != nil {
 			return tmp
 		}
@@ -82,8 +87,8 @@ func (l *LoopNode) GetLeaf(id int) *LeafNode {
 
 func (o *ORNode) GetLeaf(id int) *LeafNode {
 	// returns the first node where id matches or nil
-	for i, _ := range o.children {
-		tmp := o.children[i].GetLeaf(id)
+	for i, _ := range o.Children {
+		tmp := o.Children[i].GetLeaf(id)
 		if tmp != nil {
 			return tmp
 		}
@@ -93,8 +98,8 @@ func (o *ORNode) GetLeaf(id int) *LeafNode {
 
 func (a *ANDNode) GetLeaf(id int) *LeafNode {
 	// returns the first node where id matches or nil
-	for i, _ := range a.children {
-		tmp := a.children[i].GetLeaf(id)
+	for i, _ := range a.Children {
+		tmp := a.Children[i].GetLeaf(id)
 		if tmp != nil {
 			return tmp
 		}
@@ -104,8 +109,8 @@ func (a *ANDNode) GetLeaf(id int) *LeafNode {
 
 func (x *XORNode) GetLeaf(id int) *LeafNode {
 	// returns the first node where id matches or nil
-	for i, _ := range x.children {
-		tmp := x.children[i].GetLeaf(id)
+	for i, _ := range x.Children {
+		tmp := x.Children[i].GetLeaf(id)
 		if tmp != nil {
 			return tmp
 		}
@@ -139,17 +144,17 @@ func (t *TraverseNode) NextNode(caller Node, availablePaths []string) []*LeafNod
 	var leafs []*LeafNode
 	// if caller is parent we check the "first" node
 	if caller == t.Parent {
-		leafs = append(leafs, t.children[0].NextNode(t, availablePaths)...)
-	// then we check all the following children
-	} else if caller != t.children[len(t.children)-1] {
-		for i, n := range t.children {
+		leafs = append(leafs, t.Children[0].NextNode(t, availablePaths)...)
+	// then we check all the following Children
+	} else if caller != t.Children[len(t.Children)-1] {
+		for i, n := range t.Children {
 			if caller == n {
-				leafs = append(leafs, t.children[i+1].NextNode(t, availablePaths)...)
+				leafs = append(leafs, t.Children[i+1].NextNode(t, availablePaths)...)
 				break
 			}
 		}
 	// untill we reach the last chil where we call the parent
-	} else if caller == t.children[len(t.children)-1] {
+	} else if caller == t.Children[len(t.Children)-1] {
 		leafs = append(leafs, t.Parent.NextNode(t, availablePaths)...)
 	} else {
 		panic("Should not happen!")
@@ -179,18 +184,18 @@ func (l *LoopNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	// 	panic("loopnode nextnode panic")
 	// }
 
-	// if caller is parent we return all children paths
+	// if caller is parent we return all Children paths
 	if caller == l.Parent {
-		for i, _ := range l.children {
-			leafs = append(leafs, l.children[i].NextNode(l, availablePaths)...)
+		for i, _ := range l.Children {
+			leafs = append(leafs, l.Children[i].NextNode(l, availablePaths)...)
 		}
-	// if caller is not last child we return all childrens paths
-	} else if caller != l.children[len(l.children)-1] {
-		for i, _ := range l.children {
-			leafs = append(leafs, l.children[i].NextNode(l, availablePaths)...)
+	// if caller is not last child we return all Childrens paths
+	} else if caller != l.Children[len(l.Children)-1] {
+		for i, _ := range l.Children {
+			leafs = append(leafs, l.Children[i].NextNode(l, availablePaths)...)
 		}
 	// if child is last child we call parents nextnode
-	} else if caller == l.children[len(l.children)-1] {
+	} else if caller == l.Children[len(l.Children)-1] {
 		leafs = append(leafs, l.Parent.NextNode(l, availablePaths)...)
 	} else {
 		panic("Should not happen!")
@@ -198,6 +203,7 @@ func (l *LoopNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	return leafs
 }
 
+// split query
 func (o *ORNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	var leafs []*LeafNode
 
@@ -208,12 +214,12 @@ func (o *ORNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	// 	leafs = append(leafs, o.Parent.NextNode(o, availablePaths)...)
 	// }
 
-	// if caller is parent return all childrens paths
+	// if caller is parent return all Childrens paths
 	if caller == o.Parent {
-		for i, _ := range o.children {
-			leafs = append(leafs, o.children[i].NextNode(o, availablePaths)...)
+		for i, _ := range o.Children {
+			leafs = append(leafs, o.Children[i].NextNode(o, availablePaths)...)
 		}
-	// if caller is any of the children return parents nextnode
+	// if caller is any of the Children return parents nextnode
 	} else {
 		leafs = append(leafs, o.Parent.NextNode(o, availablePaths)...)
 	}
@@ -221,6 +227,7 @@ func (o *ORNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	return leafs
 }
 
+// split if both
 func (a *ANDNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	var leafs []*LeafNode
 	// if caller == a.Parent {
@@ -241,8 +248,8 @@ func (a *ANDNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	
 	// if caller return all paths, if path does not exist return empty slice
 	if caller == a.Parent {
-		for i, _ := range a.children {
-			leafs = append(leafs, a.children[i].NextNode(a, availablePaths)...)
+		for i, _ := range a.Children {
+			leafs = append(leafs, a.Children[i].NextNode(a, availablePaths)...)
 		}
 
 		// check if leafs.value exist as an available path
@@ -260,6 +267,7 @@ func (a *ANDNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	return leafs	
 }
 
+// split if only path
 func (x *XORNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	var leafs []*LeafNode
 	// if caller == x.Parent {
@@ -288,8 +296,8 @@ func (x *XORNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 
 	// if parent called returns the the one path that exists if that is the only path
 	if caller == x.Parent {
-		for i, _ := range x.children {
-			leafs = append(leafs, x.children[i].NextNode(x, availablePaths)...)
+		for i, _ := range x.Children {
+			leafs = append(leafs, x.Children[i].NextNode(x, availablePaths)...)
 		}
 
 		numOfPaths := 0
@@ -326,35 +334,68 @@ func (l *LeafNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	}
 }
 
+
 // creates a branch where the top node has the given parent.
 // return a the top node
 func grow_tree(str string, parent Node, id *int) (Node, error) {
-	// split the string to a left operator and right part
-	// this functions takes into account brackets {}
-	parts := split_q(str)
+	// splitq split the string to parts that are children of the operator
+	operator, parts := split_q(str)
 	// fmt.Printf("%v\n", parts)
-	Left, operator, Right := parts[0], parts[1], parts[2]
 
 	// if the operator is traverse create a traverse node
 	if operator == "/" {
 		t := TraverseNode{}
 		t.Parent = parent
-		t.Left, _ = grow_tree(Left, &t, id)
-		t.Right, _ = grow_tree(Right, &t, id)
+		for _, part := range parts {
+			child, _ := grow_tree(part, &t, id)
+			t.Children = append(t.Children, child)
+		}
 		return &t, nil
 
-		// if the operator is loop (aka match zero or more) create a loop node
+	// if the operator is loop (aka match zero or more) create a loop node
 	} else if operator == "*" {
 		l := LoopNode{}
 		l.Parent = parent
-		l.Left, _ = grow_tree(Left, &l, id)
-		l.Right, _ = grow_tree(Right, &l, id)
+		for _, part := range parts {
+			child, _ := grow_tree(part, &l, id)
+			l.Children = append(l.Children, child)
+		}
 		return &l, nil
 
-		// if the operator is "0" this indicates that the parsing resulted in only a left side
-		// this means this is an leaf node
+	// if the operator is a OR, create a ORNode 			
+	} else if operator == "|" {
+		o := ORNode{}
+		o.Parent = parent
+		for _, part := range parts {
+			child, _ := grow_tree(part, &o, id)
+			o.Children = append(o.Children, child)
+		}
+		return &o, nil
+	
+	// if the operator is a AND, create a ANDNode 
+	} else if operator == "&" {
+		a := ANDNode{}
+		a.Parent = parent
+		for _, part := range parts {
+			child, _ := grow_tree(part, &a, id)
+			a.Children = append(a.Children, child)
+		}
+		return &a, nil
+
+	// if the operator is a XOR, create a XORNode 
+	} else if operator == "^" {
+		x := XORNode{}
+		x.Parent = parent
+		for _, part := range parts {
+			child, _ := grow_tree(part, &x, id)
+			x.Children = append(x.Children, child)
+		}
+		return &x, nil
+
+	// if the operator is "0" this indicates that the parsing resulted in only a left side
+	// this means this is an leaf node
 	} else if operator == "0" {
-		l := LeafNode{Value: Left, ID: *id, Parent: parent}
+		l := LeafNode{Value: parts[0], ID: *id, Parent: parent}
 		tmp := *id
 		tmp++
 		*id = tmp
@@ -367,8 +408,6 @@ func grow_tree(str string, parent Node, id *int) (Node, error) {
 }
 
 
-
-
 // if the passed string contains a valid operator,
 // note that this returns true even for operators that are planed but not implanted
 func containsOperators(s string) bool {
@@ -376,10 +415,11 @@ func containsOperators(s string) bool {
 	return re.MatchString(s)
 }
 
+
 // this splits the query into the first evaluated operator off the string and its left and right sides.
 // this string “{recipe/input}*price/currency“ would split into “{recipe/input}“ “*“ “price/currency“
 // as the first evaluated operator is *
-func split_q(str string) [3]string {
+func split_q(str string) (string, []string) {
 
 	// maybe this should return error?
 	// when is it the case that an empty would be passed?
@@ -442,3 +482,73 @@ func split_q(str string) [3]string {
 	// TODO add test in the beginning if an non operator is after an closing bracket, example "}h" or before and opening bracket "a{"
 	panic("something went wrong, no operators to split on")
 }
+
+
+
+
+// // this splits the query into the first evaluated operator off the string and its left and right sides.
+// // this string “{recipe/input}*price/currency“ would split into “{recipe/input}“ “*“ “price/currency“
+// // as the first evaluated operator is *
+// func split_q(str string) ([3]string) {
+
+// 	// maybe this should return error?
+// 	// when is it the case that an empty would be passed?
+// 	// except in these cases "s/pick/recipe/"
+// 	// or "s//error_here/recipe"
+// 	// both of these might be better to check beforehand?
+// 	if str == "" {
+// 		return [3]string{"", "0", ""}
+
+// 		// if no operator is contained
+// 	} else if !containsOperators(str) {
+// 		// if the string is contained inside brackets remove them
+// 		if str[0] == '{' && str[len(str)-1] == '}' {
+// 			str = str[1:]
+// 			str = str[:len(str)-1]
+// 			// why call split again?
+// 			// we know no operators are in the string
+// 			// this will just end up att the return bellow, ``return [3]string{str, "0", ""}``
+// 			return split_q(str)
+// 		} else {
+// 			// since we have no operators or enclosing brackets this is an edge
+// 			return [3]string{str, "0", ""}
+// 		}
+// 	}
+// 	//is inside brackets counter
+// 	insideCount := 0
+// 	// for each character advance until the operator is found
+// 	for i, char := range str {
+// 		if insideCount > 0 {
+// 			if char == '}' {
+// 				//remove level of inside brackets
+// 				insideCount = insideCount - 1
+// 			}
+// 			if i == len(str)-1 {
+// 				str = str[1:]
+// 				str = str[:len(str)-1]
+// 				// if this was the last and char encountered and its an closing bracket
+// 				// the whole statement is enclosed on one
+// 				// remove brackets and parse again
+// 				// we should never be att the end and not be on a closing bracket
+// 				return split_q(str)
+// 			}
+// 		} else {
+// 			if char == '{' {
+// 				//add level of inside brackets
+// 				insideCount = insideCount + 1
+
+// 			} else {
+// 				// The first operator found outside of brackets it the one we want to split on
+// 				if strings.Contains("/*&|", string(char)) {
+// 					return [...]string{str[:i], string(str[i]), str[i+1:]}
+// 				}
+// 			}
+// 		}
+// 	}
+
+// 	// noting should be able to cause this if the query is correctly formed?
+// 	// only two ways i see into this is "{hello/test}hej"
+// 	// and two ways i see into this is "he{llo/test"
+// 	// TODO add test in the beginning if an non operator is after an closing bracket, example "}h" or before and opening bracket "a{"
+// 	panic("something went wrong, no operators to split on")
+// }
