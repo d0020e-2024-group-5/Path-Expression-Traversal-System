@@ -138,21 +138,6 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := sendQuery(requestData.Data)
-	if err != nil {
-		fmt.Println("error processing query")
-		response := ResponseData{Message: "error: invalid query format"}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(response)
-		return
-	}
-	fmt.Println("res: " + res)
-
-	//if requestData.Data == "mermaid" {
-	//	mermaid(w, r)
-	//	return
-	//}
 	res := sendQuery(requestData.Data)
 
 	// create a response containing the received data
