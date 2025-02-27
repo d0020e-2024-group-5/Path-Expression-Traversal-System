@@ -394,7 +394,7 @@ func isValid(str string) error { // checks for invalid operator combinations
 	operands := "/^*&|"	// current available operands
 	index := strings.IndexAny(str, operands)
 	if (string(str[index]) != "/"){	// if first operand isn't a traverse (/)
-		return errors.New("Error; First operator is "+string(str[index])+" , not /") // return error
+		return errors.New("Error; First operator is "+string(str[index])+" , not traverse (/)") // return error
 	}
 	for i, char := range str {
 		if (string(char)+string(str[i+1]) == "*/"){ // exception is */ which is equal to *
