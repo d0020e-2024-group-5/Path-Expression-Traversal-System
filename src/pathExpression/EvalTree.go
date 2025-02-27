@@ -1,6 +1,7 @@
 package pathExpression
 
 import (
+	"errors"
 	"regexp"
 	"slices"
 	"strings"
@@ -354,6 +355,7 @@ func split_q(str string) [3]string {
 	insideCount := 0
 	// for each character advance until the operator is found
 	for i, char := range str {
+
 		if insideCount > 0 {
 			if char == '}' {
 				//remove level of inside brackets
@@ -387,4 +389,31 @@ func split_q(str string) [3]string {
 	// and two ways i see into this is "he{llo/test"
 	// TODO add test in the beginning if an non operator is after an closing bracket, example "}h" or before and opening bracket "a{"
 	panic("something went wrong, no operators to split on")
+}
+func isValid(str string) error { // checks for invalid operator combinations
+	operands := "/^*&|"	// current available operands
+	index := strings.IndexAny(str, operands)
+	if (string(str[index]) != "/"){	// if first operand isn't a traverse (/)
+		return errors.New("Error; First operator is "+string(str[index])+" , not /") // return error
+	}
+	for i, char := range str {
+		if (string(char)+string(str[i+1]) == "*/"){ // exception is */ which is equal to *
+			continue
+		}
+		if (string(char) == "{") {	// invalid combination { and op
+			if strings.Contains(operands, string(str[i+1])){
+				return errors.New("Error; Invalid group operand combination: " + (string(char)+string(str[i+1])))
+			}
+		}
+		if strings.Contains(operands, string(char)) { // if current char is operand 
+			if (string(str[i+1]) == "}"){// invalid combination op and }
+				return errors.New("Error; Invalid group operand combination: " + (string(char)+string(str[i+1])))
+			}
+			
+			if strings.Contains(operands, string(str[i+1])) {	// check right char for invalid operand
+				return errors.New("Error; Invalid operand combination: " + (string(char)+string(str[i+1])))
+			}
+		}
+	}
+	return nil
 }
