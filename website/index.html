@@ -12,7 +12,7 @@
 <body id="body">
 
 <div class="flex-container">
-    <input type="text" id="input" placeholder="Enter something..." oninput="checkInput()">
+    <input type="text" id="input" placeholder="Enter something...">
     <button onclick="sendData()">Send</button>
     <button id="dark" onclick="darkMode()">Light</button>
     
@@ -56,14 +56,24 @@ function sendData() {
         if (!response.ok) {
             console.log("server error")
             return response.json().then(errorData => {
-                throw new Error(errorData.message || "server error.");
+                throw new Error(errorData.message || "server error");
             });
         }
+        return response.json();
     })
     // recievs the response
     .then(data => {
         console.log("Received from server:", data);
         document.getElementById("response").innerText = "Server: " + data.message;
+
+        if (data.message) {
+            const mermaidContainer = document.getElementById("mermaidDiagram");
+            mermaidContainer.innerHTML = `<div class="mermaid">graph TD;\n${data.message}</div>`;
+           // mermaidContainer.style.display = "block";
+            mermaid.init(undefined, ".mermaid");
+        } else {
+            console.error("Invalid response: missing 'message' property");
+        }
     })
     .catch(error => {
         document.getElementById("response").innerText = "error: " + error.message;
@@ -93,6 +103,7 @@ function checkInput() {
     document.addEventListener("DOMContentLoaded", function () {
     fetchMermaidDiagram();
 });
+}
 
 function fetchMermaidDiagram() {
     fetch("/api/submit", {
@@ -102,16 +113,20 @@ function fetchMermaidDiagram() {
     })
     .then(response => response.json())
     .then(data => {
+        console.log("Received data:", data);
         if (data.message) {
             const mermaidContainer = document.getElementById("mermaidDiagram");
-            mermaidContainer.innerHTML = "mermaid\n" + data.message + "\n"; 
+            mermaidContainer.innerHTML = "```mermaid\n" + "graph TD;\n" + data.message + "\n```";
             mermaidContainer.style.display = "block";
             mermaid.init(undefined, ".mermaid");
+        } else {
+            console.error("Invalid response: missing 'message' property");
         }
     })
     .catch(error => console.error("Error fetching Mermaid diagram:", error));
 }
-}
+
+document.addEventListener("DOMContentLoaded", fetchMermaidDiagram);
 
 //import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.esm.min.mjs';
 //mermaid.initialize({ startOnLoad: true});

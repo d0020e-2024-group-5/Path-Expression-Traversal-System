@@ -132,6 +132,7 @@ func sendQuery(queryString string) (string, error) {
 
 	s := pathExpression.TraverseQuery(&q, nodeLst)
 	println("s: ", s)
+
 	return s, nil
 }
 
