@@ -3,7 +3,6 @@ package pathExpression
 import (
 	"regexp"
 	"slices"
-	"strings"
 )
 
 // interface type that all nodes need to implement
@@ -167,22 +166,6 @@ func (t *TraverseNode) NextNode(caller Node, availablePaths []string) []*LeafNod
 // right is the exit so when right is done pass ask parent for next node
 func (l *LoopNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	var leafs []*LeafNode
-	// if caller == l.Parent {
-	// 	tmp1 := l.Left.NextNode(l, availablePaths)
-	// 	tmp2 := l.Right.NextNode(l, availablePaths)
-	// 	leafs = append(leafs, tmp1...)
-	// 	leafs = append(leafs, tmp2...)
-	// } else if caller == l.Left {
-	// 	tmp1 := l.Left.NextNode(l, availablePaths)
-	// 	tmp2 := l.Right.NextNode(l, availablePaths)
-	// 	leafs = append(leafs, tmp1...)
-	// 	leafs = append(leafs, tmp2...)
-	// } else if caller == l.Right {
-	// 	tmp1 := l.Parent.NextNode(l, availablePaths)
-	// 	leafs = append(leafs, tmp1...)
-	// } else {
-	// 	panic("loopnode nextnode panic")
-	// }
 
 	// if caller is parent we return all Children paths
 	if caller == l.Parent {
@@ -207,13 +190,6 @@ func (l *LoopNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 func (o *ORNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	var leafs []*LeafNode
 
-	// if caller == o.Parent {
-	// 	leafs = append(leafs, o.Left.NextNode(o, availablePaths)...)
-	// 	leafs = append(leafs, o.Right.NextNode(o, availablePaths)...)
-	// } else {
-	// 	leafs = append(leafs, o.Parent.NextNode(o, availablePaths)...)
-	// }
-
 	// if caller is parent return all Childrens paths
 	if caller == o.Parent {
 		for i, _ := range o.Children {
@@ -230,21 +206,6 @@ func (o *ORNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 // split if both
 func (a *ANDNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	var leafs []*LeafNode
-	// if caller == a.Parent {
-	// 	leafs = append(leafs, a.Left.NextNode(a, availablePaths)...)
-	// 	leafs = append(leafs, a.Right.NextNode(a, availablePaths)...)
-		
-	// 	for _, leaf := range leafs{
-	// 		isPath := slices.Contains(availablePaths, leaf.Value)
-	// 		// if path is not an available path return empty array
-	// 		if !isPath {
-	// 			var tmp []*LeafNode
-	// 			return tmp
-	// 		}
-	// 	}
-	// } else {
-	// 	leafs = append(leafs, a.Parent.NextNode(a, availablePaths)...)
-	// }
 	
 	// if caller return all paths, if path does not exist return empty slice
 	if caller == a.Parent {
@@ -270,29 +231,6 @@ func (a *ANDNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 // split if only path
 func (x *XORNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	var leafs []*LeafNode
-	// if caller == x.Parent {
-	// 	leafs = append(leafs, x.Left.NextNode(x, availablePaths)...)
-	// 	leafs = append(leafs, x.Right.NextNode(x, availablePaths)...)
-
-	// 	numOfPaths := 0
-	// 	for _, leaf := range leafs{
-	// 		isPath := slices.Contains(availablePaths, leaf.Value)
-	// 		// if path is not an available path return empty array
-	// 		if isPath {numOfPaths += 1}
-	// 	}
-	// 	if numOfPaths == 1 {
-	// 		for _, leaf := range leafs {
-	// 			isPath := slices.Contains(availablePaths, leaf.Value)
-	// 			if isPath {
-	// 				var tmp []*LeafNode
-	// 				tmp = append(tmp, leaf)
-	// 				return tmp
-	// 			}
-	// 		}
-	// 	}
-	// } else {
-	// 	leafs = append(leafs, x.Parent.NextNode(x, availablePaths)...)
-	// }
 
 	// if parent called returns the the one path that exists if that is the only path
 	if caller == x.Parent {
@@ -392,10 +330,14 @@ func grow_tree(str string, parent Node, id *int) (Node, error) {
 		}
 		return &x, nil
 
-	// if the operator is "0" this indicates that the parsing resulted in only a left side
 	// this means this is an leaf node
 	} else if operator == "0" {
-		l := LeafNode{Value: parts[0], ID: *id, Parent: parent}
+		l := LeafNode{}
+		if parts == nil {
+			l = LeafNode{Value: "", ID: *id, Parent: parent}
+		} else {
+			l = LeafNode{Value: parts[0], ID: *id, Parent: parent}
+		}
 		tmp := *id
 		tmp++
 		*id = tmp
@@ -409,9 +351,8 @@ func grow_tree(str string, parent Node, id *int) (Node, error) {
 
 
 // if the passed string contains a valid operator,
-// note that this returns true even for operators that are planed but not implanted
 func containsOperators(s string) bool {
-	re := regexp.MustCompile(`[/*&|]`)
+	re := regexp.MustCompile(`[/*&|^]`)
 	return re.MatchString(s)
 }
 
@@ -420,67 +361,53 @@ func containsOperators(s string) bool {
 // this string “{recipe/input}*price/currency“ would split into “{recipe/input}“ “*“ “price/currency“
 // as the first evaluated operator is *
 func split_q(str string) (string, []string) {
+	var previusOperators []string
+	var parts []string
 
-	// maybe this should return error?
-	// when is it the case that an empty would be passed?
-	// except in these cases "s/pick/recipe/"
-	// or "s//error_here/recipe"
-	// both of these might be better to check beforehand?
+	// if empty return empty
 	if str == "" {
-		return [3]string{"", "0", ""}
-
+		return "0", nil
 		// if no operator is contained
 	} else if !containsOperators(str) {
 		// if the string is contained inside brackets remove them
 		if str[0] == '{' && str[len(str)-1] == '}' {
-			str = str[1:]
-			str = str[:len(str)-1]
-			// why call split again?
-			// we know no operators are in the string
-			// this will just end up att the return bellow, ``return [3]string{str, "0", ""}``
-			return split_q(str)
+			return split_q(str[1:len(str)-1])
 		} else {
 			// since we have no operators or enclosing brackets this is an edge
-			return [3]string{str, "0", ""}
+			return "0", []string{str}
 		}
 	}
-	//is inside brackets counter
+
 	insideCount := 0
-	// for each character advance until the operator is found
 	for i, char := range str {
 		if insideCount > 0 {
+			// decrement insidecount if we find closing bracket
 			if char == '}' {
-				//remove level of inside brackets
-				insideCount = insideCount - 1
+				insideCount -= 1
 			}
+			// since last element and inside brackets remove them
 			if i == len(str)-1 {
-				str = str[1:]
-				str = str[:len(str)-1]
-				// if this was the last and char encountered and its an closing bracket
-				// the whole statement is enclosed on one
-				// remove brackets and parse again
-				// we should never be att the end and not be on a closing bracket
-				return split_q(str)
+				return split_q(str[1:len(str)-1])
 			}
-		} else {
+		} else if insideCount == 0 {
+			// increment open brackets
 			if char == '{' {
-				//add level of inside brackets
-				insideCount = insideCount + 1
-
+				insideCount += 1
 			} else {
-				// The first operator found outside of brackets it the one we want to split on
-				if strings.Contains("/*&|", string(char)) {
-					return [...]string{str[:i], string(str[i]), str[i+1:]}
+				// if thing contains operator take left of operator into parts
+				// and save the operator in the operator list, all operators should be the same according to pre proccesing
+				// this will solit it up into all parts, 
+				// "A&B&C"  => ["&", "&"] and ["A", "B", "C"]
+				if containsOperators(string(char)) {
+					parts = append(parts, str[:i])
+					previusOperators = append(previusOperators, string(str[i]))
 				}
 			}
+		} else {
+			panic("insideCount should never be negative")
 		}
 	}
-
-	// noting should be able to cause this if the query is correctly formed?
-	// only two ways i see into this is "{hello/test}hej"
-	// and two ways i see into this is "he{llo/test"
-	// TODO add test in the beginning if an non operator is after an closing bracket, example "}h" or before and opening bracket "a{"
-	panic("something went wrong, no operators to split on")
+	return previusOperators[0], parts
 }
 
 
