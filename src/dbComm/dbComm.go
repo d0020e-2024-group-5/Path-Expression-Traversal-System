@@ -24,11 +24,19 @@ type DataEdge struct {
 // The node is specified by the string node
 // The prefix is a list of strings that are used as prefixes in the query (can be empty)
 func DBGetNodeEdgesString(node string, prefix []string) ([]DataEdge, error) {
+	//TODO hårdkådad
+	prefixMap := map[string]string{
+		"rdf:":          "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+		"rdfs:":         "http://www.w3.org/2000/01/rdf-schema#",
+		"owl:":          "http://www.w3.org/2002/07/owl#",
+		"nodeOntology:": "http://example.org/NodeOntology#",
+		"minecraft:":    "http://example.org/minecraft#",
+	}
 	//sql injection protection
 	re := regexp.MustCompile(`\s|{|}|\s\.|\n|,|;`)
-	if re.MatchString(node) {
-		return nil, fmt.Errorf("sql injection protection node. ")
-	}
+	//if re.MatchString(node) {
+	//	return nil, fmt.Errorf("sql injection protection node. ")
+	//}
 
 	//predetermined prefix
 	prefixStr := "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX owl: <http://www.w3.org/2002/07/owl#>\nPREFIX nodeOntology: <http://example.org/NodeOntology#>\n"
@@ -86,11 +94,17 @@ func DBGetNodeEdgesString(node string, prefix []string) ([]DataEdge, error) {
 		//fmt.Println(v)
 		if byte == '\n' || byte == ',' {
 			if everyOther {
-				list = append(list, DataEdge{EdgeName: temp, TargetName: "nil"})
+				if strings.TrimSpace(replacePrefix(temp, prefixMap)) != replacePrefix(temp, prefixMap) {
+					fmt.Println("inte lika: ", strings.TrimSpace(replacePrefix(temp, prefixMap)), "|", replacePrefix(temp, prefixMap))
+				}
+				list = append(list, DataEdge{EdgeName: strings.TrimSpace(replacePrefix(temp, prefixMap)), TargetName: "nil"})
 				everyOther = false
 
 			} else {
-				list[len(list)-1].TargetName = temp
+				if strings.TrimSpace(replacePrefix(temp, prefixMap)) != replacePrefix(temp, prefixMap) {
+					fmt.Println("inte lika: ", strings.TrimSpace(replacePrefix(temp, prefixMap)), "|", replacePrefix(temp, prefixMap))
+				}
+				list[len(list)-1].TargetName = strings.TrimSpace(replacePrefix(temp, prefixMap))
 				everyOther = true
 			}
 
@@ -120,4 +134,16 @@ func DBGetNodeEdgesString(node string, prefix []string) ([]DataEdge, error) {
 
 func main() {
 	DBGetNodeEdgesString("http://example.org/minecraft#Stick_Bamboo_made_Instance", nil)
+}
+
+func replacePrefix(in string, prefixMap map[string]string) string {
+	for key, value := range prefixMap {
+		if strings.HasPrefix(in, key) {
+			return strings.Replace(in, key, value, 1)
+		}
+		if strings.HasPrefix(in, value) {
+			return strings.Replace(in, value, key, 1)
+		}
+	}
+	return in
 }

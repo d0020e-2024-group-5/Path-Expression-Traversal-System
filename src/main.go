@@ -28,16 +28,18 @@ type ResponseData struct {
 	Message string `json:"message"`
 }
 
-var nodeLst = map[string][]dbComm.DataEdge{} // NODE HASHMAP WITH A TUPLE LIST (EDGES) AS VALUE
+var prefixList = []string{"minecraft: <http://example.org/minecraft#>"}
+
+//var nodeLst = map[string][]dbComm.DataEdge{} // NODE HASHMAP WITH A TUPLE LIST (EDGES) AS VALUE
 
 func main() {
-	var prefixList = []string{"minecraft: <http://example.org/minecraft#>"}
+
 	fmt.Println(dbComm.DBGetNodeEdgesString("minecraft:obtainedBy", prefixList))
 	http.HandleFunc("/", handler) // servers the main HTML file
 
 	http.HandleFunc("/api/submit", handleSubmit) // API endpoint to handle form submission
 
-	http.HandleFunc("/api/recq", queryHandler)
+	http.HandleFunc("/api/pets", queryHandler)
 
 	// create the server and listen to port 80
 	err := http.ListenAndServe(":80", nil)
@@ -79,7 +81,7 @@ func queryHandler(w http.ResponseWriter, r *http.Request) {
 	stream := io.Reader(r.Body)
 	q, _ := pathExpression.QueryStructFromStream(&stream)
 	log.Printf("parsed request: \n%s", q.DebugToString())
-	pathExpression.RecursiveTraverse(&q, nodeLst, w)
+	pathExpression.RecursiveTraverse(&q, w)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -158,7 +160,7 @@ func sendQuery(queryString string) string {
 
 	q, _ := pathExpression.QueryStructFromStream(&stream)
 
-	s := pathExpression.TraverseQuery(&q, nodeLst)
+	s := pathExpression.TraverseQuery(&q)
 	println(s)
 	return s
 }
