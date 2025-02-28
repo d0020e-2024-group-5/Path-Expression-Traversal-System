@@ -1,2 +1,5 @@
 graphDBdata/*
 graphDBdata.zip
+.vscode
+src/pets
+src/pets.exe

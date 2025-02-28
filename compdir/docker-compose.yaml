@@ -6,7 +6,7 @@ services:
         ports:
             - "7202:7200"
         volumes:
-            - ./../graphDBdata/repC/:/root/graphdb-import
+            - ./../graphDBdata/repC/:/opt/graphdb/home
     bDB:
         image: ontotext/graphdb:10.7.0
         container_name: graphdb_B
@@ -15,7 +15,7 @@ services:
             - "7201:7200"
         volumes:
             - ./../graphDBdata/repB/:/opt/graphdb/home
-        
+
     aDB:
         image: ontotext/graphdb:10.7.0
         container_name: graphDB_A
@@ -23,7 +23,7 @@ services:
         ports:
             - "7200:7200"
         volumes:
-            - ./../graphDBdata/repC/:/root/graphdb-import
+            - ./../graphDBdata/repA/:/opt/graphdb/home
 
     a:
         # Build our go application with hostname "a", 
@@ -47,7 +47,7 @@ services:
             GRAPHDB_HOSTNAME: "bDB"
             GRAPHDB_REPOSITORY: "PETSrep"
         depends_on:
-             bDB:
+            bDB:
                 condition: service_started
     c:
 
@@ -61,4 +61,3 @@ services:
         environment:
             GRAPHDB_HOSTNAME: "cDB"
             GRAPHDB_REPOSITORY: "PETSrep"
-        

@@ -261,24 +261,3 @@ func RecursiveTraverse(q *QueryStruct, data map[string][]dbComm.DataEdge, res io
 		RecursiveTraverse(&qRec, data, res)
 	}
 }
-
-func TestBob() {
-	data := map[string][]DataEdge{
-		"s": {
-			{"pickaxe", "pickaxe"},
-		},
-		"pickaxe": {
-			{"obtainedBy", "Pickaxe_From_Stick_And_Stone_Recipe"},
-		},
-		"Pickaxe_From_Stick_And_Stone_Recipe": {
-			{"hasInput", "Stick"},
-			{"hasInput", "Cobblestone"},
-		},
-	}
-	fmt.Printf("%v\n\n", data)
-
-	q, _ := BobTheBuilder("s/pickaxe/{obtainedBy/hasInput}*")
-	fmt.Printf("%s\n\n", q.DebugToString())
-
-	fmt.Println(TraverseQuery(&q, data))
-}
