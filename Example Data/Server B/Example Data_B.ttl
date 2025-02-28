@@ -22,11 +22,11 @@ minecraft:CraftingTable_Instance a minecraft:CraftingTable ;
 	nodeOntology:pointsToServer minecraft:Server_a ;
 	nodeOntology:hasID 8 .
 
-
 # Recipe Instance: Stick_recipe_Planks
 minecraft:Stick_Planks_recipe_Instance a minecraft:Stick_From_Planks_Recipe ;
 	nodeOntology:hasID 11 ;
 	minecraft:hasInput minecraft:Plank_Instance ;
+	minecraft:hasInput minecraft:Plank_from_Bamboo_Instance ;
 	minecraft:hasOutput minecraft:Stick_Plank_made_Instance ;
 	minecraft:usedInStation minecraft:CraftingTable_Instance .
 
@@ -34,3 +34,12 @@ minecraft:Stick_Planks_recipe_Instance a minecraft:Stick_From_Planks_Recipe ;
 minecraft:Plannks_From_Logs_Recipe_Instance a minecraft:Plannks_From_Logs_Recipe ;
 	nodeOntology:hasID 13 ;
 	nodeOntology:pointsToServer minecraft:Server_c .
+
+# Plank_from_Bamboo_Instance
+minecraft:Plank_from_Bamboo_Instance a minecraft:Plank_from_Bamboo
+	nodeOntology:hasID 14 ;
+	minecraft:obtainedBy minecraft:Plank_from_bamboo_recipe_Instance .
+
+minecraft:Plank_from_bamboo_recipe_Instance a minecraft:Plank_from_bamboo_recipe;
+	nodeOntology:hasID 15 ;
+	nodeOntology:pointsToServer minecraft:Server_a .

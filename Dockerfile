@@ -4,8 +4,9 @@ FROM golang:1.23
 WORKDIR /usr/app/
 
 # when modules is used, downlaod stuff to image
-# COPY go.mod go.sum
-# RUN go mod download && go mod verify
+COPY ./src/go.mod ./src/go.mod
+COPY ./src/go.sum ./src/go.sum
+RUN go -C ./src mod download && go -C ./src mod  verify
 
 # Copy everything from this dir to our image at /usr/app
 COPY . .
