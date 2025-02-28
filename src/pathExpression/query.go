@@ -196,11 +196,8 @@ func (q *QueryStruct) next() []QueryStruct {
 		fmt.Println(q.DebugToString(), "\n")
 
 		for _, exist_edge := range nodeList {
-			fmt.Println("exist_edge: ", exist_edge)
 			// if it exist and we want to follow it
-			fmt.Println("follow_edge.value: ", follow_edge.Value, " exist_edge.EdgeName: ", exist_edge.EdgeName, ", is equal ", exist_edge.EdgeName == follow_edge.Value, "\n")
 			if follow_edge.Value == exist_edge.EdgeName {
-				fmt.Println("Target name: ", exist_edge.TargetName)
 				// create a new query with new current leaf
 				// and next node
 				copy := QueryStruct{
@@ -240,7 +237,6 @@ func RecursiveTraverse(q *QueryStruct, res io.Writer) {
 		fmt.Println(q.DebugToString(), "\n")
 		// test if it has en edge that indicates its a false node
 		// TODO error, there might exist a scenario when next node dont exists in our data, it should not happen but we need to be able to handle it
-		fmt.Println("recursive nextNode: ", qRec.nextNode)
 		edges, err := dbComm.DBGetNodeEdgesString(qRec.nextNode, prefixList)
 		//TODO handle error
 		fmt.Println(err)
@@ -255,7 +251,6 @@ func RecursiveTraverse(q *QueryStruct, res io.Writer) {
 				for _, server_edge := range edgesList {
 					// if the edge has contact information
 					if server_edge.EdgeName == "nodeOntology:hasIP" {
-						fmt.Println("server_edge:", server_edge.TargetName)
 						stream := io.MultiReader(bytes.NewReader(PetsMermaidQueryHeader[:]), qRec.ToReader())
 						log.Printf("query following querydata to %s \n%s", server_edge.TargetName, qRec.DebugToString())
 						fmt.Println("URL: ", "http://"+server_edge.TargetName+"/api/pets")

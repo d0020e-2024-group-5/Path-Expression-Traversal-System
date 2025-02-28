@@ -27,11 +27,9 @@ var cashMap = map[string][]DataEdge{}
 // The prefix is a list of strings that are used as prefixes in the query (can be empty)
 func DBGetNodeEdgesString(node string, prefix []string) ([]DataEdge, error) {
 	hashing := os.Getenv("CASHING")
-	fmt.Println("hashing:", hashing, hashing == "TRUE")
 	if hashing == "TRUE" {
 		i, ok := cashMap[node]
 		if ok {
-			fmt.Println("cashing returned")
 			return i, nil
 		}
 	}
@@ -126,7 +124,6 @@ func DBGetNodeEdgesString(node string, prefix []string) ([]DataEdge, error) {
 			temp = temp + string(byte)
 		}
 	}
-	fmt.Println("List:")
 	if len(list) == 0 {
 		return nil, fmt.Errorf("error: query wrong / wrong address1 ")
 	}
@@ -134,15 +131,11 @@ func DBGetNodeEdgesString(node string, prefix []string) ([]DataEdge, error) {
 		return nil, fmt.Errorf("error: query wrong / wrong address2 ")
 	}
 	// remove the first element
-	for _, edge := range list {
-		fmt.Println("edge: ", edge.EdgeName, " | ", edge.TargetName)
-	}
 	var ret []DataEdge = nil
 	for i := 1; i < len(list); i++ {
 		ret = append(ret, list[i])
 	}
 	if hashing == "TRUE" {
-		fmt.Println("cashing hapened")
 		cashMap[node] = ret
 	}
 	return ret, nil
