@@ -36,6 +36,7 @@ services:
         environment:
             GRAPHDB_HOSTNAME: "aDB"
             GRAPHDB_REPOSITORY: "PETSrep"
+            CASHING: "TRUE"
 
     b:
         # same as a but no contact to outside
@@ -46,6 +47,7 @@ services:
         environment:
             GRAPHDB_HOSTNAME: "bDB"
             GRAPHDB_REPOSITORY: "PETSrep"
+            CASHING: "TRUE"
         depends_on:
             bDB:
                 condition: service_started
@@ -61,3 +63,4 @@ services:
         environment:
             GRAPHDB_HOSTNAME: "cDB"
             GRAPHDB_REPOSITORY: "PETSrep"
+            CASHING: "TRUE"

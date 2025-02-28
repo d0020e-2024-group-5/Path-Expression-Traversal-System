@@ -20,11 +20,22 @@ type DataEdge struct {
 	TargetName string
 }
 
+var cashMap = map[string][]DataEdge{}
+
 // DBGetNodeEdgesString returns the edges of a node in the form of a list of DataEdge
 // The node is specified by the string node
 // The prefix is a list of strings that are used as prefixes in the query (can be empty)
 func DBGetNodeEdgesString(node string, prefix []string) ([]DataEdge, error) {
-	//TODO hårdkådad
+	hashing := os.Getenv("CASHING")
+	fmt.Println("hashing:", hashing, hashing == "TRUE")
+	if hashing == "TRUE" {
+		i, ok := cashMap[node]
+		if ok {
+			fmt.Println("cashing returned")
+			return i, nil
+		}
+	}
+	// TODO hårdkådad
 	prefixMap := map[string]string{
 		"rdf:":          "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
 		"rdfs:":         "http://www.w3.org/2000/01/rdf-schema#",
@@ -32,6 +43,7 @@ func DBGetNodeEdgesString(node string, prefix []string) ([]DataEdge, error) {
 		"nodeOntology:": "http://example.org/NodeOntology#",
 		"minecraft:":    "http://example.org/minecraft#",
 	}
+
 	//sql injection protection
 	re := regexp.MustCompile(`\s|{|}|\s\.|\n|,|;`)
 	//if re.MatchString(node) {
@@ -128,6 +140,10 @@ func DBGetNodeEdgesString(node string, prefix []string) ([]DataEdge, error) {
 	var ret []DataEdge = nil
 	for i := 1; i < len(list); i++ {
 		ret = append(ret, list[i])
+	}
+	if hashing == "TRUE" {
+		fmt.Println("cashing hapened")
+		cashMap[node] = ret
 	}
 	return ret, nil
 }
