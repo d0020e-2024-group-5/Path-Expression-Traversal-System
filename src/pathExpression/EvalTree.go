@@ -4,6 +4,7 @@ import (
 	"errors"
 	"regexp"
 	"slices"
+	"strings"
 )
 
 // interface type that all nodes need to implement
@@ -413,74 +414,6 @@ func split_q(str string) (string, []string) {
 }
 
 
-
-
-// // this splits the query into the first evaluated operator off the string and its left and right sides.
-// // this string “{recipe/input}*price/currency“ would split into “{recipe/input}“ “*“ “price/currency“
-// // as the first evaluated operator is *
-// func split_q(str string) ([3]string) {
-
-// 	// maybe this should return error?
-// 	// when is it the case that an empty would be passed?
-// 	// except in these cases "s/pick/recipe/"
-// 	// or "s//error_here/recipe"
-// 	// both of these might be better to check beforehand?
-// 	if str == "" {
-// 		return [3]string{"", "0", ""}
-
-// 		// if no operator is contained
-// 	} else if !containsOperators(str) {
-// 		// if the string is contained inside brackets remove them
-// 		if str[0] == '{' && str[len(str)-1] == '}' {
-// 			str = str[1:]
-// 			str = str[:len(str)-1]
-// 			// why call split again?
-// 			// we know no operators are in the string
-// 			// this will just end up att the return bellow, ``return [3]string{str, "0", ""}``
-// 			return split_q(str)
-// 		} else {
-// 			// since we have no operators or enclosing brackets this is an edge
-// 			return [3]string{str, "0", ""}
-// 		}
-// 	}
-// 	//is inside brackets counter
-// 	insideCount := 0
-// 	// for each character advance until the operator is found
-// 	for i, char := range str {
-// 		if insideCount > 0 {
-// 			if char == '}' {
-// 				//remove level of inside brackets
-// 				insideCount = insideCount - 1
-// 			}
-// 			if i == len(str)-1 {
-// 				str = str[1:]
-// 				str = str[:len(str)-1]
-// 				// if this was the last and char encountered and its an closing bracket
-// 				// the whole statement is enclosed on one
-// 				// remove brackets and parse again
-// 				// we should never be att the end and not be on a closing bracket
-// 				return split_q(str)
-// 			}
-// 		} else {
-// 			if char == '{' {
-// 				//add level of inside brackets
-// 				insideCount = insideCount + 1
-
-// 			} else {
-// 				// The first operator found outside of brackets it the one we want to split on
-// 				if strings.Contains("/*&|", string(char)) {
-// 					return [...]string{str[:i], string(str[i]), str[i+1:]}
-// 				}
-// 			}
-// 		}
-// 	}
-
-	// noting should be able to cause this if the query is correctly formed?
-	// only two ways i see into this is "{hello/test}hej"
-	// and two ways i see into this is "he{llo/test"
-	// TODO add test in the beginning if an non operator is after an closing bracket, example "}h" or before and opening bracket "a{"
-	panic("something went wrong, no operators to split on")
-}
 // Checks for invalid operator combinations and returns nil if no invalid combination is found.
 func isValid(str string) error { 
 	operands := "/^*&|"	// current available operands
