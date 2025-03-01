@@ -1,0 +1,11 @@
+@prefix rep: <http://www.openrdf.org/config/repository#> .
+@prefix sr: <http://www.openrdf.org/config/repository/sail#> .
+
+[] a rep:Repository ;
+   rep:repositoryID "kalle" ;
+   rep:repositoryImpl [
+       rep:repositoryType "graphdb:FreeSailRepository" ;
+       sr:sailImpl [
+           sr:sailType "graphdb:FreeSail" ;
+       ]
+   ] .

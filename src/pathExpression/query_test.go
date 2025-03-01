@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	p "pets/parse"
+	p "pets/dbComm"
 	"strings"
 	"testing"
 
