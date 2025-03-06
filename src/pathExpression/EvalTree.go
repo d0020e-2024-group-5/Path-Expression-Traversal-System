@@ -381,16 +381,15 @@ func split_q(str string) (string, []string) {
 		}
 	}
 	insideCount := 0
-	i_pre_op := 0
+	i_pre_op := -1
 	for i, char := range str {
-
 		if insideCount > 0 {
 			// decrement insidecount if we find closing bracket
 			if char == '}' {
 				insideCount -= 1
 			}
 			// since last element and inside brackets remove them
-			if i == len(str)-1 {
+			if i == len(str)-1 && len(parts) == 0 {
 				return split_q(str[1 : len(str)-1])
 			}
 		} else if insideCount == 0 {
@@ -406,14 +405,21 @@ func split_q(str string) (string, []string) {
 					if previusOperator == char || previusOperator == '0' {
 						parts = append(parts, str[i_pre_op+1:i])
 						i_pre_op = i
+						previusOperator = char
+					} else {
+						parts = append(parts, str[i_pre_op+1:])
+						return string(previusOperator), parts
 					}
-					previusOperator = char
+					if i == len(str)-1 {
+						return string(previusOperator), parts
+					}
+
 				}
 			}
 		} else {
 			panic("insideCount should never be negative")
 		}
-		if i == len(str) {
+		if i == len(str)-1 {
 			parts = append(parts, str[i_pre_op+1:])
 		}
 	}
