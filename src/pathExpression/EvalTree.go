@@ -278,6 +278,12 @@ func (l *LeafNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 // creates a branch where the top node has the given parent.
 // return a the top node
 func grow_tree(str string, parent Node, id *int) (Node, error) {
+	//pre process
+	err := isValid(str)
+	if err != nil {
+		return nil, err
+	}
+
 	// splitq split the string to parts that are children of the operator
 	operator, parts := split_q(str)
 	// fmt.Printf("%v\n", parts)
@@ -417,11 +423,19 @@ func split_q(str string) (string, []string) {
 // Checks for invalid operator combinations and returns nil if no invalid combination is found.
 func isValid(str string) error { 
 	operands := "/^*&|"	// current available operands
+	right := 0
+	left := 0
 	index := strings.IndexAny(str, operands)
 	if (string(str[index]) != "/"){	// if first operand isn't a traverse (/)
 		return errors.New("Error; First operator is "+string(str[index])+" , not traverse (/)") // return error
 	}
 	for i, char := range str {
+		if char == '}' {
+			right += 1
+		}
+		if char == '{' {
+			left += 1
+		
 		if (string(char)+string(str[i+1]) == "*/"){ // exception is */ which is equal to *
 			continue
 		}
@@ -438,6 +452,9 @@ func isValid(str string) error {
 			if strings.Contains(operands, string(str[i+1])) {	// check right char for invalid operand
 				return errors.New("Error; Invalid operand combination: " + (string(char)+string(str[i+1])))
 			}
+		}
+		if right != left {
+			return errors.New("Error; Unequal amount of left ("+string(left)+")and right ("+string(right)+") brackets")
 		}
 	}
 	return nil

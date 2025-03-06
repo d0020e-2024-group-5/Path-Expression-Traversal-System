@@ -46,7 +46,7 @@ func BobTheBuilder(input_query string) (QueryStruct, error) {
 
 	id_int := 0
 	root := RootNode{}
-	tmp := grow_tree(components[0], &root, &id_int)
+	tmp, err := grow_tree(components[0], &root, &id_int)
 	root.Child = tmp
 
 	// construct the tree
