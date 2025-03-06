@@ -49,6 +49,10 @@ func BobTheBuilder(input_query string) (QueryStruct, error) {
 	tmp, err := grow_tree(components[0], &root, &id_int)
 	root.Child = tmp
 
+	if err != nil {
+		log.Print(err)
+	}
+
 	// construct the tree
 	q := QueryStruct{}
 	q.Query = components[0]
@@ -65,7 +69,7 @@ func BobTheBuilder(input_query string) (QueryStruct, error) {
 
 	} else if len(components) == 1 {
 
-		q.FollowLeaf = root.NextNode(nil)[0]
+		q.FollowLeaf = root.NextNode(nil, []string{})[0]
 		// TODO this need to be changed to being conditione if we have passed in the next node in the input_query
 		// TODO error handling, we cant be sure that the first "operator" is traverse and therefore might get a multiple return
 		q.NextNode = q.FollowLeaf.Value
@@ -90,7 +94,7 @@ func (q *QueryStruct) next(data map[string][]DataEdge) []QueryStruct {
 	nextQ := make([]QueryStruct, 0)
 
 	// for each edge we want to follow
-	for _, follow_edge := range q.FollowLeaf.NextNode(nil) {
+	for _, follow_edge := range q.FollowLeaf.NextNode(nil, []string{}) {
 
 		// for each edge that exist from node
 		for _, exist_edge := range data[q.NextNode] {

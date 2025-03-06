@@ -2,6 +2,7 @@ package pathExpression
 
 import (
 	"errors"
+	"log"
 	"regexp"
 	"slices"
 	"strings"
@@ -22,29 +23,30 @@ type RootNode struct {
 
 // A Traverse Node represent a traversal from right to left
 type TraverseNode struct {
-	Parent Node
-	Children []Node 
+	Parent   Node
+	Children []Node
 }
+
 // Struct representing a loop in the query structure
 type LoopNode struct {
-	Parent Node
-	Children []Node 
+	Parent   Node
+	Children []Node
 }
 
 // Struct representing the OR node operator
 type ORNode struct {
-	Parent Node
-	Children []Node 
+	Parent   Node
+	Children []Node
 }
 
 type ANDNode struct {
-	Parent Node
-	Children []Node 
+	Parent   Node
+	Children []Node
 }
 
 type XORNode struct {
-	Parent Node
-	Children []Node 
+	Parent   Node
+	Children []Node
 }
 
 // type PNode struct {
@@ -126,12 +128,6 @@ func (l *LeafNode) GetLeaf(id int) *LeafNode {
 	return nil
 }
 
-
-
-
-
-
-
 // Passes next node to child with required info
 // TODO error can occur when a child calls this function
 func (r *RootNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
@@ -146,7 +142,7 @@ func (t *TraverseNode) NextNode(caller Node, availablePaths []string) []*LeafNod
 	// if caller is parent we check the "first" node
 	if caller == t.Parent {
 		leafs = append(leafs, t.Children[0].NextNode(t, availablePaths)...)
-	// then we check all the following Children
+		// then we check all the following Children
 	} else if caller != t.Children[len(t.Children)-1] {
 		for i, n := range t.Children {
 			if caller == n {
@@ -154,7 +150,7 @@ func (t *TraverseNode) NextNode(caller Node, availablePaths []string) []*LeafNod
 				break
 			}
 		}
-	// untill we reach the last chil where we call the parent
+		// untill we reach the last chil where we call the parent
 	} else if caller == t.Children[len(t.Children)-1] {
 		leafs = append(leafs, t.Parent.NextNode(t, availablePaths)...)
 	} else {
@@ -174,12 +170,12 @@ func (l *LoopNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 		for i, _ := range l.Children {
 			leafs = append(leafs, l.Children[i].NextNode(l, availablePaths)...)
 		}
-	// if caller is not last child we return all Childrens paths
+		// if caller is not last child we return all Childrens paths
 	} else if caller != l.Children[len(l.Children)-1] {
 		for i, _ := range l.Children {
 			leafs = append(leafs, l.Children[i].NextNode(l, availablePaths)...)
 		}
-	// if child is last child we call parents nextnode
+		// if child is last child we call parents nextnode
 	} else if caller == l.Children[len(l.Children)-1] {
 		leafs = append(leafs, l.Parent.NextNode(l, availablePaths)...)
 	} else {
@@ -197,7 +193,7 @@ func (o *ORNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 		for i, _ := range o.Children {
 			leafs = append(leafs, o.Children[i].NextNode(o, availablePaths)...)
 		}
-	// if caller is any of the Children return parents nextnode
+		// if caller is any of the Children return parents nextnode
 	} else {
 		leafs = append(leafs, o.Parent.NextNode(o, availablePaths)...)
 	}
@@ -208,7 +204,7 @@ func (o *ORNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 // split if both
 func (a *ANDNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	var leafs []*LeafNode
-	
+
 	// if caller return all paths, if path does not exist return empty slice
 	if caller == a.Parent {
 		for i, _ := range a.Children {
@@ -216,7 +212,7 @@ func (a *ANDNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 		}
 
 		// check if leafs.value exist as an available path
-		for _, leaf := range leafs{
+		for _, leaf := range leafs {
 			isPath := slices.Contains(availablePaths, leaf.Value)
 			// if path is not an available path return empty array
 			if !isPath {
@@ -227,7 +223,7 @@ func (a *ANDNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	} else {
 		leafs = append(leafs, a.Parent.NextNode(a, availablePaths)...)
 	}
-	return leafs	
+	return leafs
 }
 
 // split if only path
@@ -241,10 +237,12 @@ func (x *XORNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 		}
 
 		numOfPaths := 0
-		for _, leaf := range leafs{
+		for _, leaf := range leafs {
 			isPath := slices.Contains(availablePaths, leaf.Value)
 			// if path is not an available path return empty array
-			if isPath {numOfPaths += 1}
+			if isPath {
+				numOfPaths += 1
+			}
 		}
 		if numOfPaths == 1 {
 			for _, leaf := range leafs {
@@ -256,7 +254,7 @@ func (x *XORNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 				}
 			}
 		}
-	// else call parents nextnode
+		// else call parents nextnode
 	} else {
 		leafs = append(leafs, x.Parent.NextNode(x, availablePaths)...)
 	}
@@ -274,15 +272,10 @@ func (l *LeafNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	}
 }
 
-
 // creates a branch where the top node has the given parent.
 // return a the top node
 func grow_tree(str string, parent Node, id *int) (Node, error) {
 	//pre process
-	err := isValid(str)
-	if err != nil {
-		return nil, err
-	}
 
 	// splitq split the string to parts that are children of the operator
 	operator, parts := split_q(str)
@@ -298,7 +291,7 @@ func grow_tree(str string, parent Node, id *int) (Node, error) {
 		}
 		return &t, nil
 
-	// if the operator is loop (aka match zero or more) create a loop node
+		// if the operator is loop (aka match zero or more) create a loop node
 	} else if operator == "*" {
 		l := LoopNode{}
 		l.Parent = parent
@@ -308,7 +301,7 @@ func grow_tree(str string, parent Node, id *int) (Node, error) {
 		}
 		return &l, nil
 
-	// if the operator is a OR, create a ORNode 			
+		// if the operator is a OR, create a ORNode
 	} else if operator == "|" {
 		o := ORNode{}
 		o.Parent = parent
@@ -317,8 +310,8 @@ func grow_tree(str string, parent Node, id *int) (Node, error) {
 			o.Children = append(o.Children, child)
 		}
 		return &o, nil
-	
-	// if the operator is a AND, create a ANDNode 
+
+		// if the operator is a AND, create a ANDNode
 	} else if operator == "&" {
 		a := ANDNode{}
 		a.Parent = parent
@@ -328,7 +321,7 @@ func grow_tree(str string, parent Node, id *int) (Node, error) {
 		}
 		return &a, nil
 
-	// if the operator is a XOR, create a XORNode 
+		// if the operator is a XOR, create a XORNode
 	} else if operator == "^" {
 		x := XORNode{}
 		x.Parent = parent
@@ -338,7 +331,7 @@ func grow_tree(str string, parent Node, id *int) (Node, error) {
 		}
 		return &x, nil
 
-	// this means this is an leaf node
+		// this means this is an leaf node
 	} else if operator == "0" {
 		l := LeafNode{}
 		if parts == nil {
@@ -357,13 +350,11 @@ func grow_tree(str string, parent Node, id *int) (Node, error) {
 	}
 }
 
-
 // if the passed string contains a valid operator,
 func containsOperators(s string) bool {
 	re := regexp.MustCompile(`[/*&|^]`)
 	return re.MatchString(s)
 }
-
 
 // this splits the query into the first evaluated operator off the string and its left and right sides.
 // this string “{recipe/input}*price/currency“ would split into “{recipe/input}“ “*“ “price/currency“
@@ -379,7 +370,7 @@ func split_q(str string) (string, []string) {
 	} else if !containsOperators(str) {
 		// if the string is contained inside brackets remove them
 		if str[0] == '{' && str[len(str)-1] == '}' {
-			return split_q(str[1:len(str)-1])
+			return split_q(str[1 : len(str)-1])
 		} else {
 			// since we have no operators or enclosing brackets this is an edge
 			return "0", []string{str}
@@ -396,7 +387,7 @@ func split_q(str string) (string, []string) {
 			}
 			// since last element and inside brackets remove them
 			if i == len(str)-1 {
-				return split_q(str[1:len(str)-1])
+				return split_q(str[1 : len(str)-1])
 			}
 		} else if insideCount == 0 {
 			// increment open brackets
@@ -405,7 +396,7 @@ func split_q(str string) (string, []string) {
 			} else {
 				// if thing contains operator take left of operator into parts
 				// and save the operator in the operator list, all operators should be the same according to pre proccesing
-				// this will solit it up into all parts, 
+				// this will solit it up into all parts,
 				// "A&B&C"  => ["&", "&"] and ["A", "B", "C"]
 				if containsOperators(string(char)) {
 					parts = append(parts, str[:i])
@@ -419,43 +410,72 @@ func split_q(str string) (string, []string) {
 	return previusOperators[0], parts
 }
 
-
 // Checks for invalid operator combinations and returns nil if no invalid combination is found.
-func isValid(str string) error { 
-	operands := "/^*&|"	// current available operands
+func IsValid(str string) error {
+	operands := "/^*&|" // current available operands
 	right := 0
 	left := 0
 	index := strings.IndexAny(str, operands)
-	if (string(str[index]) != "/"){	// if first operand isn't a traverse (/)
-		return errors.New("Error; First operator is "+string(str[index])+" , not traverse (/)") // return error
+	if string(str[index]) != "/" { // if first operand isn't a traverse (/)
+		return errors.New("Error; First operator is " + string(str[index]) + " , not traverse (/)") // return error
 	}
-	for i, char := range str {
-		if char == '}' {
-			right += 1
+	for i := 0; i < (len(str) - 1); i++ {
+		// checks if last character is an operand (with the exception of / or *)
+		if strings.Contains(operands, string(str[len(str)-1])) && !(strings.Contains("*", string(str[len(str)-1])) || strings.Contains("/", string(str[len(str)-1]))) {
+			return errors.New("Error; Invalid operand as last character"+string(str[len(str)-1]))
 		}
-		if char == '{' {
-			left += 1
-		
-		if (string(char)+string(str[i+1]) == "*/"){ // exception is */ which is equal to *
+		char := str[i]
+		log.Print(string(str[i]))
+		if i == len(str)-2 {
+			log.Print(string(str[i+1]))
+			if str[i+1] == '}' {
+				log.Print("right")
+				right += 1
+			}
+			if str[i+1] == '{' {
+				log.Print("left")
+				left += 1
+			}
+			if str[i] == '}' {
+				log.Print("right")
+				right += 1
+			}
+			if str[i] == '{' {
+				log.Print("left")
+				left += 1
+			}
+		} else {
+			if str[i] == '}' {
+				log.Print("right")
+				right += 1
+			}
+			if str[i] == '{' {
+				log.Print("left")
+				left += 1
+			}
+		}
+
+		if string(char)+string(str[i+1]) == "*/" { // exception is */ which is equal to *
 			continue
 		}
-		if (string(char) == "{") {	// invalid combination { and op
-			if strings.Contains(operands, string(str[i+1])){
-				return errors.New("Error; Invalid group operand combination: " + (string(char)+string(str[i+1])))
+		if string(char) == "{" { // invalid combination { and op
+			if strings.Contains(operands, string(str[i+1])) {
+				return errors.New("Error; Invalid group operand combination: " + (string(char) + string(str[i+1])))
 			}
 		}
-		if strings.Contains(operands, string(char)) { // if current char is operand 
-			if (string(str[i+1]) == "}"){// invalid combination op and }
-				return errors.New("Error; Invalid group operand combination: " + (string(char)+string(str[i+1])))
+		if strings.Contains(operands, string(char)) { // if current char is operand
+			if string(str[i+1]) == "}" { // invalid combination op and }
+				return errors.New("Error; Invalid group operand combination: " + (string(char) + string(str[i+1])))
 			}
-			
-			if strings.Contains(operands, string(str[i+1])) {	// check right char for invalid operand
-				return errors.New("Error; Invalid operand combination: " + (string(char)+string(str[i+1])))
+
+			if strings.Contains(operands, string(str[i+1])) { // check right char for invalid operand
+				return errors.New("Error; Invalid operand combination: " + (string(char) + string(str[i+1])))
 			}
 		}
-		if right != left {
-			return errors.New("Error; Unequal amount of left ("+string(left)+")and right ("+string(right)+") brackets")
-		}
+
+	}
+	if right != left {
+		return errors.New("Error; Unequal amount of left (" + string(left) + ")and right (" + string(right) + ") brackets")
 	}
 	return nil
 }

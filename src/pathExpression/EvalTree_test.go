@@ -1,0 +1,101 @@
+package pathExpression
+
+import (
+	"log"
+	"testing"
+)
+
+var str string
+
+func TestIsValid(t *testing.T) {
+	str = "{s}/pickaxe*/{craftin_table}*/{test/of_bomba{eksdee}}"
+	got := IsValid(str)
+	want := true
+
+	if got != want {
+		log.Print(got)
+		t.Errorf("got %t, wanted %t", got, want)
+	}
+
+}
+// Checks for invalid operator combinations and returns nil if no invalid combination is found.
+func IsValid(str string) bool {
+	log.Print("test1")
+	operands := "/^*&|" // current available operands
+	right := 0
+	left := 0
+	index := strings.IndexAny(str, operands)
+	if string(str[index]) != "/" { // if first operand isn't a traverse (/)
+		log.Print("0")
+		return false
+		//return errors.New("Error; First operator is " + string(str[index]) + " , not traverse (/)") // return error
+	}
+	for i := 0; i < (len(str) - 1); i++ {
+		// checks if last character is an operand (with the exception of / or *)
+		if strings.Contains(operands, string(str[len(str)-1])) && !(strings.Contains("*", string(str[len(str)-1])) || strings.Contains("/", string(str[len(str)-1]))) {
+			log.Print("-1")
+			return false
+		}
+		char := str[i]
+		log.Print(string(str[i]))
+		if i == len(str)-2 {
+			log.Print(string(str[i+1]))
+			if str[i+1] == '}' {
+				log.Print("right")
+				right += 1
+			}
+			if str[i+1] == '{' {
+				log.Print("left")
+				left += 1
+			}
+			if str[i] == '}' {
+				log.Print("right")
+				right += 1
+			}
+			if str[i] == '{' {
+				log.Print("left")
+				left += 1
+			}
+		} else {
+			if str[i] == '}' {
+				log.Print("right")
+				right += 1
+			}
+			if str[i] == '{' {
+				log.Print("left")
+				left += 1
+			}
+		}
+
+		if string(char)+string(str[i+1]) == "*/" { // exception is */ which is equal to *
+			continue
+		}
+		if string(char) == "{" { // invalid combination { and op
+			if strings.Contains(operands, string(str[i+1])) {
+				log.Print("1")
+				return false
+				//return errors.New("Error; Invalid group operand combination: " + (string(char) + string(str[i+1])))
+			}
+		}
+		if strings.Contains(operands, string(char)) { // if current char is operand
+			if string(str[i+1]) == "}" { // invalid combination op and }
+				log.Print("2")
+				return false
+				//return errors.New("Error; Invalid group operand combination: " + (string(char) + string(str[i+1])))
+			}
+
+			if strings.Contains(operands, string(str[i+1])) { // check right char for invalid operand
+				log.Print("3")
+				return false
+				//return errors.New("Error; Invalid operand combination: " + (string(char) + string(str[i+1])))
+			}
+		}
+
+	}
+	if right != left {
+		log.Print("4")
+		return false
+		//return errors.New("Error; Unequal amount of left (" + string(left) + ")and right (" + string(right) + ") brackets")
+	}
+	return true
+}
