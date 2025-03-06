@@ -250,7 +250,9 @@ func RecursiveTraverse(q *QueryStruct, res io.Writer) {
 				// get the domain of the server
 				for _, server_edge := range edgesList {
 					// if the edge has contact information
+
 					if server_edge.EdgeName == "nodeOntology:hasIP" {
+
 						stream := io.MultiReader(bytes.NewReader(PetsMermaidQueryHeader[:]), qRec.ToReader())
 						log.Printf("query following querydata to %s \n%s", server_edge.TargetName, qRec.DebugToString())
 						fmt.Println("URL: ", "http://"+server_edge.TargetName+"/api/pets")
