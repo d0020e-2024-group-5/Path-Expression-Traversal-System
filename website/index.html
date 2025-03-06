@@ -21,7 +21,9 @@
     <p id="response"></p>
 </div>
 
-<div class="mermaid" id="mermaidDiagram" style="display:block;"></div>
+<div class="flex-container">
+    <div class="mermaid" id="mermaidDiagram" style="display:none;"></div>
+</div>
 
 <script>
 
@@ -69,7 +71,7 @@ function sendData() {
         if (data.message) {
             const mermaidContainer = document.getElementById("mermaidDiagram");
             mermaidContainer.innerHTML = `<div class="mermaid">graph TD;\n${data.message}</div>`;
-           // mermaidContainer.style.display = "block";
+            mermaidContainer.style.display = "block";
             mermaid.init(undefined, ".mermaid");
         } else {
             console.error("Invalid response: missing 'message' property");
@@ -120,13 +122,14 @@ function fetchMermaidDiagram() {
             mermaidContainer.style.display = "block";
             mermaid.init(undefined, ".mermaid");
         } else {
+            document.getElementById("mermaidDiagram").style.display = "none"
             console.error("Invalid response: missing 'message' property");
         }
     })
     .catch(error => console.error("Error fetching Mermaid diagram:", error));
 }
 
-document.addEventListener("DOMContentLoaded", fetchMermaidDiagram);
+//document.addEventListener("DOMContentLoaded", fetchMermaidDiagram);
 
 //import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.esm.min.mjs';
 //mermaid.initialize({ startOnLoad: true});
@@ -173,6 +176,10 @@ body {
 }
 
 #response {
+    color: white;
+}
+
+#mermaidDiagram {
     color: white;
 }
 </style>
