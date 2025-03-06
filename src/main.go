@@ -14,6 +14,7 @@ import (
 	"pets/parse"
 	"pets/pathExpression"
 
+	"strconv"
 	"strings"
 
 	"github.com/TyphonHill/go-mermaid/diagrams/flowchart"
@@ -96,7 +97,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	//}
 
 	// reads the html file
-	html, err := os.ReadFile("./src/index.html")
+	html, err := os.ReadFile("index.html")
 	if err != nil {
 		fmt.Fprintf(w, "Error: %v\n", err)
 		tmp, _ := os.Getwd()
@@ -127,17 +128,30 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 
 	// parse the request data into requestData struct
 	var requestData RequestData
+
+	fmt.Println(json.Unmarshal(body, &requestData))
 	err = json.Unmarshal(body, &requestData)
+
 	if err != nil {
 		http.Error(w, "Error parsing JSON", http.StatusBadRequest)
 		return
 	}
 
-	//if requestData.Data == "mermaid" {
-	//	mermaid(w, r)
-	//	return
-	//}
-	res := sendQuery(requestData.Data)
+	queryList := strings.Split(requestData.Data, "#")
+
+	newQuery := ""
+	ttl := uint16(100)
+	for i := 0; i < len(queryList); i++ {
+		newQuery = queryList[0]
+		ttlTemp, err := strconv.Atoi(queryList[1])
+		if err != nil {
+			log.Fatal("failed to convert string to integer", err)
+		}
+		ttl = uint16(ttlTemp)
+	}
+	fmt.Println("ttl =", ttl)
+	fmt.Println("query =", newQuery)
+	res := sendQuery(newQuery, ttl)
 
 	// create a response containing the received data
 	response := ResponseData{Message: res}
@@ -148,11 +162,11 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 }
 
 // this functions creates an header with an ttl = 100 and an uuid
-func sendQuery(queryString string) string {
+func sendQuery(queryString string, ttl uint16) string {
 
 	// create a header of ttl = 100 and an uuid
 	header := make([]byte, 0, 32)
-	header = binary.BigEndian.AppendUint16(header, 100)
+	header = binary.BigEndian.AppendUint16(header, ttl)
 	tmp := uuid.New()
 	log.Printf("Created query with id %s", tmp.URN())
 	qid, _ := tmp.MarshalBinary()

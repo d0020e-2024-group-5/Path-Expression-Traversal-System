@@ -241,7 +241,7 @@ func RecursiveTraverse(q *QueryStruct, data map[string][]parse.DataEdge, res io.
 				// get the domain of the server
 				for _, server_edge := range data[edge.TargetName] {
 					// if the edge has contact information
-					if server_edge.EdgeName == "hasIP" {
+					if server_edge.EdgeName == "hasIP" && false {
 
 						stream := io.MultiReader(bytes.NewReader(PetsMermaidQueryHeader[:]), qRec.ToReader())
 						log.Printf("query following querydata to %s \n%s", server_edge.TargetName, qRec.DebugToString())
