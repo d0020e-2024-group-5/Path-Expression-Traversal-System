@@ -281,7 +281,7 @@ func grow_tree(str string, parent Node, id *int) (Node, error) {
 	operator, parts := split_q(str)
 	// fmt.Printf("%v\n", parts)
 
-	log.Printf("%s\n%+v", operator, parts)
+	// log.Printf("%s\n%+v", operator, parts)
 
 	// if the operator is traverse create a traverse node
 	if operator == "/" {
@@ -411,6 +411,7 @@ func split_q(str string) (string, []string) {
 						return string(previusOperator), parts
 					}
 					if i == len(str)-1 {
+						parts = append(parts, "")
 						return string(previusOperator), parts
 					}
 

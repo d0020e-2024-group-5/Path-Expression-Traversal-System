@@ -197,9 +197,9 @@ func (q *QueryStruct) next() []QueryStruct {
 		log.Printf("Result edges from NextNode: %s", follow_edge.Value)
 
 		// for each edge that exist from node
-		nodeList, err := dbComm.DBGetNodeEdgesString(q.nextNode, prefixList)
+		nodeList, _ := dbComm.DBGetNodeEdgesString(q.nextNode, prefixList)
 		//TODO NO error handeling
-		fmt.Println(err)
+		// fmt.Println(err)
 
 		for _, exist_edge := range nodeList {
 			// if it exist and we want to follow it
@@ -249,8 +249,9 @@ func RecursiveTraverse(q *QueryStruct, res io.Writer) {
 		// TODO break this out to own function
 		for _, edge := range edges {
 			if edge.EdgeName == "nodeOntology:pointsToServer" {
-				edgesList, err := dbComm.DBGetNodeEdgesString(edge.TargetName, prefixList)
-				fmt.Println(err)
+				log.Print(" I WANT TO TRAVERSE")
+				edgesList, _ := dbComm.DBGetNodeEdgesString(edge.TargetName, prefixList)
+				// fmt.Println(err)
 				//TODO handle err
 				// get the domain of the server
 				for _, server_edge := range edgesList {

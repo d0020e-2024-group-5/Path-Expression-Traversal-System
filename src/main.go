@@ -42,7 +42,7 @@ func main() {
 	http.HandleFunc("/api/pets", queryHandler)
 
 	// create the server and listen to port 80
-	err := http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":80", nil)
 	if err != nil {
 		fmt.Printf("ERROR: %s", err.Error())
 	}
@@ -92,7 +92,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	//}
 
 	// reads the html file
-	html, err := os.ReadFile("index.html")
+	html, err := os.ReadFile("./src/index.html")
 	if err != nil {
 		fmt.Fprintf(w, "Error: %v\n", err)
 		tmp, _ := os.Getwd()
