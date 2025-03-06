@@ -8,7 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"pets/parse"
+	"pets/dbComm"
 	"pets/pathExpression/mermaidError"
 	"strconv"
 	"strings"
@@ -19,6 +19,7 @@ import (
 // The first 6 bytes of a recursive mermaid query, a 4 byte magic "PETS"
 // and an big endian u16 with the query type of 1, representing recursive mermaid
 var PetsMermaidQueryHeader = [...]byte{'P', 'E', 'T', 'S', 0x00, 0x01}
+var prefixList = []string{"minecraft: <http://example.org/minecraft#>"}
 
 // preprocesses the query, removes all white spaces and converts */ to *
 func preprocessQuery(inp string) string {
@@ -180,17 +181,21 @@ func (q *QueryStruct) DebugToString() string {
 	return sb.String()
 }
 
-// this function evolutes the query and with the help of the data and return new queries which have traversed one step.
-// Note that if TTL == 0, then it returns an empty list (will be changed to return error later)
-func (q *QueryStruct) next(data map[string][]parse.DataEdge) []QueryStruct {
+// this function evolutes the query and with the help of the data and return new queries which have traversed one step
+func (q *QueryStruct) next() []QueryStruct {
 	nextQ := make([]QueryStruct, 0)
 
 	// for each edge we want to follow
 	for _, follow_edge := range q.followLeaf.NextNode(nil) {
 
 		// for each edge that exist from node
-		for _, exist_edge := range data[q.nextNode] {
+		nodeList, err := dbComm.DBGetNodeEdgesString(q.nextNode, prefixList)
+		//TODO NO error handeling
+		fmt.Println(err)
+		fmt.Println("===============================================================================")
+		fmt.Println(q.DebugToString(), "\n")
 
+		for _, exist_edge := range nodeList {
 			// if it exist and we want to follow it
 			if follow_edge.Value == exist_edge.EdgeName {
 				// create a new query with new current leaf
@@ -210,41 +215,47 @@ func (q *QueryStruct) next(data map[string][]parse.DataEdge) []QueryStruct {
 	return nextQ
 }
 
-// this function takes an query struct and traverses the data adn traverses to other servers if necessary.
-// Returns the path the query in mermaid format, errors that occurred during evaluation will be converted to valid mermaid
-func TraverseQuery(q *QueryStruct, data map[string][]parse.DataEdge) string {
+// this function takes an query struct and traverses the data.
+// Returns the path the query in mermaid format
+func TraverseQuery(q *QueryStruct) string {
 	sBuilder := new(strings.Builder)
-	RecursiveTraverse(q, data, sBuilder)
+	RecursiveTraverse(q, sBuilder)
 	return sBuilder.String()
 }
 
 // This recursively (depth first) traverses the query.
 // If the path encounters a "false node" it will traverse to the server that it points to.
 // TODO error that are encounter will be written as valid mermaid and have an edge to the queries nextnode
-func RecursiveTraverse(q *QueryStruct, data map[string][]parse.DataEdge, res io.Writer) {
+func RecursiveTraverse(q *QueryStruct, res io.Writer) {
 	// if Time to live is zero write error
 	if q.TimeToLive == 0 {
 		mermaidError.MermaidErrorEdge(res, q.nextNode, " ", fmt.Sprintf("Time to live expired\n%s(%s)", strings.ReplaceAll(q.toString(), ";", "\n"), q.followLeaf.Value))
 		return
 	}
 
-	for _, qRec := range q.next(data) {
+	for _, qRec := range q.next() {
+		fmt.Println(q.DebugToString(), "\n")
 		// test if it has en edge that indicates its a false node
 		// TODO error, there might exist a scenario when next node dont exists in our data, it should not happen but we need to be able to handle it
-		edges := data[qRec.nextNode]
-
+		edges, err := dbComm.DBGetNodeEdgesString(qRec.nextNode, prefixList)
+		//TODO handle error
+		fmt.Println(err)
 		// see if edge with weight "pointsToServer" exist
 		// TODO break this out to own function
 		for _, edge := range edges {
-			if edge.EdgeName == "pointsToServer" {
-
+			if edge.EdgeName == "nodeOntology:pointsToServer" {
+				edgesList, err := dbComm.DBGetNodeEdgesString(edge.TargetName, prefixList)
+				fmt.Println(err)
+				//TODO handle err
 				// get the domain of the server
-				for _, server_edge := range data[edge.TargetName] {
+				for _, server_edge := range edgesList {
 					// if the edge has contact information
-					if server_edge.EdgeName == "hasIP" && false {
+
+					if server_edge.EdgeName == "nodeOntology:hasIP" {
 
 						stream := io.MultiReader(bytes.NewReader(PetsMermaidQueryHeader[:]), qRec.ToReader())
 						log.Printf("query following querydata to %s \n%s", server_edge.TargetName, qRec.DebugToString())
+						fmt.Println("URL: ", "http://"+server_edge.TargetName+"/api/pets")
 						resp, err := http.Post("http://"+server_edge.TargetName+"/api/pets", "PETSQ", stream)
 						// TODO write error as valid mermaid
 						if err != nil {
@@ -259,6 +270,6 @@ func RecursiveTraverse(q *QueryStruct, data map[string][]parse.DataEdge, res io.
 		}
 		// TODO, change arrow type if its a false node
 		fmt.Fprintf(res, "%s-->|%s|%s\n", q.nextNode, qRec.followLeaf.Value, qRec.nextNode)
-		RecursiveTraverse(&qRec, data, res)
+		RecursiveTraverse(&qRec, res)
 	}
 }
