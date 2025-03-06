@@ -1,17 +1,23 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"reflect"
+
 	"io"
 	"log"
 	"net/http"
 	"os"
-	"pets/parse"
+	"pets/dbComm"
 	"pets/pathExpression"
+
 	"strings"
 
 	"github.com/TyphonHill/go-mermaid/diagrams/flowchart"
+	"github.com/google/uuid"
 )
 
 type RequestData struct {
@@ -22,16 +28,18 @@ type ResponseData struct {
 	Message string `json:"message"`
 }
 
-var nodeLst = map[string][]pathExpression.DataEdge{} // NODE HASHMAP WITH A TUPLE LIST (EDGES) AS VALUE
+var prefixList = []string{"minecraft: <http://example.org/minecraft#>"}
+
+//var nodeLst = map[string][]dbComm.DataEdge{} // NODE HASHMAP WITH A TUPLE LIST (EDGES) AS VALUE
 
 func main() {
-	nodeLst = parse.Parse()
 
+	fmt.Println(dbComm.DBGetNodeEdgesString("minecraft:obtainedBy", prefixList))
 	http.HandleFunc("/", handler) // servers the main HTML file
 
 	http.HandleFunc("/api/submit", handleSubmit) // API endpoint to handle form submission
 
-	http.HandleFunc("/api/recq", queryHandler)
+	http.HandleFunc("/api/pets", queryHandler)
 
 	// create the server and listen to port 80
 	err := http.ListenAndServe(":80", nil)
@@ -41,14 +49,39 @@ func main() {
 }
 
 func queryHandler(w http.ResponseWriter, r *http.Request) {
-	b := strings.Builder{}
-	full, _ := io.ReadAll(r.Body)
-	b.Write(full)
-	log.Printf("Received request: \n%s", b.String())
 
-	q, _ := pathExpression.BobTheBuilder(b.String())
+	// read the first 4 bytes
+	var redMagic [4]byte
+	_, err := io.ReadFull(r.Body, redMagic[:])
+	if err != nil {
+		fmt.Fprintf(w, "%% error reading: %s", err.Error())
+		return
+	}
+
+	// if this magic doesn't match
+	if !reflect.DeepEqual(redMagic[:], pathExpression.PetsMermaidQueryHeader[:4]) {
+		fmt.Fprint(w, "%% Bad magic")
+		return
+	}
+
+	// read the type
+	var petsType uint16
+	err = binary.Read(r.Body, binary.BigEndian, &petsType)
+	if err != nil {
+		fmt.Fprintf(w, "%% error reading type: %s", err.Error())
+		return
+	}
+
+	// if the type is not recursive mermaid, then write the error
+	if petsType != 1 {
+		fmt.Fprint(w, "%% types other than recursive mermaid is not implemented")
+		return
+	}
+
+	stream := io.Reader(r.Body)
+	q, _ := pathExpression.QueryStructFromStream(&stream)
 	log.Printf("parsed request: \n%s", q.DebugToString())
-	pathExpression.RecursiveTraverse(&q, nodeLst, w)
+	pathExpression.RecursiveTraverse(&q, w)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -102,7 +135,7 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 	//}
 	res := sendQuery(requestData.Data)
 
-	// create a response containging the recieived data
+	// create a response containing the received data
 	response := ResponseData{Message: res}
 
 	// set response content type to JSON and send it back
@@ -110,11 +143,25 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+// this functions creates an header with an ttl = 100 and an uuid
 func sendQuery(queryString string) string {
 
-	q, _ := pathExpression.BobTheBuilder(queryString)
-	s := pathExpression.TraverseQuery(&q, nodeLst)
-	// println(s)
+	// create a header of ttl = 100 and an uuid
+	header := make([]byte, 0, 32)
+	header = binary.BigEndian.AppendUint16(header, 100)
+	tmp := uuid.New()
+	log.Printf("Created query with id %s", tmp.URN())
+	qid, _ := tmp.MarshalBinary()
+	header = append(header, qid...)
+
+	payload := strings.NewReader(queryString)
+
+	stream := io.MultiReader(bytes.NewReader(header), payload)
+
+	q, _ := pathExpression.QueryStructFromStream(&stream)
+
+	s := pathExpression.TraverseQuery(&q)
+	println(s)
 	return s
 }
 
