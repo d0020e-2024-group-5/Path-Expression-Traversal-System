@@ -281,7 +281,7 @@ The user enter in a query, for example
 The Program will then attempt to build an evaluation tree.
 First it gets passed into a preprocessing step where it removes whitespaces newlines and so on. It then gets checked so that it follows the requirments of the qury structure, for example no following operators, always closing parenthsees, etc.
 It will then call a function to build the tree structure entering in the query and the available edges it can take in the program from the current server. Current limitations limits the program to the current server, in future development it would be ideal to be able to see edges stored in different servers. It will then pass it into the tree-building function 
-that takes the query and seperates the operators into operator-nodes and stores the edges in leaf-nodes.
+that takes the query and seperates the operators into operator-nodes and stores the edges in leaf-nodes. This three is then used to query the DB.
 The tree building process will repeat whenever the query is passed to a new server. After it has been passed to a new server it will also call the nextLeaf function that finds the next leaf that has to be visited by treversing the three with an in order walk and returning a pointer to the node.  
 
 
@@ -512,9 +512,8 @@ Pickaxe --> Mineshaft --> Rare
 
 ## Current limitations
 
-Currently AND, OR and XOR are not implemented due to the program not supporting evaluation between different edges. NextNode does not have acces to other data. With the current implemtation of the three being that of a binary tree we are limited in the queries we can construct, in future developmen the structs will change from having a Left, Right to having a ds that allows us to not be limited by the number of constraints in our query.
-
-For sprint two we need to implement the missing features as well as add more covering unit tests. To add the features it could be quite an expensive task as it requires a rewrite of two important parts of the program. while adding the unit tess would be cheap unless untill they discover errors.
+Currently AND, OR and XOR are not implemented due to the program not supporting evaluation between different edges. 
+The query structure still requires mroe complet coverage from unit tests.
 
 ## Example of internal structure of a query
 
@@ -560,94 +559,82 @@ the right sides gives us NULL, the end of the query an valid position to return.
 
 ## go style pseudo code
 
-Note that this pseudo code
+Note this is an example of part of the tree structure. 
+This example will use the treverse- and leaf- node as an example.
 
 ```go
-type TraverseNode Struct{
-    Parent  *Node
-    Left    *Node
-    Right   *Node
+// A Traverse Node represent a traversal from right to left
+type TraverseNode struct {
+	Parent Node
+	Children []Node 
 }
 
-// when calling this function we need to know where this was called from, was it our parent, left or right, there for passing a pointer to caller is necessary
-// the function return array of pointers to the leafs/query edges, which can be used to determine the next node(s)
-func (self TraverseNode) NextNode(caller *Node) []*LeafNode {
-    // if the caller is parent, we should deced into the left branch,
-    if caller == self.parent {
-        return self.left.NextNode(&self)
-    }
-    // when the left branch has evaluated it will call us again
-    // an we than have to evaluate the right branch
-    else if caller == self.left {
-        self.right.NextNode(&self)
-    }
-    // when the right brach has evaluated it will call us again
-    // we then know we have been fully evaluated and can call our parent saying we are done
-    else if caller == self.right {
-        self.parent.nextEdege(&self)
-    }
+// will simple passby and return a matching leafnode pointer or null (see leafnode)
+func (t *TraverseNode) GetLeaf(id int) *LeafNode {
+	// returns the first node where id matches or nil
+	for i, _ := range t.Children {
+		tmp := t.Children[i].GetLeaf(id)
+		if tmp != nil {
+			return tmp
+		}
+	}
+	return nil
 }
 
-type LeafNode Struct {
-    Parent      *Node
-    edgeName    string
+// node that implements the traverse function.
+// If the parent calls it checks the fist node
+// if a child calls it checks the next node
+// if it is the last child it calls parents nextnode nad gets it's next child.
+// returns a slice of leafnode pointers, empty if no matches or logic stops it.
+func (t *TraverseNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
+	var leafs []*LeafNode
+	// if caller is parent we check the "first" node
+	if caller == t.Parent {
+		leafs = append(leafs, t.Children[0].NextNode(t, availablePaths)...)
+	// then we check all the following Children
+	} else if caller != t.Children[len(t.Children)-1] {
+		for i, n := range t.Children {
+			if caller == n {
+				leafs = append(leafs, t.Children[i+1].NextNode(t, availablePaths)...)
+				break
+			}
+		}
+	// untill we reach the last chil where we call the parent
+	} else if caller == t.Children[len(t.Children)-1] {
+		leafs = append(leafs, t.Parent.NextNode(t, availablePaths)...)
+	} else {
+		panic("Should not happen!")
+	}
+	return leafs
 }
 
-// we are asked what the next edge is, this LeafNode represent that edge
-func (self LeafNode) NextNode(caller *Node) []*LeafNode {
-    if caller == self.parent {
-        return [&self]
-    }
+// A leaf node represent en edge in the query, these are also the leafs in the evaluation tree
+type LeafNode struct {
+	Parent Node
+	Value  string
+	ID     int
 }
 
-type LoopNode Struct{
-    Parent  *Node
-    Left    *Node
-    Right   *Node
+// will check if the id matches and return a pointer to itself if it does, nil if it doesnt
+func (l *LeafNode) GetLeaf(id int) *LeafNode {
+	if l.ID == id {
+		return l
+	}
+	return nil
 }
 
-func (self LoopNode) NextNode(caller *Node) []*LeafNode {
-    // if the caller is parent, the possible outcomes are that we match zero of the edges and move on with the right branch
-    // or that we match whatever in the left brach, therefore we return the next edges
-    // an therefore return 
-    // if this was match one and more instead of zero or more, calling right would not be the right option as it then would progress forward without having matched anything on the left
-    // maybe add an + operator which is match one or more?
-    if caller == self.parent {
-        return [self.left.NextNode(&self),self.right.NextNode(&self)]
-    }
-    // when the left branch has evaluated it will call us again
-    // we can continue the loop so left is an valid option, but we could also exit
-    // this leads to the same output as the caller was the parent
-    else if caller == self.left {
-        return [self.left.NextNode(&self),self.right.NextNode(&self)]
-    }
-    // when the right brach has evaluated it will call us again
-    // we then know we have been fully evaluated and can call our parent saying we are done
-    else if caller == self.right {
-        self.parent.NextNode(&self)
-    }
+// Returns pointer to self in slice if parent called it
+// if call came from nil take parents nextnode instead
+func (l *LeafNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
+	if caller == l.Parent {
+		return []*LeafNode{l}
+	} else if caller == nil {
+		return l.Parent.NextNode(l, availablePaths)
+	} else {
+		panic("leafnode nextnode panic")
+	}
 }
 
-type OrNode Struct{
-    Parent  *Node
-    Left    *Node
-    Right   *Node
-}
-
-func (self OrNode) NextNode(caller *Node) []*LeafNode {
-    // if the parent calls us we could either match each side, so both sides are an alternative
-    if caller == self.parent {
-        return [self.left.NextNode(&self),self.right.NextNode(&self)]
-    }
-    // if the left side calls us we have then completed one of the options and are fully evaluated, an the call our parent saying we are done, and let them get the next edge
-    else if caller == self.left {
-        self.parent.NextNode(&self)
-    }
-    // same ass above
-    else if caller == self.right {
-        self.parent.NextNode(&self)
-    }
-}
 ```
 
 ## Parsing and constructing the evaluationTree
