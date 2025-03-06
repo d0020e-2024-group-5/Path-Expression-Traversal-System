@@ -678,6 +678,10 @@ Implementing error handling for simple syntax errors is relatively straightforwa
 However, more advanced error handling may require additional time due to potential edge cases,
 particularly those involving Unicode.
 
+### Syntax Validation
+
+As mentioned previously, checking the syntax is very straightforward. We simply only need to check for invalid operator combinations with a few edge cases such as what starting/ending operators are allowed. 
+
 ### Passing the query to dirent servers
 
 Since the data might not be stored on the same server,
