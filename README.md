@@ -269,6 +269,23 @@ Our system is designed to navigate and retrieve information from linked ontologi
 The system helps users efficiently access and analyze linked data. For example in a supply chain context, it can model the entire distribution network of a specific item by retrieving manufacturer data at each stage. This provides transparency, traceability, and deeper insights into complex data relationships.
 Our solution is valuable for businesses, researchers, and data analysts who needs to explore and make sense of decentralized, linked data in a clear ond structured way. 
 
+
+## From Qurery to Result
+
+The user enter in a query, for example 
+`S/Pickaxe/obtainedBy/crafting_recipe/hasInput` \
+...
+...
+...
+
+The Program will then attempt to build an evaluation tree.
+First it gets passed into a preprocessing step where it removes whitespaces newlines and so on. It then gets checked so that it follows the requirments of the qury structure, for example no following operators, always closing parenthsees, etc.
+It will then call a function to build the tree structure entering in the query and the available edges it can take in the program from the current server. Current limitations limits the program to the current server, in future development it would be ideal to be able to see edges stored in different servers. It will then pass it into the tree-building function 
+that takes the query and seperates the operators into operator-nodes and stores the edges in leaf-nodes.
+The tree building process will repeat whenever the query is passed to a new server. After it has been passed to a new server it will also call the nextLeaf function that finds the next leaf that has to be visited by treversing the three with an in order walk and returning a pointer to the node.  
+
+
+
 ## Parsing the ontologies into GoLang
 
 For this parsing function, nodes have been defined as struct containing an array (or slices in GoLang) with edges to the node. We also create a struct for edges with the properties "EdgeName" and "TargetName" with each property denoting how an item is obtained respectively what the edge is pointing to. One server can then save all these nodes in a hashmap (dictionary) with the key being the node name and the value, the DataNode struct.
