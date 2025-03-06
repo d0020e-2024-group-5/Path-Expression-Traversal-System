@@ -68,7 +68,7 @@ func (r *RootNode) GetLeaf(id int) *LeafNode {
 
 func (t *TraverseNode) GetLeaf(id int) *LeafNode {
 	// returns the first node where id matches or nil
-	for i, _ := range t.Children {
+	for i := range t.Children {
 		tmp := t.Children[i].GetLeaf(id)
 		if tmp != nil {
 			return tmp
@@ -79,7 +79,7 @@ func (t *TraverseNode) GetLeaf(id int) *LeafNode {
 
 func (l *LoopNode) GetLeaf(id int) *LeafNode {
 	// returns the first node where id matches or nil
-	for i, _ := range l.Children {
+	for i := range l.Children {
 		tmp := l.Children[i].GetLeaf(id)
 		if tmp != nil {
 			return tmp
@@ -90,7 +90,7 @@ func (l *LoopNode) GetLeaf(id int) *LeafNode {
 
 func (o *ORNode) GetLeaf(id int) *LeafNode {
 	// returns the first node where id matches or nil
-	for i, _ := range o.Children {
+	for i := range o.Children {
 		tmp := o.Children[i].GetLeaf(id)
 		if tmp != nil {
 			return tmp
@@ -101,7 +101,7 @@ func (o *ORNode) GetLeaf(id int) *LeafNode {
 
 func (a *ANDNode) GetLeaf(id int) *LeafNode {
 	// returns the first node where id matches or nil
-	for i, _ := range a.Children {
+	for i := range a.Children {
 		tmp := a.Children[i].GetLeaf(id)
 		if tmp != nil {
 			return tmp
@@ -112,7 +112,7 @@ func (a *ANDNode) GetLeaf(id int) *LeafNode {
 
 func (x *XORNode) GetLeaf(id int) *LeafNode {
 	// returns the first node where id matches or nil
-	for i, _ := range x.Children {
+	for i := range x.Children {
 		tmp := x.Children[i].GetLeaf(id)
 		if tmp != nil {
 			return tmp
@@ -167,12 +167,12 @@ func (l *LoopNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 
 	// if caller is parent we return all Children paths
 	if caller == l.Parent {
-		for i, _ := range l.Children {
+		for i := range l.Children {
 			leafs = append(leafs, l.Children[i].NextNode(l, availablePaths)...)
 		}
 		// if caller is not last child we return all Childrens paths
 	} else if caller != l.Children[len(l.Children)-1] {
-		for i, _ := range l.Children {
+		for i := range l.Children {
 			leafs = append(leafs, l.Children[i].NextNode(l, availablePaths)...)
 		}
 		// if child is last child we call parents nextnode
@@ -190,7 +190,7 @@ func (o *ORNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 
 	// if caller is parent return all Childrens paths
 	if caller == o.Parent {
-		for i, _ := range o.Children {
+		for i := range o.Children {
 			leafs = append(leafs, o.Children[i].NextNode(o, availablePaths)...)
 		}
 		// if caller is any of the Children return parents nextnode
@@ -207,7 +207,7 @@ func (a *ANDNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 
 	// if caller return all paths, if path does not exist return empty slice
 	if caller == a.Parent {
-		for i, _ := range a.Children {
+		for i := range a.Children {
 			leafs = append(leafs, a.Children[i].NextNode(a, availablePaths)...)
 		}
 
@@ -232,7 +232,7 @@ func (x *XORNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 
 	// if parent called returns the the one path that exists if that is the only path
 	if caller == x.Parent {
-		for i, _ := range x.Children {
+		for i := range x.Children {
 			leafs = append(leafs, x.Children[i].NextNode(x, availablePaths)...)
 		}
 
@@ -280,6 +280,8 @@ func grow_tree(str string, parent Node, id *int) (Node, error) {
 	// splitq split the string to parts that are children of the operator
 	operator, parts := split_q(str)
 	// fmt.Printf("%v\n", parts)
+
+	log.Printf("%s\n%+v", operator, parts)
 
 	// if the operator is traverse create a traverse node
 	if operator == "/" {
@@ -359,9 +361,11 @@ func containsOperators(s string) bool {
 // this splits the query into the first evaluated operator off the string and its left and right sides.
 // this string “{recipe/input}*price/currency“ would split into “{recipe/input}“ “*“ “price/currency“
 // as the first evaluated operator is *
+
 func split_q(str string) (string, []string) {
-	var previusOperators []string
+	var previusOperator rune
 	var parts []string
+	previusOperator = '0'
 
 	// if empty return empty
 	if str == "" {
@@ -376,8 +380,8 @@ func split_q(str string) (string, []string) {
 			return "0", []string{str}
 		}
 	}
-
 	insideCount := 0
+	i_pre_op := 0
 	for i, char := range str {
 
 		if insideCount > 0 {
@@ -399,15 +403,21 @@ func split_q(str string) (string, []string) {
 				// this will solit it up into all parts,
 				// "A&B&C"  => ["&", "&"] and ["A", "B", "C"]
 				if containsOperators(string(char)) {
-					parts = append(parts, str[:i])
-					previusOperators = append(previusOperators, string(str[i]))
+					if previusOperator == char || previusOperator == '0' {
+						parts = append(parts, str[i_pre_op+1:i])
+						i_pre_op = i
+					}
+					previusOperator = char
 				}
 			}
 		} else {
 			panic("insideCount should never be negative")
 		}
+		if i == len(str) {
+			parts = append(parts, str[i_pre_op+1:])
+		}
 	}
-	return previusOperators[0], parts
+	return string(previusOperator), parts
 }
 
 // Checks for invalid operator combinations and returns nil if no invalid combination is found.
@@ -422,7 +432,7 @@ func IsValid(str string) error {
 	for i := 0; i < (len(str) - 1); i++ {
 		// checks if last character is an operand (with the exception of / or *)
 		if strings.Contains(operands, string(str[len(str)-1])) && !(strings.Contains("*", string(str[len(str)-1])) || strings.Contains("/", string(str[len(str)-1]))) {
-			return errors.New("Error; Invalid operand as last character"+string(str[len(str)-1]))
+			return errors.New("Error; Invalid operand as last character" + string(str[len(str)-1]))
 		}
 		char := str[i]
 		log.Print(string(str[i]))

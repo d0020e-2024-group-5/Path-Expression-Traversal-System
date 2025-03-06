@@ -129,6 +129,7 @@ func readPayloadToQuery(stream *io.Reader, query *QueryStruct) error {
 	root := RootNode{}
 	tmp, err := grow_tree(components[0], &root, &id_int)
 	root.Child = tmp
+	query.rootPointer = &root
 
 	if err != nil {
 		log.Print(err)
@@ -144,7 +145,7 @@ func readPayloadToQuery(stream *io.Reader, query *QueryStruct) error {
 
 	} else if len(components) == 1 {
 
-		q.FollowLeaf = root.NextNode(nil, []string{})[0]
+		query.followLeaf = root.NextNode(nil, []string{})[0]
 		// TODO this need to be changed to being conditione if we have passed in the next node in the input_query
 		// TODO error handling, we cant be sure that the first "operator" is traverse and therefore might get a multiple return
 		query.nextNode = query.followLeaf.Value
@@ -190,14 +191,15 @@ func (q *QueryStruct) next() []QueryStruct {
 	nextQ := make([]QueryStruct, 0)
 
 	// for each edge we want to follow
-	for _, follow_edge := range q.FollowLeaf.NextNode(nil, []string{}) {
+	fmt.Println("===============================================================================")
+	fmt.Println(q.DebugToString(), "\n")
+	for _, follow_edge := range q.followLeaf.NextNode(nil, []string{}) {
+		log.Printf("Result edges from NextNode: %s", follow_edge.Value)
 
 		// for each edge that exist from node
 		nodeList, err := dbComm.DBGetNodeEdgesString(q.nextNode, prefixList)
 		//TODO NO error handeling
 		fmt.Println(err)
-		fmt.Println("===============================================================================")
-		fmt.Println(q.DebugToString(), "\n")
 
 		for _, exist_edge := range nodeList {
 			// if it exist and we want to follow it
@@ -241,9 +243,8 @@ func RecursiveTraverse(q *QueryStruct, res io.Writer) {
 		fmt.Println(q.DebugToString(), "\n")
 		// test if it has en edge that indicates its a false node
 		// TODO error, there might exist a scenario when next node dont exists in our data, it should not happen but we need to be able to handle it
-		edges, err := dbComm.DBGetNodeEdgesString(qRec.nextNode, prefixList)
+		edges, _ := dbComm.DBGetNodeEdgesString(qRec.nextNode, prefixList)
 		//TODO handle error
-		fmt.Println(err)
 		// see if edge with weight "pointsToServer" exist
 		// TODO break this out to own function
 		for _, edge := range edges {
