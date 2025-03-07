@@ -129,9 +129,11 @@ func (l *LeafNode) GetLeaf(id int) *LeafNode {
 }
 
 // Passes next node to child with required info
-// TODO error can occur when a child calls this function
 func (r *RootNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
-	return r.Child.NextNode(r, availablePaths)
+	if caller == nil {
+		return r.Child.NextNode(r, availablePaths)
+	}
+	return []*LeafNode{}
 }
 
 // node that implements the traverse function.
