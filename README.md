@@ -557,6 +557,49 @@ We then have two possible options continue right or redo the left side.
 by evaluating the left side we get ``obtainedBy`` again, showing us that the *loop* works.
 the right sides gives us NULL, the end of the query an valid position to return.
 
+## Building the tree
+
+<!-- <div id="slider">
+    <img id="slide" src="image1.png" width="400">
+    <br>
+    <button onclick="prevSlide()">Previous</button>
+    <button onclick="nextSlide()">Next</button>
+</div> -->
+
+<div id="slider">
+    <img id="slide" src="fixer.jpg" width="400">
+    <br>
+    <button onclick="prevSlide()">Previous</button>
+    <button onclick="nextSlide()">Next</button>
+</div>
+
+<div id="slider">
+    <img id="slide" src="marie.jpg" width="400">
+    <br>
+    <button onclick="prevSlide()">Previous</button>
+    <button onclick="nextSlide()">Next</button>
+</div>
+<script>
+    const images = ["fixer.jpg", "marie.jpg",];
+    let currentIndex = 0;
+
+    function showSlide(index) {
+        document.getElementById("slide").src = images[index];
+    }
+
+    function prevSlide() {
+        currentIndex = (currentIndex - 1 + images.length) % images.length;
+        showSlide(currentIndex);
+    }
+
+    function nextSlide() {
+        currentIndex = (currentIndex + 1) % images.length;
+        showSlide(currentIndex);
+    }
+</script>
+
+## Treversing the tree
+
 ## go style pseudo code
 
 Note this is an example of part of the tree structure. 
