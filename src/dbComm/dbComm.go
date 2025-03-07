@@ -65,11 +65,11 @@ func DBGetNodeEdgesString(node string, prefix []string) ([]DataEdge, error) {
 		}
 		prefixStr += "PREFIX " + str + "\n"
 	}
-	fmt.Println(" Hoasname: ", os.Getenv("GRAPHDB_HOSTNAME"), " Repository: ", os.Getenv("GRAPHDB_REPOSITORY"))
+	// fmt.Println(" Hoasname: ", os.Getenv("GRAPHDB_HOSTNAME"), " Repository: ", os.Getenv("GRAPHDB_REPOSITORY"))
 	hostname := "http://" + os.Getenv("GRAPHDB_HOSTNAME") + ":7200" + "/repositories/" + os.Getenv("GRAPHDB_REPOSITORY")
 	// sql injection might be possible here
 	query := prefixStr + "SELECT ?p ?o WHERE { " + node + " ?p ?o } limit 100"
-	fmt.Println(query)
+	// fmt.Println(query)
 	reqBody := []byte("query=" + query)
 	req, err := http.NewRequest("POST", hostname, bytes.NewBuffer(reqBody))
 	if err != nil {
@@ -93,8 +93,8 @@ func DBGetNodeEdgesString(node string, prefix []string) ([]DataEdge, error) {
 		fmt.Println("Error reading response:", err)
 		return nil, fmt.Errorf("Error reading response: %s", err)
 	}
-	fmt.Println("Response:")
-	fmt.Println(string(body))
+	// fmt.Println("Response:")
+	// fmt.Println(string(body))
 	list := []DataEdge{}
 	var everyOther = true
 	var temp string = ""
@@ -104,16 +104,16 @@ func DBGetNodeEdgesString(node string, prefix []string) ([]DataEdge, error) {
 		//fmt.Println(v)
 		if byte == '\n' || byte == ',' {
 			if everyOther {
-				if strings.TrimSpace(replacePrefix(temp, prefixMap)) != replacePrefix(temp, prefixMap) {
-					fmt.Println("inte lika: ", strings.TrimSpace(replacePrefix(temp, prefixMap)), "|", replacePrefix(temp, prefixMap))
-				}
+				// if strings.TrimSpace(replacePrefix(temp, prefixMap)) != replacePrefix(temp, prefixMap) {
+				// 	fmt.Println("inte lika: ", strings.TrimSpace(replacePrefix(temp, prefixMap)), "|", replacePrefix(temp, prefixMap))
+				// }
 				list = append(list, DataEdge{EdgeName: strings.TrimSpace(replacePrefix(temp, prefixMap)), TargetName: "nil"})
 				everyOther = false
 
 			} else {
-				if strings.TrimSpace(replacePrefix(temp, prefixMap)) != replacePrefix(temp, prefixMap) {
-					fmt.Println("inte lika: ", strings.TrimSpace(replacePrefix(temp, prefixMap)), "|", replacePrefix(temp, prefixMap))
-				}
+				// if strings.TrimSpace(replacePrefix(temp, prefixMap)) != replacePrefix(temp, prefixMap) {
+				// 	fmt.Println("inte lika: ", strings.TrimSpace(replacePrefix(temp, prefixMap)), "|", replacePrefix(temp, prefixMap))
+				// }
 				list[len(list)-1].TargetName = strings.TrimSpace(replacePrefix(temp, prefixMap))
 				everyOther = true
 			}
