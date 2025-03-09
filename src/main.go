@@ -146,11 +146,18 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 // this functions creates an header with an ttl = 100 and an uuid
 func sendQuery(queryString string) string {
 
+	// test if syntax is valid
+	err := pathExpression.IsValid(queryString)
+	if err != nil {
+		return "%%" + err.Error()
+	}
+
 	// create a header of ttl = 100 and an uuid
 	header := make([]byte, 0, 32)
 	header = binary.BigEndian.AppendUint16(header, 100)
 	tmp := uuid.New()
 	log.Printf("Created query with id %s", tmp.URN())
+	// uuid marshal binary can not error, but have error return to match interface
 	qid, _ := tmp.MarshalBinary()
 	header = append(header, qid...)
 

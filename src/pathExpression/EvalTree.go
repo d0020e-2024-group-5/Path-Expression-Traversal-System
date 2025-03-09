@@ -61,7 +61,7 @@ type LeafNode struct {
 	ID     int
 }
 
-// getleaf does DFS and returns *leafnode with matching id
+// GetLeaf does DFS and returns *leafnode with matching id
 func (r *RootNode) GetLeaf(id int) *LeafNode {
 	return r.Child.GetLeaf(id)
 }
@@ -152,7 +152,7 @@ func (t *TraverseNode) NextNode(caller Node, availablePaths []string) []*LeafNod
 				break
 			}
 		}
-		// untill we reach the last chil where we call the parent
+		// until we reach the last child where we call the parent
 	} else if caller == t.Children[len(t.Children)-1] {
 		leafs = append(leafs, t.Parent.NextNode(t, availablePaths)...)
 	} else {
@@ -172,7 +172,7 @@ func (l *LoopNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 		for i := range l.Children {
 			leafs = append(leafs, l.Children[i].NextNode(l, availablePaths)...)
 		}
-		// if caller is not last child we return all Childrens paths
+		// if caller is not last child we return all Children's paths
 	} else if caller != l.Children[len(l.Children)-1] {
 		for i := range l.Children {
 			leafs = append(leafs, l.Children[i].NextNode(l, availablePaths)...)
@@ -190,7 +190,7 @@ func (l *LoopNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 func (o *ORNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 	var leafs []*LeafNode
 
-	// if caller is parent return all Childrens paths
+	// if caller is parent return all Children's paths
 	if caller == o.Parent {
 		for i := range o.Children {
 			leafs = append(leafs, o.Children[i].NextNode(o, availablePaths)...)
@@ -279,7 +279,7 @@ func (l *LeafNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 func grow_tree(str string, parent Node, id *int) (Node, error) {
 	//pre process
 
-	// splitq split the string to parts that are children of the operator
+	// split_q split the string to parts that are children of the operator
 	operator, parts := split_q(str)
 	// fmt.Printf("%v\n", parts)
 
@@ -365,9 +365,9 @@ func containsOperators(s string) bool {
 // as the first evaluated operator is *
 
 func split_q(str string) (string, []string) {
-	var previusOperator rune
+	var previousOperator rune
 	var parts []string
-	previusOperator = '0'
+	previousOperator = '0'
 
 	// if empty return empty
 	if str == "" {
@@ -386,7 +386,7 @@ func split_q(str string) (string, []string) {
 	i_pre_op := -1
 	for i, char := range str {
 		if insideCount > 0 {
-			// decrement insidecount if we find closing bracket
+			// decrement insideCount if we find closing bracket
 			if char == '}' {
 				insideCount -= 1
 			}
@@ -400,21 +400,21 @@ func split_q(str string) (string, []string) {
 				insideCount += 1
 			} else {
 				// if thing contains operator take left of operator into parts
-				// and save the operator in the operator list, all operators should be the same according to pre proccesing
-				// this will solit it up into all parts,
-				// "A&B&C"  => ["&", "&"] and ["A", "B", "C"]
+				// and save the operator in the operator list, all operators should be the same according to pre processing
+				// this will split it up into all parts,
+				// "A&B&C"  => "&" and ["A", "B", "C"]
 				if containsOperators(string(char)) {
-					if previusOperator == char || previusOperator == '0' {
+					if previousOperator == char || previousOperator == '0' {
 						parts = append(parts, str[i_pre_op+1:i])
 						i_pre_op = i
-						previusOperator = char
+						previousOperator = char
 					} else {
 						parts = append(parts, str[i_pre_op+1:])
-						return string(previusOperator), parts
+						return string(previousOperator), parts
 					}
 					if i == len(str)-1 {
 						parts = append(parts, "")
-						return string(previusOperator), parts
+						return string(previousOperator), parts
 					}
 
 				}
@@ -426,7 +426,7 @@ func split_q(str string) (string, []string) {
 			parts = append(parts, str[i_pre_op+1:])
 		}
 	}
-	return string(previusOperator), parts
+	return string(previousOperator), parts
 }
 
 // Checks for invalid operator combinations and returns nil if no invalid combination is found.
@@ -434,18 +434,24 @@ func IsValid(str string) error {
 	operands := "/^*&|" // current available operands
 	right := 0
 	left := 0
+	// FIXME, index any can return -1, WILL crash program
+	// solution might be to test if -1 and return error "no operators" @spookyfirefox 2025 03 09
 	index := strings.IndexAny(str, operands)
 	if string(str[index]) != "/" { // if first operand isn't a traverse (/)
 		return errors.New("Error; First operator is " + string(str[index]) + " , not traverse (/)") // return error
 	}
 	for i := 0; i < (len(str) - 1); i++ {
+		// TODO why is this checked in the loop? this does not use anu loop variable
 		// checks if last character is an operand (with the exception of / or *)
 		if strings.Contains(operands, string(str[len(str)-1])) && !(strings.Contains("*", string(str[len(str)-1])) || strings.Contains("/", string(str[len(str)-1]))) {
 			return errors.New("Error; Invalid operand as last character" + string(str[len(str)-1]))
 		}
 		char := str[i]
 		log.Print(string(str[i]))
+		// check if we have another char after current
 		if i == len(str)-2 {
+			// why not a switch statement?
+			// and wy log all this? @spookyfirefox 2025 03 09
 			log.Print(string(str[i+1]))
 			if str[i+1] == '}' {
 				log.Print("right")
@@ -493,6 +499,7 @@ func IsValid(str string) error {
 		}
 
 	}
+	// should we not also test if right is larger than left during the loop, we might have {a}}/{b} @spookyfirefox 2025 03 09
 	if right != left {
 		return errors.New("Error; Unequal amount of left (" + string(left) + ")and right (" + string(right) + ") brackets")
 	}

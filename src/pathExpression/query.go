@@ -278,7 +278,7 @@ func RecursiveTraverse(q *QueryStruct, res io.Writer) {
 
 		} else {
 			// this does point to other servers
-			fmt.Fprintf(res, "%s-->|%s|%s\n", q.nextNode, qRec.followLeaf.Value, qRec.nextNode)
+			fmt.Fprintf(res, "%s-.->|%s|%s\n", q.nextNode, qRec.followLeaf.Value, qRec.nextNode)
 
 			// for each domain the false node points to
 			for _, domain := range domains {
