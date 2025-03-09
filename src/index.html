@@ -6,29 +6,22 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!--<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>-->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <title>Webserver</title>
 </head>
-<body>
+<body id="body">
 
 <div class="flex-container">
-    <input type="text" id="input" placeholder="Enter something..." oninput="checkInput()">
+    <input type="text" id="input" placeholder="Enter something...">
     <button onclick="sendData()">Send</button>
-   
+    <button id="dark" onclick="darkMode()">Light</button>
+    
 </div>
 <div class="flex-container">
     <p id="response"></p>
 </div>
-<!--<button onclick="fetchData()">Get Server Data</button>-->
-<!--<div class="mermaid" id="mermaidDiagram" style="display:none;"></div>-->
 
-<!--<pre class="mermaid">
-
-C4Component
-    title component diags user story n1
-    //*mermaid things*//
-  </pre>-->
-  
+<div class="mermaid" id="mermaidDiagram" style="display:block;"></div>
 
 <script>
 
@@ -47,7 +40,6 @@ function fetchData() {
         .catch(error => console.error("error fetching data:", error));
 }
 
-// skickar inputen till servern för att sen hämta datan och skriva ut den
 function sendData() {
     let input = document.getElementById("input").value;
 
@@ -58,41 +50,101 @@ function sendData() {
         },
         body: JSON.stringify({data: input})  
     })
-    // skickar
+    // sends the rresponse
     .then(response => {
         console.log("Response status:", response.status);
+        if (!response.ok) {
+            console.log("server error")
+            return response.json().then(errorData => {
+                throw new Error(errorData.message || "server error");
+            });
+        }
         return response.json();
     })
-    // hämtar
+    // recievs the response
     .then(data => {
         console.log("Received from server:", data);
         document.getElementById("response").innerText = "Server: " + data.message;
+
+        if (data.message) {
+            const mermaidContainer = document.getElementById("mermaidDiagram");
+            mermaidContainer.innerHTML = `<div class="mermaid">graph TD;\n${data.message}</div>`;
+           // mermaidContainer.style.display = "block";
+            mermaid.init(undefined, ".mermaid");
+        } else {
+            console.error("Invalid response: missing 'message' property");
+        }
     })
-    .catch(error => console.error("Error:", error));
+    .catch(error => {
+        document.getElementById("response").innerText = "error: " + error.message;
+        console.error("error:", error);
+    });
 }
 
 function checkInput() {
-    const input = document.getElementById("input").value.toLowerCase();
-    if (input === "mermaid") {
-        fetch("/api/submit", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({data: "mermaid"})
-        })
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById("mermaidDiagram").textContent = data.Message;
-            document.getElementById("mermaidDiagram").style.display = "block";
-            mermaid.init(undefined, ".mermaid");
-        })
-        .catch(error => console.error("Error:", error));
-    } else {
-        document.getElementById("mermaid-diagram").style.display = "none";
-    }
+    const allowedPatterns = [
+        /^s\/[a-z0-9_]+\/[a-z0-9_]+\/[a-z0-9_]+$/, // example: s/pickaxe/obtainedBy/craftingrecipe
+        /^[a-z0-9_]+_instance_[a-z0-9_]+\/\{[a-z0-9_]+\/[a-z0-9_]+\}\*$/, // example: pickaxe_instancehenry/{obtainedBy/hasInput}*
+        /^s\/[a-z0-9_]+\/\{[a-z0-9_]+\/[a-z0-9_]+\}\*$/, // example: s/pick/{made_of/craftingrecipe}*
+        /^s\/[a-z0-9_]+\/\{[a-z0-9_]+\/[a-z0-9_]+\/([a-z0-9_]+\|)+[a-z0-9_]+}\/[a-z0-9_]+$/, // example: S/Pickaxe/{obtainedBy/rarity|foundAt}/rarity
+        /^s\/[a-z0-9_]+\/\{[a-z0-9_]+ \& [a-z0-9_]+\}\/[a-z0-9_]+$/, // example: S/Pickaxe/{obtainedBy&foundAt}/rarity
+        /^s\/[a-z0-9_]+\/\{[a-z0-9_]+ \^ [a-z0-9_]+\}\/[a-z0-9_]+$/ // example: S/Pickaxe/{obtainedBy^foundAt}/rarity
+    ];
+
+    let isValid = false;
+    //for (const pattern of allowedPatterns) {
+      //  if (pattern.test(input)) {
+        //    console.log("valid pattern")
+          //  isValid = true;
+           // break;
+        //}
+    //}
+
+    document.addEventListener("DOMContentLoaded", function () {
+    fetchMermaidDiagram();
+});
 }
+
+function fetchMermaidDiagram() {
+    fetch("/api/submit", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({data: ""})
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Received data:", data);
+        if (data.message) {
+            const mermaidContainer = document.getElementById("mermaidDiagram");
+            mermaidContainer.innerHTML = "```mermaid\n" + "graph TD;\n" + data.message + "\n```";
+            mermaidContainer.style.display = "block";
+            mermaid.init(undefined, ".mermaid");
+        } else {
+            console.error("Invalid response: missing 'message' property");
+        }
+    })
+    .catch(error => console.error("Error fetching Mermaid diagram:", error));
+}
+
+document.addEventListener("DOMContentLoaded", fetchMermaidDiagram);
 
 //import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.esm.min.mjs';
 //mermaid.initialize({ startOnLoad: true});
+
+const button = document.getElementById("dark");
+
+function darkMode() {
+    if (document.body.style.background === "white") {
+        document.body.style.background = "rgb(59, 59, 59)";
+        document.getElementById("response").style.color = 'white';
+        button.textContent = "Light"
+    } else {
+        document.body.style.background = "white"
+        document.getElementById("response").style.color = 'black';
+        button.textContent = "Dark"
+    }
+    
+}
 
 </script>
 
@@ -116,6 +168,13 @@ button {
     border-radius: 25px;
 }
 
+body {
+    background-color: rgb(59, 59, 59);
+}
+
+#response {
+    color: white;
+}
 </style>
 
 </body>
