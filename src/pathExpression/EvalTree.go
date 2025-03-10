@@ -381,45 +381,38 @@ func split_q(str string) (string, []string) {
 			return "0", []string{str}
 		}
 	}
+
 	insideCount := 0
 	i_pre_op := -1
 	for i, char := range str {
-		if insideCount > 0 {
-			// decrement insideCount if we find closing bracket
-			if char == '}' {
-				insideCount -= 1
-			}
-			// since last element and inside brackets remove them
+		if char == '}' {
+			insideCount -= 1
 			if i == len(str)-1 && len(parts) == 0 {
 				return split_q(str[1 : len(str)-1])
 			}
+		} else if char == '{' {
+			insideCount += 1
 		} else if insideCount == 0 {
 			// increment open brackets
-			if char == '{' {
-				insideCount += 1
-			} else {
-				// if thing contains operator take left of operator into parts
-				// and save the operator in the operator list, all operators should be the same according to pre processing
-				// this will split it up into all parts,
-				// "A&B&C"  => "&" and ["A", "B", "C"]
-				if containsOperators(string(char)) {
-					if previousOperator == char || previousOperator == '0' {
-						parts = append(parts, str[i_pre_op+1:i])
-						i_pre_op = i
-						previousOperator = char
-					} else {
-						parts = append(parts, str[i_pre_op+1:])
-						return string(previousOperator), parts
-					}
-					if i == len(str)-1 {
-						parts = append(parts, "")
-						return string(previousOperator), parts
-					}
 
+			// if thing contains operator take left of operator into parts
+			// and save the operator in the operator list, all operators should be the same according to pre processing
+			// this will split it up into all parts,
+			// "A&B&C"  => "&" and ["A", "B", "C"]
+			if containsOperators(string(char)) {
+				if previousOperator == char || previousOperator == '0' {
+					parts = append(parts, str[i_pre_op+1:i])
+					i_pre_op = i
+					previousOperator = char
+				} else {
+					parts = append(parts, str[i_pre_op+1:])
+					return string(previousOperator), parts
+				}
+				if i == len(str)-1 {
+					parts = append(parts, "")
+					return string(previousOperator), parts
 				}
 			}
-		} else {
-			panic("insideCount should never be negative")
 		}
 		if i == len(str)-1 {
 			parts = append(parts, str[i_pre_op+1:])
