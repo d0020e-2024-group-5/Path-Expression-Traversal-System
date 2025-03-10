@@ -2,7 +2,7 @@ package pathExpression
 
 import (
 	"errors"
-	"log"
+	//"log"
 	"regexp"
 	"slices"
 	"strings"
@@ -283,7 +283,7 @@ func grow_tree(str string, parent Node, id *int) (Node, error) {
 	operator, parts := split_q(str)
 	// fmt.Printf("%v\n", parts)
 
-	// log.Printf("%s\n%+v", operator, parts)
+	// //log.Printf("%s\n%+v", operator, parts)
 
 	// if the operator is traverse create a traverse node
 	if operator == "/" {
@@ -453,35 +453,35 @@ func IsValid(str string) error {
 			return errors.New("Error; Invalid operand as last character" + string(str[len(str)-1]))
 		}
 		char := str[i]
-		log.Print(string(str[i]))
+		//log.Print(string(str[i]))
 		// check if we have another char after current
 		if i == len(str)-2 {
 			// why not a switch statement?
 			// and wy log all this? @spookyfirefox 2025 03 09
-			log.Print(string(str[i+1]))
+			//log.Print(string(str[i+1]))
 			if str[i+1] == '}' {
-				log.Print("right")
+				//log.Print("right")
 				right += 1
 			}
 			if str[i+1] == '{' {
-				log.Print("left")
+				//log.Print("left")
 				left += 1
 			}
 			if str[i] == '}' {
-				log.Print("right")
+				//log.Print("right")
 				right += 1
 			}
 			if str[i] == '{' {
-				log.Print("left")
+				//log.Print("left")
 				left += 1
 			}
 		} else {
 			if str[i] == '}' {
-				log.Print("right")
+				//log.Print("right")
 				right += 1
 			}
 			if str[i] == '{' {
-				log.Print("left")
+				//log.Print("left")
 				left += 1
 			}
 		}
