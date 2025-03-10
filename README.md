@@ -41,6 +41,7 @@ Our system is designed to navigate and retrieve information from linked ontologi
   - [Passing the query to dirent servers](#passing-the-query-to-dirent-servers)
     - [The Common Header](#the-common-header)
     - [Payload for recursive mermaid query (type 0x1)](#payload-for-recursive-mermaid-query-type-0x1)
+  - [Improvements and limitations of the query wrapper](#improvements-and-limitations-of-the-query-wrapper)
 - [Webserver](#webserver)
 
 ## Ontologies
@@ -881,6 +882,7 @@ As mentioned previously, checking the syntax is very straightforward. We simply 
 
 The evaluation tree, on its own, does not provide complete utility.
 Therefore, a wrapper is constructed to include additional information necessary for graph traversal.
+Before the construction of this warper functions that validate the syntax of the query is executed to make sure no problems would arise in the evaluation tree
 This wrapper specifies the next node to traverse and the edge along which to traverse.
 
 With the aid of the evaluation tree, the next edges and subsequent nodes can be determined, and the traversal path can be updated,
@@ -888,9 +890,19 @@ provided we have access to the graph.
 This process may necessitate splitting the query into multiple sub-queries in certain cases.
 By applying this approach recursively, we can effectively navigate the graph.
 
-Currently, the wrapper, which is responsible for initializing values and invoking the grow tree function,
-lacks error handling and query syntax validation. For a system like this to be useful,
-stability is crucial, which is currently not the case.
+During the evaluation, multiple events can occur that require error handling, such as the expiration of the time to live,
+a failed connection to the database, or an error resulting from passing the query to another server.
+These errors are converted to valid Mermaid syntax and piped along with the rest of the results.
+
+An example on how an ttl error looks, first row is the error, second the query, third the curent node, and list the edge index used to get to that node, and the name of the edge.
+
+```mermaid
+graph TD;
+9 -->|TTL err| 7590597108386491890@{ shape: braces, label: "Time to live expired
+minecraft:Pickaxe_Instance_Henry/minecraft:obtainedBy*minecraft:hasInput*nodeOntology:hasID*
+9
+3(nodeOntology:hasID)" }
+```
 
 Implementing error handling for simple syntax errors is relatively straightforward.
 However, more advanced error handling may require additional time due to potential edge cases,
@@ -937,6 +949,27 @@ if state values are missing, the query is assumed to be new. The starting node i
 
 The return of *recursive mermaid query* is always a valid mermaid string, when error are encountered during the traversal its converted to an valid mermaid syntax,
 such as node with custom styling containing the error message, if possible an arrow to the node that the error occurred in is also drawn.
+
+### Improvements and limitations of the query wrapper
+
+Currently, the Query wrapper, responsible for traversing the data, is single-threaded and uses a depth-first evaluation approach.
+The query speed could be significantly improved by adopting a breadth-first, multi-threaded approach.
+This is because the system is primarily I/O-bound,
+either waiting for data from the database or passing results from another server, even with cached database results.
+
+By utilizing Go's green threads (Goroutines), the query could be evaluated in parallel.
+It is important to note that green threads are not system threads, so asynchronous versions of I/O operations need to be used to avoid blocking.
+
+Another dramatic speedup could be achieved by switching from HTTP to TCP. The system was originally designed with TCP in mind,
+as evidenced by the use of custom binary headers and the lack of HTTP functionality beyond its message-carrying capability.
+HTTP requires buffering the entire message before sending it over the wire because it is designed to send fixed-size data, as indicated by the content-length header.
+By transferring data over TCP, unnecessary buffering is avoided, leading to lower latency and reduced memory usage.
+
+To implement both these improvements, the primary challenge is determining when to split the evaluation,
+as creating one green thread per traversal step would likely incur significant overhead in creation and context switching.
+Another issue is protecting writes to the response stream to avoid interweaved characters in the Mermaid syntax.
+This could be achieved by buffering lines and ensuring each line is fully written before writing the next one.
+An exception to this would be the multiline blocks that represent errors, but this could be resolved by checking for opening and closing brackets in the Mermaid syntax.
 
 ## Webserver
 
