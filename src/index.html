@@ -17,6 +17,20 @@
     <button id="dark" onclick="darkMode()">Light</button>
     
 </div>
+
+<div class="flex-container">
+<div class="row">
+    <div class="column">
+      <div class="card">
+        
+        <textarea type="text" id="input" placeholder="Enter query" rows="1" style="resize: none; overflow: hidden;"></textarea><br>
+        <input type="number" id="ttl" placeholder="Enter ttl" value="100"><br>
+        <button onclick="sendData()">Send</button>
+      </div>
+    </div>
+</div>   
+</div> 
+
 <div class="flex-container">
     <p id="response"></p>
 </div>
@@ -24,7 +38,10 @@
 <div class="mermaid" id="mermaidDiagram" style="display:block;"></div>
 
 <script>
-
+document.getElementById("input").addEventListener("input", function () {
+    this.style.height = "auto";
+    this.style.height = this.scrollHeight + "px"
+})
 // hämtar responsen från handleAPI
 function fetchData() {
     fetch("/api/data")
@@ -40,15 +57,25 @@ function fetchData() {
         .catch(error => console.error("error fetching data:", error));
 }
 
+// sendas the input with the ttl to the server
 function sendData() {
     let input = document.getElementById("input").value;
-
+    let ttl = document.getElementById("ttl").value;
+    if (input == "") {
+        alert("You need to enter a query")
+        return
+    }
+    if (ttl == "") {
+        alert("You need to enter ttl")
+        return
+    }
+    dataFormatted = input + '#' + ttl
     fetch("/api/submit", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({data: input})  
+        body: JSON.stringify({data: dataFormatted})
     })
     // sends the rresponse
     .then(response => {
@@ -151,7 +178,18 @@ function darkMode() {
 <style>
 
 #input {
-    border-radius: 40px;
+    border-radius: 20px;
+    border: 2px solid rgb(0, 0, 0);
+    height: 15px;
+    width: 250px;
+    white-space: normal;
+    text-align: justify;
+    padding: 15px 0;
+}
+
+#ttl {
+    margin-top: 10px;
+    border-radius: 20px;
     height: 40px;
     width: 250px;
 }
@@ -163,9 +201,10 @@ function darkMode() {
 } 
 
 button {
+    margin-top: 10px;
+    border-radius: 20px;
     height: 40px;
-    width: 40px;
-    border-radius: 25px;
+    width: 250px;
 }
 
 body {
