@@ -524,7 +524,8 @@ everything to the right of the last treversenode will be treated as a remaider a
 grow-tree then matches the returned operator and creates a matching node.
 The node then takes all the parts and recursively calls growthreeon them, then assignes them as a child and appends it to its slice of children.
 
-![A video depicting the constructing of the evaltree](./readme_images/build-tree.mp4)
+
+https://github.com/user-attachments/assets/4149fed5-c0e7-4b85-a21d-64de8eccd0b8
 
 
 ## Treversing the tree
@@ -540,8 +541,6 @@ When NextNode is caleld from a leaf it will find the next leaf in the evaluation
 
 When the query is passed to a new server it has to recreate the tree and must then get a new pointer to the last visited leaf in the newly constructed tree, it then calls GetLeaf(id int) *LeafNode,
 that takes in the id of a leaf and returns a pointer to it. 
-
-![A video depicting a traversal of the evaltree](./readme_images/traverse-tree.mp4)
 
 
 https://github.com/user-attachments/assets/dee7cb16-68cf-401e-9b38-bfee2e433ea0
