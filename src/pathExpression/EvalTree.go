@@ -548,6 +548,6 @@ func IsValid(str string) error {
 		//return false
 		return errors.New("Error; Unequal amount of left (" + string(left) + ")and right (" + string(right) + ") brackets")
 	}
-	return true
+	return nil
 	//return nil
 }
