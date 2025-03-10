@@ -1,3 +1,7 @@
 graphDBdata.zip
 graphDBdata/repB/data/settings.js
 /graphDBdata
+graphDBdata/*
+.vscode
+src/pets
+src/pets.exe

@@ -1,0 +1,60 @@
+services:
+    cDB:
+        image: ontotext/graphdb:10.7.0
+        container_name: graphDB_C
+        restart: always
+        ports:
+            - "7202:7200"
+    bDB:
+        image: ontotext/graphdb:10.7.0
+        container_name: graphdb_B
+        restart: always
+        ports:
+            - "7201:7200"
+
+    aDB:
+        image: ontotext/graphdb:10.7.0
+        container_name: graphDB_A
+        restart: always
+        ports:
+            - "7200:7200"
+
+    a:
+        # Build our go application with hostname "a", 
+        # this is also our entry point as its is mapped to an external port
+        build: ../.
+        image: PETS/app_v1
+        container_name: serverA
+        volumes:
+            - ./../Example Data/Server A/Example Data_A.ttl:/usr/app/shared_volume/data.ttl
+        environment:
+            GRAPHDB_HOSTNAME: "aDB"
+            GRAPHDB_REPOSITORY: "PETSrep"
+            CASHING: "TRUE"
+
+    b:
+        # same as a but no contact to outside
+        image: PETS/app_v1
+        container_name: serverB
+        volumes:
+            - ./../Example Data/Server B/Example Data_B.ttl:/usr/app/shared_volume/data.ttl
+        environment:
+            GRAPHDB_HOSTNAME: "bDB"
+            GRAPHDB_REPOSITORY: "PETSrep"
+            CASHING: "TRUE"
+        depends_on:
+            bDB:
+                condition: service_started
+    c:
+
+        # same as a but no contact to outside
+        image: PETS/app_v1
+        container_name: serverC
+        volumes:
+            - ./../Example Data/Server C/Example Data_C.ttl:/usr/app/shared_volume/data.ttl
+        ports:
+            - "80:80"
+        environment:
+            GRAPHDB_HOSTNAME: "cDB"
+            GRAPHDB_REPOSITORY: "PETSrep"
+            CASHING: "TRUE"
