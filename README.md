@@ -274,6 +274,7 @@ Our solution is valuable for businesses, researchers, and data analysts who need
 
 The user enter in a query, for example 
 `S/Pickaxe/obtainedBy/crafting_recipe/hasInput` \
+that is being sent with a JSON request {"data":"S/Pickaxe/obtainedBy/crafting_recipe/hasInput#100"} to the webserver to be traversed. The number after # represents the ttl thats being inputed at the website, with the default value of 100. 
 ...
 ...
 ...
@@ -284,7 +285,7 @@ It will then call a function to build the tree structure entering in the query a
 that takes the query and seperates the operators into operator-nodes and stores the edges in leaf-nodes. This three is then used to query the DB.
 The tree building process will repeat whenever the query is passed to a new server. After it has been passed to a new server it will also call the nextLeaf function that finds the next leaf that has to be visited by treversing the three with an in order walk and returning a pointer to the node.  
 
-
+The server sends back the traversed query and renders it as a mermaid diagram through the Mermaid.js library.
 
 ## Parsing the ontologies into GoLang
 
