@@ -533,7 +533,7 @@ Where both Cobblestone and Log would be returned.
 
 after taking hasInput it will loop if available and go check the rarity if available if neither edge exist it returns as normal.
 
-### Example 4, Or
+### Example 4, OR
 
 Allows a path traversal to follow either edge
 
