@@ -126,9 +126,14 @@ func readPayloadToQuery(stream *io.Reader, query *QueryStruct) error {
 
 	// create the evaluation tree
 	id_int := 0
-	query.rootPointer = &RootNode{}
-	tmp := grow_tree(components[0], query.rootPointer, &id_int)
-	query.rootPointer.Child = tmp
+	root := RootNode{}
+	tmp, err := grow_tree(components[0], &root, &id_int)
+	root.Child = tmp
+	query.rootPointer = &root
+
+	if err != nil {
+		log.Print(err)
+	}
 
 	if len(components) == 3 {
 		i, err := strconv.Atoi(components[2])
@@ -140,7 +145,7 @@ func readPayloadToQuery(stream *io.Reader, query *QueryStruct) error {
 
 	} else if len(components) == 1 {
 
-		query.followLeaf = query.rootPointer.NextNode(nil)[0]
+		query.followLeaf = root.NextNode(nil, []string{})[0]
 		// TODO this need to be changed to being conditione if we have passed in the next node in the input_query
 		// TODO error handling, we cant be sure that the first "operator" is traverse and therefore might get a multiple return
 		query.nextNode = query.followLeaf.Value
@@ -182,18 +187,32 @@ func (q *QueryStruct) DebugToString() string {
 }
 
 // this function evolutes the query and with the help of the data and return new queries which have traversed one step
-func (q *QueryStruct) next() []QueryStruct {
+func (q *QueryStruct) next() ([]QueryStruct, []error) {
 	nextQ := make([]QueryStruct, 0)
+	errLst := make([]error, 0)
 
+	// get the edges from this node, used for eval tree
+	// TODO error handling
+	// Why dont go have a map with collet
+	//```rust
+	// like rust list.map(|edge| edge.EdgeName).collet()
+	//```
+	list, _ := dbComm.DBGetNodeEdgesString(q.nextNode, prefixList)
+	edges := make([]string, 0)
+	for _, edge := range list {
+		edges = append(edges, edge.EdgeName)
+	}
 	// for each edge we want to follow
-	for _, follow_edge := range q.followLeaf.NextNode(nil) {
+	log.Println("Following \n", q.DebugToString(), "\n")
+	for _, follow_edge := range q.followLeaf.NextNode(nil, edges) {
+		log.Printf("Result edges from NextNode: %s", follow_edge.Value)
 
 		// for each edge that exist from node
 		nodeList, err := dbComm.DBGetNodeEdgesString(q.nextNode, prefixList)
-		//TODO NO error handeling
-		fmt.Println(err)
-		fmt.Println("===============================================================================")
-		fmt.Println(q.DebugToString(), "\n")
+		if err != nil {
+			errLst = append(errLst, err)
+			continue
+		}
 
 		for _, exist_edge := range nodeList {
 			// if it exist and we want to follow it
@@ -212,7 +231,7 @@ func (q *QueryStruct) next() []QueryStruct {
 			}
 		}
 	}
-	return nextQ
+	return nextQ, errLst
 }
 
 // this function takes an query struct and traverses the data.
@@ -233,43 +252,85 @@ func RecursiveTraverse(q *QueryStruct, res io.Writer) {
 		return
 	}
 
-	for _, qRec := range q.next() {
+	// get the queries traversed one step forward
+	qNext, qErr := q.next()
+
+	// next might multiple errors
+	for _, err := range qErr {
+		mermaidError.MermaidErrorEdge(res, q.nextNode, "", err.Error())
+	}
+
+	// for each of the next queys
+	for _, qRec := range qNext {
 		fmt.Println(q.DebugToString(), "\n")
-		// test if it has en edge that indicates its a false node
-		// TODO error, there might exist a scenario when next node dont exists in our data, it should not happen but we need to be able to handle it
-		edges, err := dbComm.DBGetNodeEdgesString(qRec.nextNode, prefixList)
-		//TODO handle error
-		fmt.Println(err)
-		// see if edge with weight "pointsToServer" exist
-		// TODO break this out to own function
-		for _, edge := range edges {
-			if edge.EdgeName == "nodeOntology:pointsToServer" {
-				edgesList, err := dbComm.DBGetNodeEdgesString(edge.TargetName, prefixList)
-				fmt.Println(err)
-				//TODO handle err
-				// get the domain of the server
-				for _, server_edge := range edgesList {
-					// if the edge has contact information
 
-					if server_edge.EdgeName == "nodeOntology:hasIP" {
+		domains, err := pointsToServer(qRec)
+		if err != nil {
+			mermaidError.MermaidErrorEdge(res, qRec.nextNode, "",
+				fmt.Sprintf("Error testing for falseNode %s:\n%s", qRec.nextNode, err.Error()))
+			continue
+		}
 
-						stream := io.MultiReader(bytes.NewReader(PetsMermaidQueryHeader[:]), qRec.ToReader())
-						log.Printf("query following querydata to %s \n%s", server_edge.TargetName, qRec.DebugToString())
-						fmt.Println("URL: ", "http://"+server_edge.TargetName+"/api/pets")
-						resp, err := http.Post("http://"+server_edge.TargetName+"/api/pets", "PETSQ", stream)
-						// TODO write error as valid mermaid
-						if err != nil {
-							log.Fatalf("error on passing to server: %s", err.Error())
-						}
-						body := resp.Body
-						defer body.Close()
-						io.Copy(res, body)
-					}
+		// this node does not point to another server
+		if len(domains) == 0 {
+			fmt.Fprintf(res, "%s-->|%s|%s\n", q.nextNode, qRec.followLeaf.Value, qRec.nextNode)
+			RecursiveTraverse(&qRec, res)
+
+		} else {
+			// this does point to other servers
+			fmt.Fprintf(res, "%s-.->|%s|%s\n", q.nextNode, qRec.followLeaf.Value, qRec.nextNode)
+
+			// for each domain the false node points to
+			for _, domain := range domains {
+
+				// convert to an qRec to an stream of bytes
+				stream := io.MultiReader(bytes.NewReader(PetsMermaidQueryHeader[:]), qRec.ToReader())
+				log.Printf("query following querydata to %s \n%s", domain, qRec.DebugToString())
+
+				// send that stream to the other server
+				resp, err := http.Post("http://"+domain+"/api/pets", "PETSQ", stream)
+
+				// if error sending to server
+				if err != nil {
+					mermaidError.MermaidErrorEdge(res, qRec.nextNode, "SERVER ERROR",
+						fmt.Sprintf("Could not send this this to server %s\nErr: %s\n%s", domain, err.Error(), qRec.DebugToString()))
+					continue // try next domain
+				}
+				body := resp.Body
+				defer body.Close()
+
+				// write result from other server to my result
+				io.Copy(res, body)
+			}
+		}
+	}
+}
+
+// gets the domains a false node points to return no domains if the node points to nothing
+func pointsToServer(qRec QueryStruct) ([]string, error) {
+	domains := make([]string, 0)
+
+	// test if it has en edge that indicates its a false node
+	edges, err := dbComm.DBGetNodeEdgesString(qRec.nextNode, prefixList)
+	if err != nil {
+		return domains, err
+	}
+
+	// see if edge with weight "pointsToServer" exist
+	for _, edge := range edges {
+		if edge.EdgeName == "nodeOntology:pointsToServer" {
+			edgesList, err := dbComm.DBGetNodeEdgesString(edge.TargetName, prefixList)
+			if err != nil {
+				return domains, err
+			}
+			// get the domain of the server
+			for _, server_edge := range edgesList {
+				// if the edge has contact information
+				if server_edge.EdgeName == "nodeOntology:hasIP" {
+					domains = append(domains, server_edge.TargetName)
 				}
 			}
 		}
-		// TODO, change arrow type if its a false node
-		fmt.Fprintf(res, "%s-->|%s|%s\n", q.nextNode, qRec.followLeaf.Value, qRec.nextNode)
-		RecursiveTraverse(&qRec, res)
 	}
+	return domains, nil
 }

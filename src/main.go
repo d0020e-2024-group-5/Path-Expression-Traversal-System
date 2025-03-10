@@ -110,6 +110,7 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 
 	// checking request method is POST
 	if r.Method != "POST" {
+		fmt.Println("hnadleSubmit invalid request method")
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
@@ -117,6 +118,7 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 	// read the request body
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
+		fmt.Println("handleSubmit error reading request body")
 		http.Error(w, "Error reading request body", http.StatusInternalServerError)
 		return
 	}
@@ -129,7 +131,14 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, &requestData)
 
 	if err != nil {
+		fmt.Println("handleSubmit error parsing JSON")
 		http.Error(w, "Error parsing JSON", http.StatusBadRequest)
+		return
+	}
+
+	if requestData.Data == "" {
+		fmt.Println("handleSubmit error empty request data")
+		http.Error(w, "empty request data", http.StatusBadRequest)
 		return
 	}
 
@@ -160,11 +169,18 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 // this functions creates an header with an ttl = 100 and an uuid
 func sendQuery(queryString string, ttl uint16) string {
 
+	// test if syntax is valid
+	err := pathExpression.IsValid(queryString)
+	if err != nil {
+		return "%%" + err.Error()
+	}
+
 	// create a header of ttl = 100 and an uuid
 	header := make([]byte, 0, 32)
 	header = binary.BigEndian.AppendUint16(header, ttl)
 	tmp := uuid.New()
 	log.Printf("Created query with id %s", tmp.URN())
+	// uuid marshal binary can not error, but have error return to match interface
 	qid, _ := tmp.MarshalBinary()
 	header = append(header, qid...)
 
