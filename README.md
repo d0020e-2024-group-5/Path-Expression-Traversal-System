@@ -27,20 +27,20 @@ What we want to do is to search such an ontology structure using a query where t
 ```mermaid
 graph TD;
 
-        Stick_Plank_made_Instance -->|obtainedBy| Stick_Planks_recipe_Instance
+        minecraft:Stick_Plank_made_Instance -->|minecraft:obtainedBy| minecraft:Stick_Planks_recipe_Instance
 
-        Stick_Bamboo_made_Instance -->|obtainedBy| Stick_bamboo_recipe_Instance
-
-
-
-        Pickaxe_Instance_Henry -->|obtainedBy| PickaxeRecipe_Instance
+        minecraft:Stick_Bamboo_made_Instance -->|minecraft:obtainedBy| minecraft:Stick_bamboo_recipe_Instance
 
 
-        Plank_Instance -->|obtainedBy| Plannks_From_Logs_Recipe_Instance
+
+        minecraft:Pickaxe_Instance_Henry -->|minecraft:obtainedBy| minecraft:PickaxeRecipe_Instance
 
 
-        PickaxeRecipe_Instance -->|hasInput| Stick_Plank_made_Instance
-        PickaxeRecipe_Instance -->|hasInput| Stick_Bamboo_made_Instance
+        minecraft:Plank_Instance -->|minecraft:obtainedBy| minecraft:Plannks_From_Logs_Recipe_Instance
+
+
+        minecraft:PickaxeRecipe_Instance -->|minecraft:hasInput| Stick_Plank_made_Instance
+        minecraft:PickaxeRecipe_Instance -->|minecraft:hasInput| Stick_Bamboo_made_Instance
         PickaxeRecipe_Instance -->|hasInput| Cobblestone_Bob
         PickaxeRecipe_Instance -->|hasOutput| Pickaxe_Instance_Henry
         PickaxeRecipe_Instance -->|usedInStation| CraftingTable_Instance
@@ -517,12 +517,12 @@ When constructing the evaluationTree the code calls the function func grow_tree(
 providing the qury string, and the parent node, it returns a node and an error, the error is nil if it did not encounter an error in the function.
 It then passes the string for some formatting, removing whitespaces, newlines and so on.
 
-It then calls the function slit_q, where it separates oprators from non-operators(edges, bracket-sections or remainder), and returns them.
-for example it starts matchin treversnodes, "/", and then finds another operator
-everything to the right of the last treversenode will be treated as a remaider and added to the non-operators.
+It then calls the function slit_q, where it separates operators from non-operators(edges, bracket-sections or remainder), and returns them.
+for example it starts matching treversnodes, "/", and then finds another operator
+everything to the right of the last treversenode will be treated as a remainder and added to the non-operators.
 
 grow-tree then matches the returned operator and creates a matching node.
-The node then takes all the parts and recursively calls growthreeon them, then assignes them as a child and appends it to its slice of children.
+The node then takes all the parts and recursively calls growthreeon them, then assigns them as a child and appends it to its slice of children.
 
 
 https://github.com/user-attachments/assets/4149fed5-c0e7-4b85-a21d-64de8eccd0b8
