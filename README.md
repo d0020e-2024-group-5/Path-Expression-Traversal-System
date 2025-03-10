@@ -971,6 +971,10 @@ Another issue is protecting writes to the response stream to avoid interweaved c
 This could be achieved by buffering lines and ensuring each line is fully written before writing the next one.
 An exception to this would be the multiline blocks that represent errors, but this could be resolved by checking for opening and closing brackets in the Mermaid syntax.
 
+A thing to note is that there were unit test for this structure but due to time constraints these were dropped when the system was chged from using ttl files to an actual database.
+This was because the functions for database access are not related to an interface are global, by using an interface test data can again be passed to the tests, this would also allow
+for multiple "backends" to be used.
+
 ## Webserver
 
 A webserver is beneficial for our system because it acts as a bridge between users and the linked data processing.
