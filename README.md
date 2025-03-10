@@ -25,7 +25,7 @@ Our solution is valuable for businesses, researchers, and data analysts who need
   - [Example 1, Simple traversal](#example-1-simple-traversal)
   - [Example 2, groups {}](#example-2-groups-)
   - [Example 3, Loop](#example-3-loop)
-  - [Example 4, Or](#example-4-or)
+  - [Example 4, OR](#example-4-or)
   - [Example 5, AND](#example-5-and)
   - [Example 6, XOR](#example-6-xor)
 - [Parsing and constructing the evaluationTree](#parsing-and-constructing-the-evaluationtree)
