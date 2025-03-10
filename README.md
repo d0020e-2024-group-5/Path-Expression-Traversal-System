@@ -543,6 +543,10 @@ that takes in the id of a leaf and returns a pointer to it.
 
 ![A video depicting a traversal of the evaltree](./readme_images/traverse-tree.mp4)
 
+
+https://github.com/user-attachments/assets/dee7cb16-68cf-401e-9b38-bfee2e433ea0
+
+
 ## go style pseudo code
 
 Note this is an example of part of the tree structure. 
