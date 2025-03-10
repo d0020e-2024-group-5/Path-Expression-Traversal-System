@@ -510,95 +510,38 @@ Pickaxe --> Mineshaft --> Rare
 
 ``S/Stick/{obtainedBy ^ foundAt}/rarity`` would go down obtainedBy as it does not have the edge foundAt
 
-## Current limitations
 
-Currently AND, OR and XOR are not implemented due to the program not supporting evaluation between different edges. 
-The query structure still requires mroe complet coverage from unit tests.
+## Parsing and constructing the evaluationTree
 
-## Example of internal structure of a query
+When constructing the evaluationTree the code calls the function func grow_tree(str string, parent Node, id *int) (Node, error)
+providing the qury string, and the parent node, it returns a node and an error, the error is nil if it did not encounter an error in the function.
+It then passes the string for some formatting, removing whitespaces, newlines and so on.
 
-<!-- Note to readers, this look incredibly like the state machines that regex compiles to -->
-```mermaid
-graph TD;
-    r([root]);
-    r -->|left| s
-    r -->|right| 2
+It then calls the function slit_q, where it separates oprators from non-operators(edges, bracket-sections or remainder), and returns them.
+for example it starts matchin treversnodes, "/", and then finds another operator
+everything to the right of the last treversenode will be treated as a remaider and added to the non-operators.
 
-    2([/]);
-    2 -->|left| Pickaxe
-    2 -->|right| 3
+grow-tree then matches the returned operator and creates a matching node.
+The node then takes all the parts and recursively calls growthreeon them, then assignes them as a child and appends it to its slice of children.
 
-    3([\*]);
-    3 -->|left| 4
-    3 -->|right| NULL
+![A video depicting the constructing of the evaltree](./readme_images/build-tree.mp4)
 
-    4([/])
-    4 -->|left| obtainedBy
-    4 -->|right| hasInput
-```
-
-### An example of evaluation
-
-Lets take an example query of show its internal evaluation
-
-``S/Pickaxe/{obtainedBy/hasInput}*``
-
-This is then converted to a tree structure of operations, where the leafs are edges and nodes .
-
-lets say that we are on edge ``obtainedBy``, and we want to know whats next.
-By looking at the parent we know that we are on the left side of an *traverse*
-and the next edge is the one on the right of the traverse, ``hasInput``
-
-if whe should get the next node from ``hasInput`` we can again look att the parentO
-and se that we are on the right side of the *traverse*,
-to find the next node we need to look higher, the *traverse*'s parent.
-This gives us the knowledge that we are on the left side of *loop* operator (aka *zero or more*)
-We then have two possible options continue right or redo the left side.
-by evaluating the left side we get ``obtainedBy`` again, showing us that the *loop* works.
-the right sides gives us NULL, the end of the query an valid position to return.
-
-## Building the tree
-
-<!-- <div id="slider">
-    <img id="slide" src="image1.png" width="400">
-    <br>
-    <button onclick="prevSlide()">Previous</button>
-    <button onclick="nextSlide()">Next</button>
-</div> -->
-
-<div id="slider">
-    <img id="slide" src="fixer.jpg" width="400">
-    <br>
-    <button onclick="prevSlide()">Previous</button>
-    <button onclick="nextSlide()">Next</button>
-</div>
-
-<div id="slider">
-    <img id="slide" src="marie.jpg" width="400">
-    <br>
-    <button onclick="prevSlide()">Previous</button>
-    <button onclick="nextSlide()">Next</button>
-</div>
-<script>
-    const images = ["fixer.jpg", "marie.jpg",];
-    let currentIndex = 0;
-
-    function showSlide(index) {
-        document.getElementById("slide").src = images[index];
-    }
-
-    function prevSlide() {
-        currentIndex = (currentIndex - 1 + images.length) % images.length;
-        showSlide(currentIndex);
-    }
-
-    function nextSlide() {
-        currentIndex = (currentIndex + 1) % images.length;
-        showSlide(currentIndex);
-    }
-</script>
 
 ## Treversing the tree
+
+When treversing the tree it will call  NextNode(caller Node, availablePaths []string) []*LeafNode,
+that takes in the caller node, all the available paths on the server, and returns a slice of leafnode pointers.
+
+Different nodes behaive differently when NextNode is called on them but the general behavior is that it calls the next child it has,
+and if it was the last child that called it it calls its parents nextnode.
+
+The recursive nextnode goes down to the firs leaf it finds (some nodes look for more then one leafnode) and returns a pointer to it.
+When NextNode is caleld from a leaf it will find the next leaf in the evaluation order.
+
+When the query is passed to a new server it has to recreate the tree and must then get a new pointer to the last visited leaf in the newly constructed tree, it then calls GetLeaf(id int) *LeafNode,
+that takes in the id of a leaf and returns a pointer to it. 
+
+![A video depicting a traversal of the evaltree](./readme_images/traverse-tree.mp4)
 
 ## go style pseudo code
 
@@ -606,6 +549,14 @@ Note this is an example of part of the tree structure.
 This example will use the treverse- and leaf- node as an example.
 
 ```go
+// interface type that all nodes need to implement
+// it add the possibility to query for the next node, returns the leaf nodes that are next in the query
+// And find the next leaf, returning a pointer to it
+type Node interface {
+	NextNode(Node, []string) []*LeafNode
+	GetLeaf(int) *LeafNode
+}
+
 // A Traverse Node represent a traversal from right to left
 type TraverseNode struct {
 	Parent Node
@@ -680,14 +631,57 @@ func (l *LeafNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
 
 ```
 
-## Parsing and constructing the evaluationTree
 
-When constructing the evaluationTree the code calls the function grow_tree(str string, parent Node, id *int)
-where it creates nodes according to the operation,
-for example, /,&,|,* that point to other nodes.
-if there is no operation it knows that it is a leaf and constructs a leafnode
 
-when it evaluates groups it follows the operation order withing the group by first treating the group itself as and edge then its content as normal by removing the group block, {}.
+
+
+## Example of internal structure of a query
+
+<!-- Note to readers, this look incredibly like the state machines that regex compiles to -->
+```mermaid
+graph TD;
+    r([root]);
+    r -->|left| s
+    r -->|right| 2
+
+    2([/]);
+    2 -->|left| Pickaxe
+    2 -->|right| 3
+
+    3([\*]);
+    3 -->|left| 4
+    3 -->|right| NULL
+
+    4([/])
+    4 -->|left| obtainedBy
+    4 -->|right| hasInput
+```
+
+### An example of evaluation
+
+Lets take an example query of show its internal evaluation
+
+``S/Pickaxe/{obtainedBy/hasInput}*``
+
+This is then converted to a tree structure of operations, where the leafs are edges and nodes .
+
+lets say that we are on edge ``obtainedBy``, and we want to know whats next.
+By looking at the parent we know that we are on the left side of an *traverse*
+and the next edge is the one on the right of the traverse, ``hasInput``
+
+if whe should get the next node from ``hasInput`` we can again look att the parentO
+and se that we are on the right side of the *traverse*,
+to find the next node we need to look higher, the *traverse*'s parent.
+This gives us the knowledge that we are on the left side of *loop* operator (aka *zero or more*)
+We then have two possible options continue right or redo the left side.
+by evaluating the left side we get ``obtainedBy`` again, showing us that the *loop* works.
+the right sides gives us NULL, the end of the query an valid position to return.
+
+
+
+## Current limitations and future development of the query structure
+
+
 
 ## The query wrapper
 
