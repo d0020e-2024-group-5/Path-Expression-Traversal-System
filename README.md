@@ -8,17 +8,19 @@ PETS, a system to store linked distributed data with traversal functions
 
 In today’s data driven world, businesses rely on structured and interconnected data to optimize operations, enhance decision making, and ensure regulatory compliance. For example, in a supply chain context, a company manufacturing pharmaceuticals must track the origin of raw materials, verify supplier compliance, and ensure product quality. Our system enables such businesses to model and analyze the entire distribution network of a specific item by retrieving manufacturer data at each stage. This ensures transparency, traceability, and deeper insights into complex data relationships.
 
-Our system is designed to navigate and retrieve information from linked ontologies using path expressions. It enables users to traverse decentralized data structures by following relationships defined in path expressions, allowing for multilevel hierarchical exploration. By leveraging ontologies, our solution provides structured access to decentralized, linked data, making it valuable for businesses, researchers, and data analysts who need to explore and make sense of interconnected information in a clear and efficient way. 
+Our system is designed to navigate and retrieve information from linked ontologies using path expressions. It enables users to traverse decentralized data structures by following relationships defined in path expressions, allowing for multilevel hierarchical exploration. By leveraging ontologies, our solution provides structured access to decentralized, linked data, making it valuable for businesses, researchers, and data analysts who need to explore and make sense of interconnected information in a clear and efficient way.
 
 ## Table of contents
 
 - [Introduction](#introduction)
 - [Table of contents](#table-of-contents)
 - [Ontologies](#ontologies)
+- [Ontology text](#ontology-text)
 - [Node ontologies](#node-ontologies)
   - [Node ontologies distributed](#node-ontologies-distributed)
   - [Truly distributed data](#truly-distributed-data)
 - [From Query to Result](#from-query-to-result)
+- [Getting data from the database](#getting-data-from-the-database)
 - [Parsing the ontologies into GoLang](#parsing-the-ontologies-into-golang)
 - [Architecture](#architecture)
 - [Query structure](#query-structure)
@@ -62,64 +64,66 @@ What we want to do is to search such an ontology structure using a query where t
 ## Ontology text
 
 Here is a version of the example data on server C
+
 ```
 @prefix minecraft: <http://example.org/minecraft#> .
 @prefix nodeOntology: <http://example.org/NodeOntology#> .
 
 # Instances of Items
 minecraft:Stick_Plank_made_Instance a minecraft:Stick ;
-	nodeOntology:hasID 1 ;
-	nodeOntology:pointsToServer minecraft:Server_b .
+ nodeOntology:hasID 1 ;
+ nodeOntology:pointsToServer minecraft:Server_b .
 
 minecraft:Stick_Bamboo_made_Instance a minecraft:Stick ;
-	nodeOntology:hasID 2 ;
-	nodeOntology:pointsToServer minecraft:Server_a .
+ nodeOntology:hasID 2 ;
+ nodeOntology:pointsToServer minecraft:Server_a .
 
 minecraft:Cobblestone_Bob a minecraft:Cobblestone ;
-	nodeOntology:hasID 3 .
+ nodeOntology:hasID 3 .
 
 minecraft:Log_Instance a minecraft:Log ;
-	nodeOntology:hasID 12 .
+ nodeOntology:hasID 12 .
 
 minecraft:Pickaxe_Instance_Henry a minecraft:Pickaxe ;
-	nodeOntology:hasID 4 ;
-	minecraft:obtainedBy minecraft:PickaxeRecipe_Instance .
+ nodeOntology:hasID 4 ;
+ minecraft:obtainedBy minecraft:PickaxeRecipe_Instance .
 
 minecraft:Server_a a nodeOntology:Server ;
-	nodeOntology:hasIP "a" .
+ nodeOntology:hasIP "a" .
 
 
 minecraft:Server_b a nodeOntology:Server ;
-	nodeOntology:hasIP "b" .
+ nodeOntology:hasIP "b" .
 
 
 minecraft:Plank_Instance a minecraft:Plank ;
-	nodeOntology:hasID 7 ;
-	nodeOntology:pointsToServer minecraft:Server_b .
+ nodeOntology:hasID 7 ;
+ nodeOntology:pointsToServer minecraft:Server_b .
 
 # Crafting Station Instance
 minecraft:CraftingTable_Instance a minecraft:CraftingTable ;
-	nodeOntology:pointsToServer minecraft:Server_a ;
-	nodeOntology:hasID 8 .
+ nodeOntology:pointsToServer minecraft:Server_a ;
+ nodeOntology:hasID 8 .
 
 # Recipe Instance: Pickaxe_From_Stick_And_Stone_Recipe 
 minecraft:PickaxeRecipe_Instance a minecraft:Pickaxe_From_Stick_And_Stone_Recipe ;
-	nodeOntology:hasID 9 ;
-	minecraft:hasInput minecraft:Stick_Plank_made_Instance  ;
-	minecraft:hasInput minecraft:Stick_Bamboo_made_Instance ;
-	minecraft:hasInput minecraft:Cobblestone_Bob ;
-	minecraft:hasOutput minecraft:Pickaxe_Instance_Henry ;
-	minecraft:usedInStation minecraft:CraftingTable_Instance .
+ nodeOntology:hasID 9 ;
+ minecraft:hasInput minecraft:Stick_Plank_made_Instance  ;
+ minecraft:hasInput minecraft:Stick_Bamboo_made_Instance ;
+ minecraft:hasInput minecraft:Cobblestone_Bob ;
+ minecraft:hasOutput minecraft:Pickaxe_Instance_Henry ;
+ minecraft:usedInStation minecraft:CraftingTable_Instance .
 
 # Recipe Instance: Plank_recipie_Log
 minecraft:Plannks_From_Logs_Recipe_Instance a minecraft:Plannks_From_Logs_Recipe ;
-	nodeOntology:hasID 13 ;
-	minecraft:hasInput minecraft:Log_Instance ;
-	minecraft:hasOutput minecraft:Plank_Instance ;
-	minecraft:usedInStation minecraft:CraftingTable_Instance .
+ nodeOntology:hasID 13 ;
+ minecraft:hasInput minecraft:Log_Instance ;
+ minecraft:hasOutput minecraft:Plank_Instance ;
+ minecraft:usedInStation minecraft:CraftingTable_Instance .
 ```
 
 Here is the Main(PETS) Ontology:
+
 ```
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -132,12 +136,12 @@ nodeOntology: a owl:Ontology ;
     rdfs:label "PETS's node Ontology" .
 
 nodeOntology:Server a owl:Class ;
-	rdfs:comment "A way to another server" ;
+ rdfs:comment "A way to another server" ;
     rdfs:label "Server" .
 
 nodeOntology:Node a owl:Class ;
     rdfs:label "Node" ;
-    rdfs:comment "Represents all nodes in the database system." .	
+    rdfs:comment "Represents all nodes in the database system." . 
 
 nodeOntology:NodeFalse a owl:Class ;
     rdfs:subClassOf nodeOntology:Node;
@@ -157,12 +161,12 @@ nodeOntology:pointsToServer a rdf:pointsToNode ;
     rdfs:comment "Links a Node to a Server ".
 
 nodeOntology:hasIP a rdfs:Property ;
-	rdfs:domain nodeOntology:Server ;
-	rdfs:range xsd:string . # store IP addres as String
-	
+ rdfs:domain nodeOntology:Server ;
+ rdfs:range xsd:string . # store IP addres as String
+ 
 nodeOntology:hasID a rdfs:Property ;
-	rdfs:domain nodeOntology:Node ;
-	rdfs:range xsd:int  . # store ID addres as String
+ rdfs:domain nodeOntology:Node ;
+ rdfs:range xsd:int  . # store ID addres as String
 ```
 
 ## Node ontologies
@@ -434,7 +438,7 @@ The user enter in a query, for example
 that is being sent with a JSON request {"data":"S/Pickaxe/obtainedBy/crafting_recipe/hasInput#100"} to the webserver to be traversed.
 The number after # represents the ttl (Time to live) thats being inputted at the website, with the default value of 100.
 
-When the server receives an query from the website, It then gets checked so that it follows the requirements of the query structure,
+When the server receives an query from the website, It then gets checked so that it follows the requirements of the query syntax,
 for example no following operators, always closing brackets, etc.
 If the query is deemed valid a query struct is made with the relevant information, such as a newly generated uuid
 The Query requires an evaluation tree to find the next edges, which can be constructed from the query.
@@ -443,32 +447,43 @@ First we call a function to build the tree structure with the string in an recur
 That takes the query and separates the operators into operator-nodes and stores the edges in leaf-nodes.
 
 With the Evaluation tree (and the edges from our current node) we can get the next edges to traverse along.
-This is done by using a method that is close to an in order walk, but we start from an leaf node and when going to nodes that aren't leafs checks are done to determine how to walk should progress, for example, the and-node checks if its leafs all exist in the passed along edges from our current node.
+This is done by using a method that is close to an in order walk, but we start from an leaf node and when going to nodes that aren't leafs checks are done to determine how to walk should progress,
+for example, the and-node checks if its leafs all exist in the passed along edges from our current node.
 The available edges it can take in are limited to the current server. In future development it would be ideal to be able to see edges stored in different servers.
 
 To get edge & node information from the database a query is sent asking for every predicate and corresponding object of the subject which is then searched for when the predicate equals the edge witch is requested.
 
 With this walk in the evaluation tree whe have the edges we should traverse along, and if there exist multiple destination the query is spit.
-If the node is determined to be a false node, by the existence of the edge NodeOntology:PointsToServer
+If the node is determined to be a false node, by the existence of the edge ``NodeOntology:PointsToServer``,
+the contact information is retrieved from the ServerNode that the PointsToServer indicates.
+With this contact information the query is serialized to a stream of bytes (se the [query wrapper](#the-query-wrapper) for information)
+and sent over the network (currently carried by the http protocol but could easily be retrofitted for pure tcp)
 
-The tree building process will repeat whenever the query is passed to a new server. After it has been passed to a new server it will also call the nextLeaf function that finds the next leaf that has to be visited by traversing the tree with an in order walk and returning a pointer to the node.  
+When the query is received att the other server the tree building process will repeat,
+and with the help of other information passed along in the query the full state can be reconstructed.
+
+While the query is traversal its continuously* streaming back the path it takes in mermaid syntax and being collected att the start server.
 
 The server sends back the traversed query and renders it as a mermaid diagram through the Mermaid.js library.
 
 ## Getting data from the database
 
 Here is an example of what is sent to the database:
-```
+
+```ttl
 PREFIX nodeOntology: <http://example.org/NodeOntology#>
 PREFIX minecraft: <http://example.org/minecraft#>
 SELECT ?p ?o WHERE { minecraft:Pickaxe_Instance_Henry ?p ?o } limit 100
 ```
+
 where the response would be:
-```
+
+```ttl
 rdf:type | minecraft:Pickaxe
 nodeOntology:hasID | 4
 minecraft:obtainedBy | minecraft:PickaxeRecipe_Instance
 ```
+
 as a hash map with the edges as keys and the nodes as value.
 
 ## Parsing the ontologies into GoLang
@@ -706,9 +721,7 @@ everything to the right of the last traverseNode will be treated as a remainder 
 grow-tree then matches the returned operator and creates a matching node.
 The node then takes all the parts and recursively calls growTree on them, then assigns them as a child and appends it to its slice of children.
 
-
-https://github.com/user-attachments/assets/1eec223d-1153-4555-9fdf-6d42b714fef4
-
+<https://github.com/user-attachments/assets/1eec223d-1153-4555-9fdf-6d42b714fef4>
 
 ## Traversing the tree
 
@@ -724,11 +737,7 @@ When NextNode is called from a leaf it will find the next leaf in the evaluation
 When the query is passed to a new server it has to recreate the tree and must then get a new pointer to the last visited leaf in the newly constructed tree, it then calls GetLeaf(id int) *LeafNode,
 that takes in the id of a leaf and returns a pointer to it.
 
-
-
-https://github.com/user-attachments/assets/60283f12-b982-4da7-be1f-c4a5cb7b2a4d
-
-
+<https://github.com/user-attachments/assets/60283f12-b982-4da7-be1f-c4a5cb7b2a4d>
 
 ## go style pseudo code
 
