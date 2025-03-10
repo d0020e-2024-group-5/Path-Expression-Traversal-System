@@ -18,7 +18,7 @@ Our solution is valuable for businesses, researchers, and data analysts who need
 - [Node ontologies](#node-ontologies)
   - [Node ontologies distributed](#node-ontologies-distributed)
   - [Truly distributed data](#truly-distributed-data)
-- [From Qurery to Result](#from-qurery-to-result)
+- [From Qurery to Result](#from-query-to-result)
 - [Parsing the ontologies into GoLang](#parsing-the-ontologies-into-golang)
 - [Architecture](#architecture)
 - [Query structure](#query-structure)
@@ -321,20 +321,30 @@ Server_c_minecraft:Plannks_From_Logs_Recipe_Instance-->|hasOutput|Server_c_minec
 Server_c_minecraft:Plannks_From_Logs_Recipe_Instance-->|usedInStation|Server_c_minecraft:CraftingTable_Instance
 ```
 
-## From Qurery to Result
+## From Query to Result
 
 The user enter in a query, for example
 `S/Pickaxe/obtainedBy/crafting_recipe/hasInput` \
-that is being sent with a JSON request {"data":"S/Pickaxe/obtainedBy/crafting_recipe/hasInput#100"} to the webserver to be traversed. The number after # represents the ttl thats being inputed at the website, with the default value of 100.
-...
-...
-...
+that is being sent with a JSON request {"data":"S/Pickaxe/obtainedBy/crafting_recipe/hasInput#100"} to the webserver to be traversed.
+The number after # represents the ttl (Time to live) thats being inputted at the website, with the default value of 100.
 
-The Program will then attempt to build an evaluation tree.
-First it gets passed into a preprocessing step where it removes whitespaces newlines and so on. It then gets checked so that it follows the requirments of the qury structure, for example no following operators, always closing parenthsees, etc.
-It will then call a function to build the tree structure entering in the query and the available edges it can take in the program from the current server. Current limitations limits the program to the current server, in future development it would be ideal to be able to see edges stored in different servers. It will then pass it into the tree-building function
-that takes the query and seperates the operators into operator-nodes and stores the edges in leaf-nodes. This three is then used to query the DB.
-The tree building process will repeat whenever the query is passed to a new server. After it has been passed to a new server it will also call the nextLeaf function that finds the next leaf that has to be visited by treversing the three with an in order walk and returning a pointer to the node.  
+When the server receives an query from the website, It then gets checked so that it follows the requirements of the query structure,
+for example no following operators, always closing brackets, etc.
+If the query is deemed valid a query struct is made with the relevant information, such as a newly generated uuid
+The Query requires an evaluation tree to find the next edges, which can be constructed from the query.
+
+First the query string gets passed into a preprocessing step where it removes whitespaces newlines and other simple string upkeep.
+It will then call a function to build the tree structure with the string in an recursive manner.
+That takes the query and seperates the operators into operator-nodes and stores the edges in leaf-nodes.
+
+with the Evaluation tree (and the edges from our current node) we can get the next edges to traverse along.
+This is done bu using a method that is close to an in order walk, but we start from an leaf node and when going to nodes that aren't leafs checks are done to determine how to walk should progress, for expample the and node checks if its leafs all exist in the passed along edges from our current node.
+The available edges it can take in are limited to the current server. In future development it would be ideal to be able to see edges stored in different servers.
+
+With this walk in the evaluation tree whe have the edges we should traverse along, and if there exist multiple destination the query is spit.
+If the node is determined to be a false node, by the existence of the edge NodeOntology:PointsToServer
+
+The tree building process will repeat whenever the query is passed to a new server. After it has been passed to a new server it will also call the nextLeaf function that finds the next leaf that has to be visited by traversing the tree with an in order walk and returning a pointer to the node.  
 
 The server sends back the traversed query and renders it as a mermaid diagram through the Mermaid.js library.
 
@@ -725,7 +735,7 @@ the right sides gives us NULL, the end of the query an valid position to return.
 
 <!-- TODO -->
 
-### Syntax Validation
+## Syntax Validation
 
 As mentioned previously, checking the syntax is very straightforward. We simply only need to check for invalid operator combinations with a few edge cases such as what starting/ending operators are allowed.
 
