@@ -19,9 +19,6 @@ minecraft:Log_Instance a minecraft:Log ;
 minecraft:Pickaxe_Instance_Henry a minecraft:Pickaxe ;
 	nodeOntology:hasID 4 ;
 	minecraft:obtainedBy minecraft:PickaxeRecipe_Instance .
-	
-minecraft:Pickaxe_Instance_Gustav a minecraft:Pickaxe ;
-	nodeOntology:hasID 5 .
 
 minecraft:Server_a a nodeOntology:Server ;
 	nodeOntology:hasIP "a" .

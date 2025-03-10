@@ -59,6 +59,112 @@ We call all subjects and objects nodes and predicates edges.
 
 What we want to do is to search such an ontology structure using a query where this structure is spread over several servers. When we split an edge over different server we do that by making the first node point to a false node where that node contains all the information to navigate to the true node on the other server.
 
+## Ontology text
+
+Here is a version of the example data on server C
+```
+@prefix minecraft: <http://example.org/minecraft#> .
+@prefix nodeOntology: <http://example.org/NodeOntology#> .
+
+# Instances of Items
+minecraft:Stick_Plank_made_Instance a minecraft:Stick ;
+	nodeOntology:hasID 1 ;
+	nodeOntology:pointsToServer minecraft:Server_b .
+
+minecraft:Stick_Bamboo_made_Instance a minecraft:Stick ;
+	nodeOntology:hasID 2 ;
+	nodeOntology:pointsToServer minecraft:Server_a .
+
+minecraft:Cobblestone_Bob a minecraft:Cobblestone ;
+	nodeOntology:hasID 3 .
+
+minecraft:Log_Instance a minecraft:Log ;
+	nodeOntology:hasID 12 .
+
+minecraft:Pickaxe_Instance_Henry a minecraft:Pickaxe ;
+	nodeOntology:hasID 4 ;
+	minecraft:obtainedBy minecraft:PickaxeRecipe_Instance .
+
+minecraft:Server_a a nodeOntology:Server ;
+	nodeOntology:hasIP "a" .
+
+
+minecraft:Server_b a nodeOntology:Server ;
+	nodeOntology:hasIP "b" .
+
+
+minecraft:Plank_Instance a minecraft:Plank ;
+	nodeOntology:hasID 7 ;
+	nodeOntology:pointsToServer minecraft:Server_b .
+
+# Crafting Station Instance
+minecraft:CraftingTable_Instance a minecraft:CraftingTable ;
+	nodeOntology:pointsToServer minecraft:Server_a ;
+	nodeOntology:hasID 8 .
+
+# Recipe Instance: Pickaxe_From_Stick_And_Stone_Recipe 
+minecraft:PickaxeRecipe_Instance a minecraft:Pickaxe_From_Stick_And_Stone_Recipe ;
+	nodeOntology:hasID 9 ;
+	minecraft:hasInput minecraft:Stick_Plank_made_Instance  ;
+	minecraft:hasInput minecraft:Stick_Bamboo_made_Instance ;
+	minecraft:hasInput minecraft:Cobblestone_Bob ;
+	minecraft:hasOutput minecraft:Pickaxe_Instance_Henry ;
+	minecraft:usedInStation minecraft:CraftingTable_Instance .
+
+# Recipe Instance: Plank_recipie_Log
+minecraft:Plannks_From_Logs_Recipe_Instance a minecraft:Plannks_From_Logs_Recipe ;
+	nodeOntology:hasID 13 ;
+	minecraft:hasInput minecraft:Log_Instance ;
+	minecraft:hasOutput minecraft:Plank_Instance ;
+	minecraft:usedInStation minecraft:CraftingTable_Instance .
+```
+
+Here is the Main(PETS) Ontology:
+```
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix nodeOntology: <http://example.org/NodeOntology#> .
+
+
+nodeOntology: a owl:Ontology ;
+    rdfs:comment "An RDFS Ontology for PETS's node System." ;
+    rdfs:label "PETS's node Ontology" .
+
+nodeOntology:Server a owl:Class ;
+	rdfs:comment "A way to another server" ;
+    rdfs:label "Server" .
+
+nodeOntology:Node a owl:Class ;
+    rdfs:label "Node" ;
+    rdfs:comment "Represents all nodes in the database system." .	
+
+nodeOntology:NodeFalse a owl:Class ;
+    rdfs:subClassOf nodeOntology:Node;
+    rdfs:label "NodeFalse" ;
+    rdfs:comment "Represents all nodes in other database system." .
+
+#Define_properties
+
+nodeOntology:pointsToNode a rdf:Property ;
+    rdfs:domain nodeOntology:Node ;
+    rdfs:range nodeOntology:Node ;
+    rdfs:comment "Links a Node to a Node ".
+
+nodeOntology:pointsToServer a rdf:pointsToNode ;
+    rdfs:domain nodeOntology:NodeFalse ;
+    rdfs:range nodeOntology:Server ;
+    rdfs:comment "Links a Node to a Server ".
+
+nodeOntology:hasIP a rdfs:Property ;
+	rdfs:domain nodeOntology:Server ;
+	rdfs:range xsd:string . # store IP addres as String
+	
+nodeOntology:hasID a rdfs:Property ;
+	rdfs:domain nodeOntology:Node ;
+	rdfs:range xsd:int  . # store ID addres as String
+```
+
 ## Node ontologies
 
 ```mermaid
@@ -363,6 +469,8 @@ rdf:type | minecraft:Pickaxe
 nodeOntology:hasID | 4
 minecraft:obtainedBy | minecraft:PickaxeRecipe_Instance
 ```
+as a hash map with the edges as keys and the nodes as value.
+
 ## Parsing the ontologies into GoLang
 
 For this parsing function, nodes have been defined as struct containing an array (or slices in GoLang) with edges to the node. We also create a struct for edges with the properties "EdgeName" and "TargetName" with each property denoting how an item is obtained respectively what the edge is pointing to. One server can then save all these nodes in a hashmap (dictionary) with the key being the node name and the value, the DataNode struct.
