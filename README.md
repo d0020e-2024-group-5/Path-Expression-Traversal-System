@@ -18,7 +18,7 @@ Our solution is valuable for businesses, researchers, and data analysts who need
 - [Node ontologies](#node-ontologies)
   - [Node ontologies distributed](#node-ontologies-distributed)
   - [Truly distributed data](#truly-distributed-data)
-- [From Qurery to Result](#from-query-to-result)
+- [From Query to Result](#from-query-to-result)
 - [Parsing the ontologies into GoLang](#parsing-the-ontologies-into-golang)
 - [Architecture](#architecture)
 - [Query structure](#query-structure)
@@ -29,13 +29,13 @@ Our solution is valuable for businesses, researchers, and data analysts who need
   - [Example 5, AND](#example-5-and)
   - [Example 6, XOR](#example-6-xor)
 - [Parsing and constructing the evaluationTree](#parsing-and-constructing-the-evaluationtree)
-- [Treversing the tree](#treversing-the-tree)
+- [Traversing the tree](#traversing-the-tree)
 - [go style pseudo code](#go-style-pseudo-code)
 - [Example of internal structure of a query](#example-of-internal-structure-of-a-query)
   - [An example of evaluation](#an-example-of-evaluation)
 - [Current limitations and future development of the query structure](#current-limitations-and-future-development-of-the-query-structure)
+- [Syntax Validation](#syntax-validation)
 - [The query wrapper](#the-query-wrapper)
-  - [Syntax Validation](#syntax-validation)
   - [Passing the query to dirent servers](#passing-the-query-to-dirent-servers)
     - [The Common Header](#the-common-header)
     - [Payload for recursive mermaid query (type 0x1)](#payload-for-recursive-mermaid-query-type-0x1)
@@ -361,7 +361,7 @@ type DataEdge struct { // minecraft:obtainedBy minecraft:Stick_bamboo_recipe_Ins
     TargetName string  // Stick_bamboo_recipe_Instance
 }
 
-var nodeLst map[string]DataNode    // Hashmap (or dictionary) with pairs of nodenames and DataNode
+var nodeLst map[string]DataNode    // Hashmap (or dictionary) with pairs of nodeNames and DataNode
 ```
 
 Reading the ontologies into Go is very simple. Since the ontologies follow a certain standard (Subject, Predicate, Object) we utilize this to read the subject prefix in order to infer the type of object and similarly what attributes it may have to apply them to our hashmap of nodes. Here is some rough pseudo-code on how the parsing works;
@@ -432,7 +432,7 @@ sequenceDiagram
     note left of DB_B: Pickaxe don't have<br/>nodes stone or stick<br/>returns server contact<br/>information.
 
     
-    note right of Tool_company: outgoing querys can be sent in parallel
+    note right of Tool_company: outgoing queries can be sent in parallel
     participant Mason_LTD as Masons LTD
     Tool_company->>+Mason_LTD: Stone/crafted_by*
 
@@ -508,7 +508,7 @@ In the above example the query each operation was evaluated left to right, in so
 ``S/Pick/{made_of/Crafting_recipie}*``
 
 In other cases we might want to do more complex
-operations, for exapmle an AND or an XOR operation between edges, those are explained in further examples.
+operations, for example an AND or an XOR operation between edges, those are explained in further examples.
 
 <!-- ### example arguments (), TO BE DECIDED
 
@@ -555,7 +555,7 @@ Pickaxe --> Pickaxe_From_Stick_And_Stone_Recipe --> Common
 Pickaxe --> Mineshaft --> Rare
 ```
 
-``S/Stick/{obtainedBy & foundAt}/rarity`` would return nothing as stick dont have the edge foundAt.
+``S/Stick/{obtainedBy & foundAt}/rarity`` would return nothing as stick don't have the edge foundAt.
 
 ### Example 6, XOR
 
@@ -573,28 +573,28 @@ Pickaxe --> Mineshaft --> Rare
 ## Parsing and constructing the evaluationTree
 
 When constructing the evaluationTree the code calls the function func grow_tree(str string, parent Node, id *int) (Node, error)
-providing the qury string, and the parent node, it returns a node and an error, the error is nil if it did not encounter an error in the function.
+providing the query string, and the parent node, it returns a node and an error, the error is nil if it did not encounter an error in the function.
 It then passes the string for some formatting, removing whitespaces, newlines and so on.
 
 It then calls the function slit_q, where it separates operators from non-operators(edges, bracket-sections or remainder), and returns them.
-for example it starts matching treversnodes, "/", and then finds another operator
-everything to the right of the last treversenode will be treated as a remainder and added to the non-operators.
+for example it starts matching traverseNodes, "/", and then finds another operator
+everything to the right of the last traverseNode will be treated as a remainder and added to the non-operators.
 
 grow-tree then matches the returned operator and creates a matching node.
 The node then takes all the parts and recursively calls growTree on them, then assigns them as a child and appends it to its slice of children.
 
 <https://github.com/user-attachments/assets/4149fed5-c0e7-4b85-a21d-64de8eccd0b8>
 
-## Treversing the tree
+## Traversing the tree
 
-When treversing the tree it will call  NextNode(caller Node, availablePaths []string) []*LeafNode,
-that takes in the caller node, all the available paths on the server, and returns a slice of leafnode pointers.
+When traversing the tree it will call  NextNode(caller Node, availablePaths []string) []*LeafNode,
+that takes in the caller node, all the available paths on the server, and returns a slice of leafNode pointers.
 
-Different nodes behaive differently when NextNode is called on them but the general behavior is that it calls the next child it has,
-and if it was the last child that called it it calls its parents nextnode.
+Different nodes behave differently when NextNode is called on them but the general behavior is that it calls the next child it has,
+and if it was the last child that called it calls its parents nextNode.
 
-The recursive nextnode goes down to the firs leaf it finds (some nodes look for more then one leafnode) and returns a pointer to it.
-When NextNode is caleld from a leaf it will find the next leaf in the evaluation order.
+The recursive nextNode goes down to the firs leaf it finds (some nodes look for more then one leafNode) and returns a pointer to it.
+When NextNode is called from a leaf it will find the next leaf in the evaluation order.
 
 When the query is passed to a new server it has to recreate the tree and must then get a new pointer to the last visited leaf in the newly constructed tree, it then calls GetLeaf(id int) *LeafNode,
 that takes in the id of a leaf and returns a pointer to it.
@@ -604,7 +604,7 @@ that takes in the id of a leaf and returns a pointer to it.
 ## go style pseudo code
 
 Note this is an example of part of the tree structure.
-This example will use the treverse- and leaf- node as an example.
+This example will use the traverse- and leaf- node as an example.
 
 ```go
 // interface type that all nodes need to implement
@@ -621,7 +621,7 @@ type TraverseNode struct {
  Children []Node 
 }
 
-// will simple passby and return a matching leafnode pointer or null (see leafnode)
+// will simple pass by and return a matching leafNode pointer or null (see leafNode)
 func (t *TraverseNode) GetLeaf(id int) *LeafNode {
  // returns the first node where id matches or nil
  for i, _ := range t.Children {
@@ -636,8 +636,8 @@ func (t *TraverseNode) GetLeaf(id int) *LeafNode {
 // node that implements the traverse function.
 // If the parent calls it checks the fist node
 // if a child calls it checks the next node
-// if it is the last child it calls parents nextnode nad gets it's next child.
-// returns a slice of leafnode pointers, empty if no matches or logic stops it.
+// if it is the last child it calls parents nextNode nad gets it's next child.
+// returns a slice of leafNode pointers, empty if no matches or logic stops it.
 func (t *TraverseNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
  var leafs []*LeafNode
  // if caller is parent we check the "first" node
@@ -651,7 +651,7 @@ func (t *TraverseNode) NextNode(caller Node, availablePaths []string) []*LeafNod
     break
    }
   }
- // untill we reach the last chil where we call the parent
+ // until we reach the last child where we call the parent
  } else if caller == t.Children[len(t.Children)-1] {
   leafs = append(leafs, t.Parent.NextNode(t, availablePaths)...)
  } else {
@@ -667,7 +667,7 @@ type LeafNode struct {
  ID     int
 }
 
-// will check if the id matches and return a pointer to itself if it does, nil if it doesnt
+// will check if the id matches and return a pointer to itself if it does, nil if it doesn't
 func (l *LeafNode) GetLeaf(id int) *LeafNode {
  if l.ID == id {
   return l
@@ -676,14 +676,14 @@ func (l *LeafNode) GetLeaf(id int) *LeafNode {
 }
 
 // Returns pointer to self in slice if parent called it
-// if call came from nil take parents nextnode instead
+// if call came from nil take parents nextNode instead
 func (l *LeafNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
  if caller == l.Parent {
   return []*LeafNode{l}
  } else if caller == nil {
   return l.Parent.NextNode(l, availablePaths)
  } else {
-  panic("leafnode nextnode panic")
+  panic("leafNode nextNode panic")
  }
 }
 
