@@ -352,15 +352,17 @@ The server sends back the traversed query and renders it as a mermaid diagram th
 ## Getting data from the database
 
 Here is an example of what is sent to the database:
+```
 PREFIX nodeOntology: <http://example.org/NodeOntology#>
 PREFIX minecraft: <http://example.org/minecraft#>
 SELECT ?p ?o WHERE { minecraft:Pickaxe_Instance_Henry ?p ?o } limit 100
-
+```
 where the response would be:
+```
 rdf:type | minecraft:Pickaxe
 nodeOntology:hasID | 4
 minecraft:obtainedBy | minecraft:PickaxeRecipe_Instance
-
+```
 ## Parsing the ontologies into GoLang
 
 For this parsing function, nodes have been defined as struct containing an array (or slices in GoLang) with edges to the node. We also create a struct for edges with the properties "EdgeName" and "TargetName" with each property denoting how an item is obtained respectively what the edge is pointing to. One server can then save all these nodes in a hashmap (dictionary) with the key being the node name and the value, the DataNode struct.
