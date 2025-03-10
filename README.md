@@ -6,9 +6,9 @@ PETS, a system to store linked distributed data with traversal functions
 
 ## Introduction
 
-Our system is designed to navigate and retrieve information from linked ontologies using path expressions. It enables users to traverse decentralized data structures by following relationships defined in path expressions, allowing for multilevel hierarchical exploration.
-The system helps users efficiently access and analyze linked data. For example in a supply chain context, it can model the entire distribution network of a specific item by retrieving manufacturer data at each stage. This provides transparency, traceability, and deeper insights into complex data relationships.
-Our solution is valuable for businesses, researchers, and data analysts who needs to explore and make sense of decentralized, linked data in a clear ond structured way.
+In today’s data driven world, businesses rely on structured and interconnected data to optimize operations, enhance decision making, and ensure regulatory compliance. For example, in a supply chain context, a company manufacturing pharmaceuticals must track the origin of raw materials, verify supplier compliance, and ensure product quality. Our system enables such businesses to model and analyze the entire distribution network of a specific item by retrieving manufacturer data at each stage. This ensures transparency, traceability, and deeper insights into complex data relationships.
+
+Our system is designed to navigate and retrieve information from linked ontologies using path expressions. It enables users to traverse decentralized data structures by following relationships defined in path expressions, allowing for multilevel hierarchical exploration. By leveraging ontologies, our solution provides structured access to decentralized, linked data, making it valuable for businesses, researchers, and data analysts who need to explore and make sense of interconnected information in a clear and efficient way. 
 
 ## Table of contents
 
@@ -496,7 +496,7 @@ To follow a simple path, first have the starting node (s in this case a we have 
 
 `S/Pickaxe/obtainedBy/crafting_recipe/hasInput`
 
-The example will start att pickaxe and follow edge `obtainedBy` to `Pickaxe_From_Stick_And_Stone_Recipe`
+The example will start at pickaxe and follow edge `obtainedBy` to `Pickaxe_From_Stick_And_Stone_Recipe`
 where the query will split and go to both `Cobblestone` and `stick`.
 Since this is the end of the query they are returned.
 
@@ -593,7 +593,7 @@ that takes in the caller node, all the available paths on the server, and return
 Different nodes behave differently when NextNode is called on them but the general behavior is that it calls the next child it has,
 and if it was the last child that called it calls its parents nextNode.
 
-The recursive nextNode goes down to the firs leaf it finds (some nodes look for more then one leafNode) and returns a pointer to it.
+The recursive nextNode goes down to the first leaf it finds (some nodes look for more then one leafNode) and returns a pointer to it.
 When NextNode is called from a leaf it will find the next leaf in the evaluation order.
 
 When the query is passed to a new server it has to recreate the tree and must then get a new pointer to the last visited leaf in the newly constructed tree, it then calls GetLeaf(id int) *LeafNode,
@@ -717,19 +717,19 @@ Lets take an example query of show its internal evaluation
 
 ``S/Pickaxe/{obtainedBy/hasInput}*``
 
-This is then converted to a tree structure of operations, where the leafs are edges and nodes .
+This is then converted to a tree structure of operations, where the leafs are edges and nodes.
 
-lets say that we are on edge ``obtainedBy``, and we want to know whats next.
+Lets say that we are on edge ``obtainedBy``, and we want to know whats next.
 By looking at the parent we know that we are on the left side of an *traverse*
-and the next edge is the one on the right of the traverse, ``hasInput``
+and the next edge is the one on the right of the traverse, ``hasInput``.
 
-if whe should get the next node from ``hasInput`` we can again look att the parentO
-and se that we are on the right side of the *traverse*,
+If we should get the next node from ``hasInput`` we can again look att the parentO
+and see that we are on the right side of the *traverse*,
 to find the next node we need to look higher, the *traverse*'s parent.
 This gives us the knowledge that we are on the left side of *loop* operator (aka *zero or more*)
 We then have two possible options continue right or redo the left side.
-by evaluating the left side we get ``obtainedBy`` again, showing us that the *loop* works.
-the right sides gives us NULL, the end of the query an valid position to return.
+By evaluating the left side we get ``obtainedBy`` again, showing us that the *loop* works.
+The right sides gives us NULL, the end of the query an valid position to return.
 
 ## Current limitations and future development of the query structure
 
@@ -760,12 +760,12 @@ particularly those involving Unicode.
 
 ### Passing the query to dirent servers
 
-To pass data and queries to different servers an common protocol is needed, this is described bellow
+To pass data and queries to different servers an common protocol is needed, this is described below.
 
 #### The Common Header
 
-The common header for all queries Include general information that is needed for the system.
-These include an magic to determine if its acutely an PETS query, Query type, an identifying UUID and TTL.
+The common header for all queries include general information that is needed for the system.
+These include an magic to determine if its actually an PETS query, Query type, an identifying UUID and TTL.
 The body to this header is determined by the type.
 
 There might be further changes to this standard to include multiple variable with authorizations tokens in further development. This would allow advanced functions such as to hide internal paths to non authorized users, but still propagate the query thru the network.
@@ -798,7 +798,7 @@ This information is sufficient to reconstruct the query and its state. In the cu
 if state values are missing, the query is assumed to be new. The starting node is the first part of the query, and the edge is the same as the starting node.
 
 The return of *recursive mermaid query* is always a valid mermaid string, when error are encountered during the traversal its converted to an valid mermaid syntax,
-shush as node with custom styling containing the error message, if possible an arrow to the node that the error occurred in is also drawn.
+such as node with custom styling containing the error message, if possible an arrow to the node that the error occurred in is also drawn.
 
 ## Webserver
 
@@ -806,3 +806,4 @@ A webserver is beneficial for our system because it acts as a bridge between use
 It allows us to interact with our system from anywhere using a simple HTTP request and it provides a unified interface for querying and retrieving linked data.
 
 <!-- TODO write about rendering mermaid -->
+Mermaid.js renders diagrams by converting text-based syntax into scalable vector graphics (SVG). When a user submits a query, the server responds with a Mermaid-formatted string. This string is dynamically inserted into an HTML <div> with the class mermaid. The mermaid.init() function scans the document for elements with the .mermaid class and processes the text inside them, transforming it into a structured SVG diagram. This enables easy visualization of flowcharts, sequence diagrams, and other graph types directly in the browser without additional rendering tools.
