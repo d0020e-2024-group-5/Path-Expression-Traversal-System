@@ -8,7 +8,7 @@ import (
 var str string
 
 func TestIsValid(t *testing.T) {
-	str = "s/bomba*}f{*y"
+	str = "s/{A/{B/{{C}}}}/b|A/{}/"
 	got := IsValid(str)
 	want := true
 
@@ -18,4 +18,5 @@ func TestIsValid(t *testing.T) {
 	}
 
 }
+
 // Checks for invalid operator combinations and returns nil if no invalid combination is found.

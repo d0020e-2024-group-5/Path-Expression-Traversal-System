@@ -2,8 +2,7 @@ package pathExpression
 
 import (
 	//"errors"
-	"errors"
-	//"log"
+	"log"
 	"regexp"
 	"slices"
 	"strings"
@@ -284,7 +283,7 @@ func grow_tree(str string, parent Node, id *int) (Node, error) {
 	operator, parts := split_q(str)
 	// fmt.Printf("%v\n", parts)
 
-	// //log.Printf("%s\n%+v", operator, parts)
+	// log.Printf("%s\n%+v", operator, parts)
 
 	// if the operator is traverse create a traverse node
 	if operator == "/" {
@@ -431,81 +430,86 @@ func split_q(str string) (string, []string) {
 }
 
 // Checks for invalid operator combinations and returns nil if no invalid combination is found.
-func IsValid(str string) error {
+func IsValid(str string) bool {
 	operands := "/^*&|" // current available operands
 	right := 0
 	left := 0
 	brStack := []rune{}
 	if len(str) <= 2 {
-		return errors.New("error; Query is too small")
-		//return false
+		log.Print("short")
+		//return errors.New("error; Query is too small")
+		return false
 	}
 	if strings.Contains("/^*&|{}", string(str[0])) {
-		return errors.New("error; First rune is an operand")
-		//return false
+		//return errors.New("error; First rune is an operand")
+		log.Print("first char op")
+		return false
 	}
 	// FIXME, index any can return -1, WILL crash program
 	// solution might be to test if -1 and return error "no operators" @spookyfirefox 2025 03 09
 
 	index := strings.IndexAny(str, operands)
 	if index == -1 {
-		return errors.New("Error; No operators) // return error")
-		//return false
+		log.Print("no op")
+		//return errors.New("Error; No operators) // return error")
+		return false
 	}
 	if string(str[index]) != "/" { // if first operand isn't a traverse (/)
-		return errors.New("Error; First operator is " + string(str[index]) + " , not traverse (/)") // return error
-		//return false
+		//return errors.New("Error; First operator is " + string(str[index]) + " , not traverse (/)") // return error
+		log.Print("firstchar")
+		return false
 	}
 	for i := 0; i < (len(str) - 1); i++ {
 		// TODO why is this checked in the loop? this does not use anu loop variable
 		// checks if last character is an operand (with the exception of / or *)
 		if strings.Contains(operands, string(str[len(str)-1])) && !(strings.Contains("*", string(str[len(str)-1])) || strings.Contains("/", string(str[len(str)-1]))) {
-			return errors.New("Error; Invalid operand as last character" + string(str[len(str)-1]))
-			//return false
+			//return errors.New("Error; Invalid operand as last character" + string(str[len(str)-1]))
+			log.Print("last char")
+			return false
 		}
 		char := str[i]
-		//log.Print(string(str[i]))
+		log.Print(string(str[i]))
 		// check if we have another char after current
 		if char == '{' {
 			brStack = append(brStack, rune(char))
 		} else if char == '}'{
 			if len(brStack) == 0 {
-				//log.Print("unmatch")
-				return errors.New("error; unmatched closing bracket")
-				//return false
+				log.Print("unmatch")
+				//return errors.New("error; unmatched closing bracket")
+				return false
 			}
 			brStack = brStack[:len(brStack)-1] // pop stack
 		}
 		if i == len(str)-2 {
 			// why not a switch statement?
 			// and wy log all this? @spookyfirefox 2025 03 09
-			//log.Print(string(str[i+1]))
+			log.Print(string(str[i+1]))
 
 			if str[i] == '}' {
-				//log.Print("right")
+				log.Print("right")
 				
 				right += 1
 			}
 			if str[i] == '{' {
-				//log.Print("left")
+				log.Print("left")
 				left += 1
 			}
 			if str[i+1] == '}' {
-				//log.Print("right")
+				log.Print("right")
 				right += 1
 			}
 			if str[i+1] == '{' {
-				//log.Print("left")
+				log.Print("left")
 				left += 1
 			}
 
 		} else {
 			if str[i] == '}' {
-				//log.Print("right")
+				log.Print("right")
 				right += 1
 			}
 			if str[i] == '{' {
-				//log.Print("left")
+				log.Print("left")
 				left += 1
 			}
 		}
@@ -514,40 +518,45 @@ func IsValid(str string) error {
 			continue
 		}
 		if string(char) == "{" { // invalid combination { and op
-			if strings.Contains(operands, string(str[i+1])) {
-				//return false
-				return errors.New("Error; Invalid group operand combination: " + (string(char) + string(str[i+1])))
+			if strings.Contains("/^*&|}", string(str[i+1])) {
+				log.Print("inv {")
+				return false
+				//return errors.New("Error; Invalid group operand combination: " + (string(char) + string(str[i+1])))
 			}
-			if !strings.Contains(operands, string(str[i-1])) {
-				//return false
-				return errors.New("Error; Invalid group operand combination: " + (string(char) + string(str[i+1])))
+			if !strings.Contains("/^*&|{", string(str[i-1])) {
+				log.Print("inv {2")
+				return false
+				//return errors.New("Error; Invalid group operand combination: " + (string(char) + string(str[i+1])))
 			}
 		}
 		if string(char) == "}" { // invalid combination { and op
-			if !strings.Contains(operands, string(str[i+1])) {
-				////log.Print("closingbracketnoop")
-				//return false
-				return errors.New("Error; Invalid group operand combination: " + (string(char) + string(str[i+1])))
+			if !strings.Contains("/^*&|}", string(str[i+1])) {
+				log.Print("inv }")
+				//log.Print("closingbracketnoop")
+				return false
+				//return errors.New("Error; Invalid group operand combination: " + (string(char) + string(str[i+1])))
 			}
 		}
 		if strings.Contains(operands, string(char)) { // if current char is operand
 			if string(str[i+1]) == "}" { // invalid combination op and }
-				//return false
-				return errors.New("Error; Invalid group operand combination: " + (string(char) + string(str[i+1])))
+				log.Print("inv }2")
+				return false
+				//return errors.New("Error; Invalid group operand combination: " + (string(char) + string(str[i+1])))
 			}
 
 			if strings.Contains(operands, string(str[i+1])) { // check right char for invalid operand
-				//return false
-				return errors.New("Error; Invalid operand combination: " + (string(char) + string(str[i+1])))
+				log.Print("inv 3")
+				return false
+				//return errors.New("Error; Invalid operand combination: " + (string(char) + string(str[i+1])))
 			}
 		}
 
 	}
 	// should we not also test if right is larger than left during the loop, we might have {a}}/{b} @spookyfirefox 2025 03 09
 	if right != left {
-		//return false
-		return errors.New("Error; Unequal amount of left (" + string(left) + ")and right (" + string(right) + ") brackets")
+		return false
+		//return errors.New("Error; Unequal amount of left (" + string(left) + ")and right (" + string(right) + ") brackets")
 	}
-	return nil
+	return true
 	//return nil
 }
