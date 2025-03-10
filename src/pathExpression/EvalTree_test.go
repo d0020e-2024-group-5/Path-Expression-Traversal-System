@@ -8,7 +8,7 @@ import (
 var str string
 
 func TestIsValid(t *testing.T) {
-	str = "{s}/pickaxe*/{craftin_table}*/{test/of_bomba{eksdee}}"
+	str = "s/bomba*}f{*y"
 	got := IsValid(str)
 	want := true
 
