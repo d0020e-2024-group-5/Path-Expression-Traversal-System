@@ -3,7 +3,7 @@ package pathExpression
 import (
 	//"errors"
 	"errors"
-	"log"
+	//"log"
 	"regexp"
 	"slices"
 	"strings"
