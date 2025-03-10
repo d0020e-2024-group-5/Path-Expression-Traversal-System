@@ -75,30 +75,30 @@ graph TD;
 
         minecraft:Plank_Instance -->|minecraft:obtainedBy| minecraft:Plannks_From_Logs_Recipe_Instance
 
-        Plank_from_Bamboo_Instance -->|obtainedBy| Plank_from_bamboo_recipe_Instance
+        minecraft:Plank_from_Bamboo_Instance -->|minecraft:obtainedBy| minecraft:Plank_from_bamboo_recipe_Instance
 
-        minecraft:PickaxeRecipe_Instance -->|minecraft:hasInput| Stick_Plank_made_Instance
-        minecraft:PickaxeRecipe_Instance -->|minecraft:hasInput| Stick_Bamboo_made_Instance
-        PickaxeRecipe_Instance -->|hasInput| Cobblestone_Bob
-        PickaxeRecipe_Instance -->|hasOutput| Pickaxe_Instance_Henry
-        PickaxeRecipe_Instance -->|usedInStation| CraftingTable_Instance
+        minecraft:PickaxeRecipe_Instance -->|minecraft:hasInput| minecraft:Stick_Plank_made_Instance
+        minecraft:PickaxeRecipe_Instance -->|minecraft:hasInput| minecraft:Stick_Bamboo_made_Instance
+        minecraft:PickaxeRecipe_Instance -->|minecraft:hasInput| minecraft:Cobblestone_Bob
+        minecraft:PickaxeRecipe_Instance -->|minecraft:hasOutput| minecraft:Pickaxe_Instance_Henry
+        minecraft:PickaxeRecipe_Instance -->|minecraft:usedInStation| minecraft:CraftingTable_Instance
 
-        Stick_bamboo_recipe_Instance -->|hasInput| Bamboo_Instance
-        Stick_bamboo_recipe_Instance -->|hasOutput| Stick_Bamboo_made_Instance
-        Stick_bamboo_recipe_Instance -->|usedInStation| CraftingTable_Instance
+        minecraft:Stick_bamboo_recipe_Instance -->|minecraft:hasInput| minecraft:Bamboo_Instance
+        minecraft:Stick_bamboo_recipe_Instance -->|minecraft:hasOutput| minecraft:Stick_Bamboo_made_Instance
+        minecraft:Stick_bamboo_recipe_Instance -->|minecraft:usedInStation| minecraft:CraftingTable_Instance
 
-        Stick_Planks_recipe_Instance -->|hasInput| Plank_Instance
-        Stick_Planks_recipe_Instance -->|hasInput| Plank_from_Bamboo_Instance
-        Stick_Planks_recipe_Instance -->|hasOutput| Stick_Plank_made_Instance
-        Stick_Planks_recipe_Instance -->|usedInStation| CraftingTable_Instance
+        minecraft:Stick_Planks_recipe_Instance -->|minecraft:hasInput| minecraft:Plank_Instance
+        minecraft:Stick_Planks_recipe_Instance -->|minecraft:hasInput| minecraft:Plank_from_Bamboo_Instance
+        minecraft:Stick_Planks_recipe_Instance -->|minecraft:hasOutput| minecraft:Stick_Plank_made_Instance
+        minecraft:Stick_Planks_recipe_Instance -->|minecraft:usedInStation| minecraft:CraftingTable_Instance
 
-        Plannks_From_Logs_Recipe_Instance -->|hasInput| Log_Instance
-        Plannks_From_Logs_Recipe_Instance -->|hasOutput| Plank_Instance
-        Plannks_From_Logs_Recipe_Instance -->|usedInStation| CraftingTable_Instance
+        minecraft:Plannks_From_Logs_Recipe_Instance -->|minecraft:hasInput| minecraft:Log_Instance
+        minecraft:Plannks_From_Logs_Recipe_Instance -->|minecraft:hasOutput| minecraft:Plank_Instance
+        minecraft:Plannks_From_Logs_Recipe_Instance -->|minecraft:usedInStation| minecraft:CraftingTable_Instance
 
-        Plank_from_bamboo_recipe_Instance-->|hasInput|Bamboo_Instance
-        Plank_from_bamboo_recipe_Instance-->|hasOutput|Plank_from_Bamboo_Instance
-        Plank_from_bamboo_recipe_Instance-->|usedInStation|CraftingTable_Instance
+        minecraft:Plank_from_bamboo_recipe_Instance-->|minecraft:hasInput|minecraft:Bamboo_Instance
+        minecraft:Plank_from_bamboo_recipe_Instance-->|minecraft:hasOutput|minecraft:Plank_from_Bamboo_Instance
+        minecraft:Plank_from_bamboo_recipe_Instance-->|minecraft:usedInStation|minecraft:CraftingTable_Instance
 ```
 
 ### Node ontologies distributed
