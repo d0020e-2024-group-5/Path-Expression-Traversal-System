@@ -706,7 +706,9 @@ everything to the right of the last traverseNode will be treated as a remainder 
 grow-tree then matches the returned operator and creates a matching node.
 The node then takes all the parts and recursively calls growTree on them, then assigns them as a child and appends it to its slice of children.
 
-<https://github.com/user-attachments/assets/4149fed5-c0e7-4b85-a21d-64de8eccd0b8>
+
+https://github.com/user-attachments/assets/1eec223d-1153-4555-9fdf-6d42b714fef4
+
 
 ## Traversing the tree
 
@@ -722,7 +724,11 @@ When NextNode is called from a leaf it will find the next leaf in the evaluation
 When the query is passed to a new server it has to recreate the tree and must then get a new pointer to the last visited leaf in the newly constructed tree, it then calls GetLeaf(id int) *LeafNode,
 that takes in the id of a leaf and returns a pointer to it.
 
-<https://github.com/user-attachments/assets/dee7cb16-68cf-401e-9b38-bfee2e433ea0>
+
+
+https://github.com/user-attachments/assets/60283f12-b982-4da7-be1f-c4a5cb7b2a4d
+
+
 
 ## go style pseudo code
 
