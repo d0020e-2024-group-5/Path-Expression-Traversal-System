@@ -435,14 +435,18 @@ func IsValid(str string) error {
 	right := 0
 	left := 0
 	if len(str) <= 2 {
-		return errors.New("error; Query is too small") 
+		return errors.New("error; Query is too small")
 	}
 	if strings.Contains(operands, string(str[0])) {
-		return errors.New("error; First rune is an operand") 
+		return errors.New("error; First rune is an operand")
 	}
 	// FIXME, index any can return -1, WILL crash program
 	// solution might be to test if -1 and return error "no operators" @spookyfirefox 2025 03 09
+
 	index := strings.IndexAny(str, operands)
+	if index == -1 {
+		return errors.New("Error; No operators) // return error")
+	}
 	if string(str[index]) != "/" { // if first operand isn't a traverse (/)
 		return errors.New("Error; First operator is " + string(str[index]) + " , not traverse (/)") // return error
 	}
