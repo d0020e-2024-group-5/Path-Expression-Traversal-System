@@ -333,13 +333,14 @@ for example no following operators, always closing brackets, etc.
 If the query is deemed valid a query struct is made with the relevant information, such as a newly generated uuid
 The Query requires an evaluation tree to find the next edges, which can be constructed from the query.
 
-First the query string gets passed into a preprocessing step where it removes whitespaces newlines and other simple string upkeep.
-It will then call a function to build the tree structure with the string in an recursive manner.
-That takes the query and seperates the operators into operator-nodes and stores the edges in leaf-nodes.
+First we call a function to build the tree structure with the string in an recursive manner.
+That takes the query and separates the operators into operator-nodes and stores the edges in leaf-nodes.
 
-with the Evaluation tree (and the edges from our current node) we can get the next edges to traverse along.
-This is done bu using a method that is close to an in order walk, but we start from an leaf node and when going to nodes that aren't leafs checks are done to determine how to walk should progress, for expample the and node checks if its leafs all exist in the passed along edges from our current node.
+With the Evaluation tree (and the edges from our current node) we can get the next edges to traverse along.
+This is done by using a method that is close to an in order walk, but we start from an leaf node and when going to nodes that aren't leafs checks are done to determine how to walk should progress, for example, the and-node checks if its leafs all exist in the passed along edges from our current node.
 The available edges it can take in are limited to the current server. In future development it would be ideal to be able to see edges stored in different servers.
+
+To get edge & node information from the database a query is sent asking for every predicate and corresponding object of the subject which is then searched for when the predicate equals the edge witch is requested.
 
 With this walk in the evaluation tree whe have the edges we should traverse along, and if there exist multiple destination the query is spit.
 If the node is determined to be a false node, by the existence of the edge NodeOntology:PointsToServer
@@ -347,6 +348,18 @@ If the node is determined to be a false node, by the existence of the edge NodeO
 The tree building process will repeat whenever the query is passed to a new server. After it has been passed to a new server it will also call the nextLeaf function that finds the next leaf that has to be visited by traversing the tree with an in order walk and returning a pointer to the node.  
 
 The server sends back the traversed query and renders it as a mermaid diagram through the Mermaid.js library.
+
+## Getting data from the database
+
+Here is an example of what is sent to the database:
+PREFIX nodeOntology: <http://example.org/NodeOntology#>
+PREFIX minecraft: <http://example.org/minecraft#>
+SELECT ?p ?o WHERE { minecraft:Pickaxe_Instance_Henry ?p ?o } limit 100
+
+where the response would be:
+rdf:type | minecraft:Pickaxe
+nodeOntology:hasID | 4
+minecraft:obtainedBy | minecraft:PickaxeRecipe_Instance
 
 ## Parsing the ontologies into GoLang
 
