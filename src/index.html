@@ -1,83 +1,84 @@
-<div class="flex-container"><input type="text" id="input" placeholder="Enter something..."> <button onclick="sendData()">Send</button> <button id="dark" onclick="darkMode()">Light</button></div>
+<!-- http://localhost:8080/ -->
+
+<!DOCTYPE html>
+<html lang="eng">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <title>Webserver</title>
+</head>
+<body id="body">
+
 <div class="flex-container">
-    <p id="response">&nbsp;</p>
+    <input type="text" id="input" placeholder="Enter something...">
+    <button onclick="sendData()">Send</button>
+    <button id="dark" onclick="darkMode()">Light</button>
+    
 </div>
-<div class="mermaid" style="display:block;" id="mermaidDiagram">Exempel quarry:</div>
-<div class="mermaid" style="display:block;" id="mermaidDiagram">&nbsp;</div>
-<div class="mermaid" style="display:block;" id="mermaidDiagram">gå igenom alla noder:</div>
-<div class="mermaid" style="display:block;" id="mermaidDiagram">minecraft:Pickaxe_Instance_Henry/{minecraft:obtainedBy/minecraft:hasInput}*</div>
-<div class="mermaid" style="display:block;" id="mermaidDiagram">&nbsp;</div>
-<div class="mermaid" style="display:block;" id="mermaidDiagram">få Id på alla noder:</div>
-<div class="mermaid" style="display:block;" id="mermaidDiagram">minecraft:Pickaxe_Instance_Henry/{nodeOntology:hasID|minecraft:obtainedBy/nodeOntology:hasID|minecraft:hasInput}*</div>
-<div class="mermaid" style="display:block;" id="mermaidDiagram">&nbsp;</div>
-<div class="mermaid" style="display:block;" id="mermaidDiagram">samma som ovan:</div>
-<div class="mermaid" style="display:block;" id="mermaidDiagram">minecraft:Pickaxe_Instance_Henry/minecraft:obtainedBy*minecraft:hasInput*nodeOntology:hasID*</div>
-<div class="mermaid" style="display:block;" id="mermaidDiagram">&nbsp;</div>
-<div class="mermaid" style="display:block;" id="mermaidDiagram">Loop:</div>
-<div class="mermaid" style="display:block;" id="mermaidDiagram">minecraft:Pickaxe_Instance_Henry/{minecraft:obtainedBy/minecraft:hasOutput}*</div>
-<div class="mermaid" style="display:block;" id="mermaidDiagram">&nbsp;</div>
+<div class="flex-container">
+    <p id="response"></p>
+</div>
+
+<div class="mermaid" id="mermaidDiagram" style="display:block;"></div>
+
 <script>
+
 // hämtar responsen från handleAPI
 function fetchData() {
     fetch("/api/data")
         .then(response => {
-            if(!response.ok) {
+            if (!response.ok) {
                 throw new Error("network error");
             }
             return response.json();
         })
         .then(data => {
-            document.getElementById("response")
-                .innerText = data.message;
+            document.getElementById("response").innerText = data.message;
         })
         .catch(error => console.error("error fetching data:", error));
 }
 
 function sendData() {
-    let input = document.getElementById("input")
-        .value;
-    
+    let input = document.getElementById("input").value;
+
     fetch("/api/submit", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                data: input
-            })
-        })
-        // sends the rresponse
-        .then(response => {
-            console.log("Response status:", response.status);
-            if(!response.ok) {
-                console.log("server error")
-                return response.json()
-                    .then(errorData => {
-                        throw new Error(errorData.message || "server error");
-                    });
-            }
-            return response.json();
-        })
-        // recievs the response
-        .then(data => {
-            console.log("Received from server:", data);
-            document.getElementById("response")
-                .innerText = "Server: " + data.message;
-            
-            if(data.message) {
-                const mermaidContainer = document.getElementById("mermaidDiagram");
-                mermaidContainer.innerHTML = `<div class="mermaid">graph TD;\n${data.message}</div>`;
-                // mermaidContainer.style.display = "block";
-                mermaid.init(undefined, ".mermaid");
-            } else {
-                console.error("Invalid response: missing 'message' property");
-            }
-        })
-        .catch(error => {
-            document.getElementById("response")
-                .innerText = "error: " + error.message;
-            console.error("error:", error);
-        });
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({data: input})  
+    })
+    // sends the rresponse
+    .then(response => {
+        console.log("Response status:", response.status);
+        if (!response.ok) {
+            console.log("server error")
+            return response.json().then(errorData => {
+                throw new Error(errorData.message || "server error");
+            });
+        }
+        return response.json();
+    })
+    // recievs the response
+    .then(data => {
+        console.log("Received from server:", data);
+        document.getElementById("response").innerText = "Server: " + data.message;
+
+        if (data.message) {
+            const mermaidContainer = document.getElementById("mermaidDiagram");
+            mermaidContainer.innerHTML = `<div class="mermaid">graph TD;\n${data.message}</div>`;
+           // mermaidContainer.style.display = "block";
+            mermaid.init(undefined, ".mermaid");
+        } else {
+            console.error("Invalid response: missing 'message' property");
+        }
+    })
+    .catch(error => {
+        document.getElementById("response").innerText = "error: " + error.message;
+        console.error("error:", error);
+    });
 }
 
 function checkInput() {
@@ -89,44 +90,40 @@ function checkInput() {
         /^s\/[a-z0-9_]+\/\{[a-z0-9_]+ \& [a-z0-9_]+\}\/[a-z0-9_]+$/, // example: S/Pickaxe/{obtainedBy&foundAt}/rarity
         /^s\/[a-z0-9_]+\/\{[a-z0-9_]+ \^ [a-z0-9_]+\}\/[a-z0-9_]+$/ // example: S/Pickaxe/{obtainedBy^foundAt}/rarity
     ];
-    
+
     let isValid = false;
     //for (const pattern of allowedPatterns) {
-    //  if (pattern.test(input)) {
-    //    console.log("valid pattern")
-    //  isValid = true;
-    // break;
+      //  if (pattern.test(input)) {
+        //    console.log("valid pattern")
+          //  isValid = true;
+           // break;
+        //}
     //}
-    //}
-    
+
     document.addEventListener("DOMContentLoaded", function () {
-        fetchMermaidDiagram();
-    });
+    fetchMermaidDiagram();
+});
 }
 
 function fetchMermaidDiagram() {
     fetch("/api/submit", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                data: ""
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log("Received data:", data);
-            if(data.message) {
-                const mermaidContainer = document.getElementById("mermaidDiagram");
-                mermaidContainer.innerHTML = "```mermaid\n" + "graph TD;\n" + data.message + "\n```";
-                mermaidContainer.style.display = "block";
-                mermaid.init(undefined, ".mermaid");
-            } else {
-                console.error("Invalid response: missing 'message' property");
-            }
-        })
-        .catch(error => console.error("Error fetching Mermaid diagram:", error));
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({data: ""})
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Received data:", data);
+        if (data.message) {
+            const mermaidContainer = document.getElementById("mermaidDiagram");
+            mermaidContainer.innerHTML = "```mermaid\n" + "graph TD;\n" + data.message + "\n```";
+            mermaidContainer.style.display = "block";
+            mermaid.init(undefined, ".mermaid");
+        } else {
+            console.error("Invalid response: missing 'message' property");
+        }
+    })
+    .catch(error => console.error("Error fetching Mermaid diagram:", error));
 }
 
 document.addEventListener("DOMContentLoaded", fetchMermaidDiagram);
@@ -137,21 +134,22 @@ document.addEventListener("DOMContentLoaded", fetchMermaidDiagram);
 const button = document.getElementById("dark");
 
 function darkMode() {
-    if(document.body.style.background === "white") {
+    if (document.body.style.background === "white") {
         document.body.style.background = "rgb(59, 59, 59)";
-        document.getElementById("response")
-            .style.color = 'white';
+        document.getElementById("response").style.color = 'white';
         button.textContent = "Light"
     } else {
         document.body.style.background = "white"
-        document.getElementById("response")
-            .style.color = 'black';
+        document.getElementById("response").style.color = 'black';
         button.textContent = "Dark"
     }
     
 }
+
 </script>
+
 <style>
+
 #input {
     border-radius: 40px;
     height: 40px;
@@ -162,7 +160,7 @@ function darkMode() {
     display: flex;
     align-items: center;
     justify-content: center;
-}
+} 
 
 button {
     height: 40px;
@@ -178,3 +176,6 @@ body {
     color: white;
 }
 </style>
+
+</body>
+</html>
