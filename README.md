@@ -722,6 +722,8 @@ everything to the right of the last traverseNode will be treated as a remainder 
 grow-tree then matches the returned operator and creates a matching node.
 The node then takes all the parts and recursively calls growTree on them, then assigns them as a child and appends it to its slice of children.
 
+A/B/{C|D|E}*{F&G}
+
 <https://github.com/user-attachments/assets/1eec223d-1153-4555-9fdf-6d42b714fef4>
 
 ## Traversing the tree
