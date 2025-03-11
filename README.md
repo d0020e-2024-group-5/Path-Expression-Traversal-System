@@ -439,33 +439,27 @@ The user enter in a query, for example
 that is being sent with a JSON request {"data":"S/Pickaxe/obtainedBy/crafting_recipe/hasInput#100"} to the webserver to be traversed.
 The number after # represents the ttl (Time to live) thats being inputted at the website, with the default value of 100.
 
-When the server receives an query from the website, It then gets checked so that it follows the requirements of the query syntax,
-for example no following operators, always closing brackets, etc.
-If the query is deemed valid a query struct is made with the relevant information, such as a newly generated uuid
+When the server receives an query from the website, It goes through syntax validation so that it follows the requirements of the query structure,
+for example making sure there are no following operators, there are always closing brackets, etc.
+If the query is deemed valid, a query struct is made with the relevant information, such as a newly generated uuid.
 The Query requires an evaluation tree to find the next edges, which can be constructed from the query.
 
-First we call a function to build the tree structure with the string in an recursive manner.
-That takes the query and separates the operators into operator-nodes and stores the edges in leaf-nodes.
+Firstly, a function call is made to build the tree structure by recursively separating the operators and edges, storing them in respective operator and leaf nodes.
 
-With the Evaluation tree (and the edges from our current node) we can get the next edges to traverse along.
-This is done by using a method that is close to an in order walk, but we start from an leaf node and when going to nodes that aren't leafs checks are done to determine how to walk should progress,
-for example, the and-node checks if its leafs all exist in the passed along edges from our current node.
-The available edges it can take in are limited to the current server. In future development it would be ideal to be able to see edges stored in different servers.
+Then, with an evaluation tree now built, traversal can begin. The traversal is similar to an in-order walk, but with the added condition of checking the operator node to determine how to proceed. For example, upon reaching an AND-node, the children are checked to see if they all exist and return them if they do. The edges it can reach are ones inside the server host. Ideally, edges in different servers should be reachable.
 
 To get edge & node information from the database a query is sent asking for every predicate and corresponding object of the subject which is then searched for when the predicate equals the edge witch is requested.
 
-With this walk in the evaluation tree whe have the edges we should traverse along, and if there exist multiple destination the query is spit.
+With this walk in the evaluation tree whe have the edges we should traverse along, and if multiple destinations exist, the query is split.
 If the node is determined to be a false node, by the existence of the edge ``NodeOntology:PointsToServer``,
-the contact information is retrieved from the ServerNode that the PointsToServer indicates.
+the contact information is retrieved from the ServerNode that the edge PointsToServer points to.
 With this contact information the query is serialized to a stream of bytes (se the [query wrapper](#the-query-wrapper) for information)
 and sent over the network (currently carried by the http protocol but could easily be retrofitted for pure tcp)
 
-When the query is received att the other server the tree building process will repeat,
+When the query is received at the other server the tree building process will repeat,
 and with the help of other information passed along in the query the full state can be reconstructed.
 
-While the query is traversal its continuously* streaming back the path it takes in mermaid syntax and being collected att the start server.
-
-The server sends back the traversed query and renders it as a mermaid diagram through the Mermaid.js library.
+While the query is traversing, it's continuously* streaming back the path it takes in mermaid syntax and gets collected at the start server to then be displayed on the website.
 
 ## Getting data from the database
 
