@@ -66,7 +66,7 @@ What we want to do is to search such an ontology structure using a query where t
 
 Here is a version of the example data on server C
 
-```
+```ttl
 @prefix minecraft: <http://example.org/minecraft#> .
 @prefix nodeOntology: <http://example.org/NodeOntology#> .
 
@@ -872,10 +872,6 @@ We then have two possible options continue right or redo the left side.
 By evaluating the left side we get ``obtainedBy`` again, showing us that the *loop* works.
 The right sides gives us NULL, the end of the query an valid position to return.
 
-## Current limitations and future development of the query structure
-
-<!-- TODO -->
-
 ## Syntax Validation
 
 As mentioned previously, checking the syntax is very straightforward. We simply only need to check for invalid operator combinations with a few edge cases such as what starting/ending operators are allowed.
@@ -963,7 +959,7 @@ By utilizing Go's green threads (Goroutines), the query could be evaluated in pa
 It is important to note that green threads are not system threads, so asynchronous versions of I/O operations need to be used to avoid blocking.
 
 Another dramatic speedup could be achieved by switching from HTTP to TCP. The system was originally designed with TCP in mind,
-as evidenced by the use of custom binary headers and the lack of HTTP functionality beyond its message-carrying capability.
+as evidenced by the use of custom binary headers and the lack of use off HTTP functionality beyond its message-carrying capability.
 HTTP requires buffering the entire message before sending it over the wire because it is designed to send fixed-size data, as indicated by the content-length header.
 By transferring data over TCP, unnecessary buffering is avoided, leading to lower latency and reduced memory usage.
 
@@ -973,9 +969,12 @@ Another issue is protecting writes to the response stream to avoid interweaved c
 This could be achieved by buffering lines and ensuring each line is fully written before writing the next one.
 An exception to this would be the multiline blocks that represent errors, but this could be resolved by checking for opening and closing brackets in the Mermaid syntax.
 
-A thing to note is that there were unit test for this structure but due to time constraints these were dropped when the system was chged from using ttl files to an actual database.
+A thing to note is that there were unit test for this structure but due to time constraints these were dropped when the system was changed from using ttl files to an actual database.
 This was because the functions for database access are not related to an interface are global, by using an interface test data can again be passed to the tests, this would also allow
 for multiple "backends" to be used.
+
+When evaluating the query for traversal the nodes are today limited to only the from current node, this limits the current operator to only deal with the currents nodes edges.
+It would also be beneficial to add some more nodes/operators allowing to create more a precise query.
 
 ## Webserver
 
