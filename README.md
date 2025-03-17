@@ -14,6 +14,8 @@ Our system is designed to navigate and retrieve information from linked ontologi
 
 - [Introduction](#introduction)
 - [Table of contents](#table-of-contents)
+- [Installation](#installation)
+- [Example](#example)
 - [Ontologies](#ontologies)
 - [Ontology text](#ontology-text)
 - [Node ontologies](#node-ontologies)
@@ -35,7 +37,6 @@ Our system is designed to navigate and retrieve information from linked ontologi
 - [go style pseudo code](#go-style-pseudo-code)
 - [Example of internal structure of a query](#example-of-internal-structure-of-a-query)
   - [An example of evaluation](#an-example-of-evaluation)
-- [Current limitations and future development of the query structure](#current-limitations-and-future-development-of-the-query-structure)
 - [Syntax Validation](#syntax-validation)
 - [The query wrapper](#the-query-wrapper)
   - [Passing the query to dirent servers](#passing-the-query-to-dirent-servers)
@@ -43,6 +44,50 @@ Our system is designed to navigate and retrieve information from linked ontologi
     - [Payload for recursive mermaid query (type 0x1)](#payload-for-recursive-mermaid-query-type-0x1)
   - [Improvements and limitations of the query wrapper](#improvements-and-limitations-of-the-query-wrapper)
 - [Webserver](#webserver)
+
+## Installation
+
+The application, defined in src, can be run two ways, as a docker container, or standalone on the system.
+For the application to run in both cases it needs an connection to an GraphDB database,
+connection details should be supplied by these environment variables
+
+- ``GRAPHDB_HOSTNAME`` this is the hostname of the database, could be an ip or an domain, note that the port is fixed to 7200.
+- ``GRAPHDB_REPOSITORY`` the graphDB repository that should be used.
+- ``CASHING`` if set to "TRUE" the result from the GraphDB queries would be cashed indefinitely
+
+The PETS protocol currently waits for http on port 80, but the application could send to other ports if defined so i the HasIp attribute in the database
+
+## Example
+
+We provide an example in this repo with the help of a docker compose file and example data files
+as problem occurred with automatically loading data into graphDB this needs to be done manually.
+
+The example creates 3 PETS servers and 3 graphDB instances, where PETS server C port 80 is exposed to the wider network.
+To load the correct data for this test into the graph databases follow these steps
+
+1. If the system has not yet started run the following command (from the compdir directory) ``docker compose up --build -d`` \
+this will start the servers and graph databases
+2. load the data into the databases
+   1. connect to a graph db instance, 7200 is graph database link to server a, ``localhost:7200`` \
+   ![image of graphDB start page](readme_images/graphDB_start_page.png)
+   2. Then the repository containing our data needs to be created, to crete ar repository we need to go to setup and repositories,
+   there we will find the create repository button \
+   ![image showing the setup/repositories page in graphDB](readme_images/graphDB_setup.png)
+   3. wh can then crete a repository, by first choosing GraphDB Repository and the filling out relevant information.
+   In the example file we set the environment variable for the repository name to ``PETSrep`` make sure to match it \
+   ![image show the result of clinking create repository, displaying the choices GraphDB repository, Ontop Virtual SPARQL, and other alternatives](readme_images/graphDB_choose_rep_type.png) \
+   ![Image showing the configuration of a repository that is displayed when choosing GraphDB repository](readme_images/graph_db_rep_config.png)
+   4. We then need to load the data into our repository, go to import and select our PETSrep,
+   we can then select Upload RDF files to load our data, since we are connected to server A (port 7200),
+   we chose ``Example Data/Server A/Example Data_A.ttl``, then press import. \
+   ![image of the import page in graph db](readme_images/graphdb_import.png) \
+   ![image of the settings when uploading rdf files](readme_images/graphdb_import_settings.png)
+3. repeat the steps in 2 for server B (port 7201) and C (port 7202).
+
+To test the system with the example data open a browser and connect to port 80 (default port) the following query could be run \
+``minecraft:Pickaxe_Instance_Henry/{minecraft:obtainedBy/minecraft:hasInput}*``
+
+![Image of a query send in the website](readme_images/website_loop_query.png)
 
 ## Ontologies
 
@@ -951,6 +996,7 @@ either waiting for data from the database or passing results from another server
 
 By utilizing Go's green threads (Goroutines), the query could be evaluated in parallel.
 It is important to note that green threads are not system threads, so asynchronous versions of I/O operations need to be used to avoid blocking.
+This might require changes to how communication between the db and other servers are done internally.
 
 Another dramatic speedup could be achieved by switching from HTTP to TCP. The system was originally designed with TCP in mind,
 as evidenced by the use of custom binary headers and the lack of use off HTTP functionality beyond its message-carrying capability.
