@@ -3,7 +3,7 @@
 
 # server Instances
 minecraft:Server_b a nodeOntology:Server ;
-	nodeOntology:hasIP b .
+	nodeOntology:hasIP "b" .
 
 # Instances of Items
 
