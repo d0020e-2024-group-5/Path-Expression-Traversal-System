@@ -8,18 +8,18 @@ minecraft: a owl:Ontology ;
     rdfs:label "Minecraft Crafting Ontology" .
 
 # Main Classes
-minecraft:Item a rdf:Property ;
-    rdfs:subClassOf rdf:Property ;
+minecraft:Item a rdf:Type ;
+    rdfs:subClassOf rdf:Type ;
     rdfs:label "Item" ;
     rdfs:comment "Represents any craftable or collectible item in Minecraft." .
 
-minecraft:Recipe a rdf:Property ;
-    rdfs:subClassOf rdf:Property ;
+minecraft:Recipe a rdf:Type ;
+    rdfs:subClassOf rdf:Type ;
     rdfs:label "Recipe" ;
     rdfs:comment "Represents a crafting recipe in Minecraft." .
 
-minecraft:CraftingStation a rdf:Property ;
-    rdfs:subClassOf rdf:Property ;
+minecraft:CraftingStation a rdf:Type ;
+    rdfs:subClassOf rdf:Type ;
     rdfs:label "Crafting Station" ;
     rdfs:comment "Represents a station where crafting occurs." .
 
