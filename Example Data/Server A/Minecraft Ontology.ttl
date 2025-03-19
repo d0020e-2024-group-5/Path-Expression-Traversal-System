@@ -2,25 +2,24 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix minecraft: <http://example.org/minecraft#> .
-@prefix nodeOntology: <http://example.org/NodeOntology#> .
 
 minecraft: a owl:Ontology ;
     rdfs:comment "An RDF Ontology for Minecraft's Crafting System." ;
     rdfs:label "Minecraft Crafting Ontology" .
 
 # Main Classes
-minecraft:Item a nodeOntology:Node ;
-    rdfs:subClassOf nodeOntology:Node ;
+minecraft:Item a rdf:Property ;
+    rdfs:subClassOf rdf:Property ;
     rdfs:label "Item" ;
     rdfs:comment "Represents any craftable or collectible item in Minecraft." .
 
-minecraft:Recipe a nodeOntology:Node ;
-    rdfs:subClassOf nodeOntology:Node ;
+minecraft:Recipe a rdf:Property ;
+    rdfs:subClassOf rdf:Property ;
     rdfs:label "Recipe" ;
     rdfs:comment "Represents a crafting recipe in Minecraft." .
 
-minecraft:CraftingStation a nodeOntology:Node ;
-    rdfs:subClassOf nodeOntology:Node ;
+minecraft:CraftingStation a rdf:Property ;
+    rdfs:subClassOf rdf:Property ;
     rdfs:label "Crafting Station" ;
     rdfs:comment "Represents a station where crafting occurs." .
 
@@ -82,23 +81,25 @@ minecraft:Plannks_From_Logs_Recipe a minecraft:Recipe ;
     minecraft:pointsToNode minecraft:CraftingTable .
 	
  #Property Definitions
-minecraft:hasInput a nodeOntology:pointsToNode ;
+minecraft:hasInput a rdf:Property ;
     rdfs:domain minecraft:Recipe ;
     rdfs:range minecraft:Item ;
     rdfs:label "has input" ;
     rdfs:comment "Specifies the input items for a recipe." .
 
-minecraft:hasOutput a nodeOntology:pointsToNode ;
+minecraft:hasOutput a rdf:Property ;
      rdfs:domain minecraft:Recipe ;
      rdfs:range minecraft:Item ;
      rdfs:label "has output" ;
      rdfs:comment "Specifies the output item of a recipe." .
-minecraft:usedInStation a nodeOntology:pointsToNode ;
+
+minecraft:usedInStation a rdf:Property ;
      rdfs:domain minecraft:Recipe ;
      rdfs:range minecraft:CraftingStation ;
      rdfs:label "requires station" ;
      rdfs:comment "Specifies the crafting station required for a recipe." .
-minecraft:obtainedBy a nodeOntology:pointsToNode ;
+
+minecraft:obtainedBy a rdf:Property ;
      rdfs:domain minecraft:Item ;
      rdfs:range minecraft:Recipe ;
      rdfs:label "obtainedBy" ;
