@@ -18,7 +18,7 @@ nodeOntology:NodeFalse a owl:Class ;
 
 #Define_properties
 
-nodeOntology:pointsToServer a rdf:Property ;
+nodeOntology:pointsToServer a rdfs:Property ;
     rdfs:domain nodeOntology:NodeFalse ;
     rdfs:range nodeOntology:Server ;
     rdfs:comment "Links a Node to a Server ".
