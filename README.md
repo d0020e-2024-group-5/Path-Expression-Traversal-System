@@ -105,9 +105,9 @@ We call all subjects and objects nodes and predicates edges.
         Node1 -->|Edge| Node2;
 ```
 
-What we want to do is to search such an ontology structure using a query where this structure is spread over several servers. When we split an edge over different server we do that by making the first node point to a false node where that node contains all the information to navigate to the true node on the other server.
+What we want to do is to search a node network based on a ontology structure using a query where this structure is spread over several servers. When we split an edge over different server we do that by making the first node point to a false node where that node contains all the information to navigate to the true node on the other server.
 
-## Ontology text
+## Example Data text
 
 Here is a version of the example data on server C
 
@@ -185,21 +185,7 @@ nodeOntology:Server a owl:Class ;
  rdfs:comment "A way to another server" ;
     rdfs:label "Server" .
 
-nodeOntology:Node a owl:Class ;
-    rdfs:label "Node" ;
-    rdfs:comment "Represents all nodes in the database system." . 
-
-nodeOntology:NodeFalse a owl:Class ;
-    rdfs:subClassOf nodeOntology:Node;
-    rdfs:label "NodeFalse" ;
-    rdfs:comment "Represents all nodes in other database system." .
-
 #Define_properties
-
-nodeOntology:pointsToNode a rdf:Property ;
-    rdfs:domain nodeOntology:Node ;
-    rdfs:range nodeOntology:Node ;
-    rdfs:comment "Links a Node to a Node ".
 
 nodeOntology:pointsToServer a rdf:pointsToNode ;
     rdfs:domain nodeOntology:NodeFalse ;
