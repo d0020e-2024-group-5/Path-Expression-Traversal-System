@@ -55,7 +55,7 @@ connection details should be supplied by these environment variables
 - ``GRAPHDB_REPOSITORY`` the graphDB repository that should be used.
 - ``CASHING`` if set to "TRUE" the result from the GraphDB queries would be cashed indefinitely ( if you plan to change the data in the database while running the program this should be turned of)
 
-The PETS protocol currently waits for http on port 80, but the application could send to other ports if defined so i the nodeOntology:hasIp property in the database
+The PETS protocol currently waits for http on port 80, but the application could send to other ports if defined so with the nodeOntology:hasIp property in the database
 
 ## Example
 
