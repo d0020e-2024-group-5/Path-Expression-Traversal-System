@@ -11,7 +11,7 @@ minecraft:Stick_Bamboo_made_Instance a minecraft:Stick ;
 	nodeOntology:hasID 2 ;
 	minecraft:obtainedBy minecraft:Stick_bamboo_recipe_Instance .
 
-minecraft:Bamboo_Instance a nodeOntology:NodeFalse ;
+minecraft:Bamboo_Instance a minecraft:Bamboo ;
 	nodeOntology:hasID 6 .
 	
 # Crafting Station Instance

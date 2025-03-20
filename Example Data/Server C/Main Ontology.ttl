@@ -12,28 +12,13 @@ nodeOntology:Server a owl:Class ;
 	rdfs:comment "A way to another server" ;
     rdfs:label "Server" .
 
-nodeOntology:Node a owl:Class ;
-    rdfs:label "Node" ;
-    rdfs:comment "Represents all nodes in the database system." .	
-
-nodeOntology:NodeTrue a owl:Class ;
-    rdfs:subClassOf nodeOntology:Node;
-    rdfs:label "NodeTrue" ;
-    rdfs:comment "Represents all nodes in the same database system." .
-
 nodeOntology:NodeFalse a owl:Class ;
-    rdfs:subClassOf nodeOntology:Node;
     rdfs:label "NodeFalse" ;
     rdfs:comment "Represents all nodes in other database system." .
 
 #Define_properties
 
-nodeOntology:pointsToNode a rdf:Property ;
-    rdfs:domain nodeOntology:Node ;
-    rdfs:range nodeOntology:Node ;
-    rdfs:comment "Links a Node to a Node ".
-
-nodeOntology:pointsToServer a rdf:pointsToNode ;
+nodeOntology:pointsToServer a rdfs:Property ;
     rdfs:domain nodeOntology:NodeFalse ;
     rdfs:range nodeOntology:Server ;
     rdfs:comment "Links a Node to a Server ".
