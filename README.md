@@ -6,37 +6,91 @@ PETS, a system to store linked distributed data with traversal functions
 
 ## Introduction
 
-Our system is designed to navigate and retrieve information from linked ontologies using path expressions. It enables users to traverse decentralized data structures by following relationships defined in path expressions, allowing for multilevel hierarchical exploration.
-The system helps users efficiently access and analyze linked data. For example in a supply chain context, it can model the entire distribution network of a specific item by retrieving manufacturer data at each stage. This provides transparency, traceability, and deeper insights into complex data relationships.
-Our solution is valuable for businesses, researchers, and data analysts who needs to explore and make sense of decentralized, linked data in a clear ond structured way.
+In today’s data driven world, businesses rely on structured and interconnected data to optimize operations, enhance decision making, and ensure regulatory compliance. For example, in a supply chain context, a company manufacturing pharmaceuticals must track the origin of raw materials, verify supplier compliance, and ensure product quality. Our system enables such businesses to model and analyze the entire distribution network of a specific item by retrieving manufacturer data at each stage. This ensures transparency, traceability, and deeper insights into complex data relationships.
+
+Our system is designed to navigate and retrieve information from linked ontologies using path expressions. It enables users to traverse decentralized data structures by following relationships defined in path expressions, allowing for multilevel hierarchical exploration. By leveraging ontologies, our solution provides structured access to decentralized, linked data, making it valuable for businesses, researchers, and data analysts who need to explore and make sense of interconnected information in a clear and efficient way.
 
 ## Table of contents
 
 - [Introduction](#introduction)
 - [Table of contents](#table-of-contents)
+- [Installation](#installation)
+- [Example](#example)
 - [Ontologies](#ontologies)
+- [Example Data text](#example-data-text)
 - [Node ontologies](#node-ontologies)
   - [Node ontologies distributed](#node-ontologies-distributed)
   - [Truly distributed data](#truly-distributed-data)
-- [Parsing the ontologies into GoLang](#parsing-the-ontologies-into-golang)
+- [From Query to Result](#from-query-to-result)
+- [Getting data from the database](#getting-data-from-the-database)
 - [Architecture](#architecture)
 - [Query structure](#query-structure)
   - [Example 1, Simple traversal](#example-1-simple-traversal)
   - [Example 2, groups {}](#example-2-groups-)
   - [Example 3, Loop](#example-3-loop)
-  - [Example 4, Or](#example-4-or)
+  - [Example 4, OR](#example-4-or)
   - [Example 5, AND](#example-5-and)
   - [Example 6, XOR](#example-6-xor)
-- [Current limitations](#current-limitations)
+- [Parsing and constructing the evaluationTree](#parsing-and-constructing-the-evaluationtree)
+- [Traversing the tree](#traversing-the-tree)
+- [go style pseudo code](#go-style-pseudo-code)
 - [Example of internal structure of a query](#example-of-internal-structure-of-a-query)
   - [An example of evaluation](#an-example-of-evaluation)
-- [go style pseudo code](#go-style-pseudo-code)
-- [Parsing and constructing the evaluationTree](#parsing-and-constructing-the-evaluationtree)
+- [Syntax Validation](#syntax-validation)
 - [The query wrapper](#the-query-wrapper)
   - [Passing the query to dirent servers](#passing-the-query-to-dirent-servers)
     - [The Common Header](#the-common-header)
     - [Payload for recursive mermaid query (type 0x1)](#payload-for-recursive-mermaid-query-type-0x1)
+  - [Improvements and limitations of the query wrapper](#improvements-and-limitations-of-the-query-wrapper)
 - [Webserver](#webserver)
+
+## Installation
+
+The application, defined in src, can be run two ways, as a docker container, or standalone on the system.
+For the application to run in both cases it needs an connection to an GraphDB database,
+connection details should be supplied by these environment variables
+
+- ``GRAPHDB_HOSTNAME`` this is the hostname of the database, could be an ip or an domain, note that the port is fixed to 7200.
+- ``GRAPHDB_REPOSITORY`` the graphDB repository that should be used.
+- ``CASHING`` if set to "TRUE" the result from the GraphDB queries would be cashed indefinitely ( if you plan to change the data in the database while running the program this should be turned of)
+
+The PETS protocol currently waits for http on port 80, but the application could send to other ports if defined so with the nodeOntology:hasIp property in the database
+
+## Example
+
+We provide an example in this repo with the help of a docker compose file and example data files
+as problems occurred with automatically loading data into graphDB this needs to be done manually.
+
+The example creates 3 PETS servers and 3 graphDB instances, where PETS server C port 80 is exposed to the wider network.
+To load the correct data for this test into the graph databases follow these steps
+
+1. If the system has not yet started run the following command (from the compdir directory) ``docker compose up --build -d`` \
+this will start the servers and graph databases
+2. load the data into the databases
+   1. connect to a graph db instance, 7200 is graph database link to server a, ``localhost:7200`` \
+   ![image of graphDB start page](readme_images/graphDB_start_page.png)
+   2. Then the repository containing our data needs to be created, to crete ar repository we need to go to setup and repositories,
+   there we will find the create repository button \
+   ![image showing the setup/repositories page in graphDB](readme_images/graphDB_setup.png)
+   3. wh can then crete a repository, by first choosing GraphDB Repository and the filling out relevant information.
+   In the example file we set the environment variable for the repository name to ``PETSrep`` make sure to match it \
+   ![image show the result of clinking create repository, displaying the choices GraphDB repository, Ontop Virtual SPARQL, and other alternatives](readme_images/graphDB_choose_rep_type.png) \
+   ![Image showing the configuration of a repository that is displayed when choosing GraphDB repository](readme_images/graph_db_rep_config.png)
+   4. We then need to load the data into our repository, go to import and select our PETSrep,
+   we can then select Upload RDF files to load our data, since we are connected to server A (port 7200),
+   we chose ``Example Data/Server A/Example Data_A.ttl``, then press import. \
+   ![image of the import page in graph db](readme_images/graphdb_import.png) \
+   ![image of the settings when uploading rdf files](readme_images/graphdb_import_settings.png)
+3. repeat the steps in 2 for server B (port 7201) and C (port 7202).
+
+To test the system with the example data open a browser and connect to port 80 (default port) the following query could be run \
+``minecraft:Pickaxe_Instance_Henry/{minecraft:obtainedBy/minecraft:hasInput}*``
+
+![Image of a query send in the website](readme_images/website_loop_query.png)
+
+## Automatic test
+
+Automatic test where implemented for some parts of the code, but due to time constraints these test where dropped during later development.
 
 ## Ontologies
 
@@ -54,48 +108,142 @@ We call all subjects and objects nodes and predicates edges.
         Node1 -->|Edge| Node2;
 ```
 
-What we want to do is to search such an ontology structure using a query where this structure is spread over several servers. When we split an edge over different server we do that by making the first node point to a false node where that node contains all the information to navigate to the true node on the other server.
+What we want to do is to search a node network based on a ontology structure using a query where this structure is spread over several servers. When we split an edge over different server we do that by making the first node point to a false node where that node contains all the information to navigate to the true node on the other server.
+
+## Example Data text
+
+Here is a version of the example data on server C
+
+```ttl
+@prefix minecraft: <http://example.org/minecraft#> .
+@prefix nodeOntology: <http://example.org/NodeOntology#> .
+
+# Instances of Items
+minecraft:Stick_Plank_made_Instance a minecraft:Stick ;
+ nodeOntology:hasID 1 ;
+ nodeOntology:pointsToServer minecraft:Server_b .
+
+minecraft:Stick_Bamboo_made_Instance a minecraft:Stick ;
+ nodeOntology:hasID 2 ;
+ nodeOntology:pointsToServer minecraft:Server_a .
+
+minecraft:Cobblestone_Bob a minecraft:Cobblestone ;
+ nodeOntology:hasID 3 .
+
+minecraft:Log_Instance a minecraft:Log ;
+ nodeOntology:hasID 12 .
+
+minecraft:Pickaxe_Instance_Henry a minecraft:Pickaxe ;
+ nodeOntology:hasID 4 ;
+ minecraft:obtainedBy minecraft:PickaxeRecipe_Instance .
+
+minecraft:Server_a a nodeOntology:Server ;
+ nodeOntology:hasIP "a" .
+
+
+minecraft:Server_b a nodeOntology:Server ;
+ nodeOntology:hasIP "b" .
+
+
+minecraft:Plank_Instance a minecraft:Plank ;
+ nodeOntology:hasID 7 ;
+ nodeOntology:pointsToServer minecraft:Server_b .
+
+# Crafting Station Instance
+minecraft:CraftingTable_Instance a minecraft:CraftingTable ;
+ nodeOntology:pointsToServer minecraft:Server_a ;
+ nodeOntology:hasID 8 .
+
+# Recipe Instance: Pickaxe_From_Stick_And_Stone_Recipe 
+minecraft:PickaxeRecipe_Instance a minecraft:Pickaxe_From_Stick_And_Stone_Recipe ;
+ nodeOntology:hasID 9 ;
+ minecraft:hasInput minecraft:Stick_Plank_made_Instance  ;
+ minecraft:hasInput minecraft:Stick_Bamboo_made_Instance ;
+ minecraft:hasInput minecraft:Cobblestone_Bob ;
+ minecraft:hasOutput minecraft:Pickaxe_Instance_Henry ;
+ minecraft:usedInStation minecraft:CraftingTable_Instance .
+
+# Recipe Instance: Plank_recipie_Log
+minecraft:Plannks_From_Logs_Recipe_Instance a minecraft:Plannks_From_Logs_Recipe ;
+ nodeOntology:hasID 13 ;
+ minecraft:hasInput minecraft:Log_Instance ;
+ minecraft:hasOutput minecraft:Plank_Instance ;
+ minecraft:usedInStation minecraft:CraftingTable_Instance .
+```
+
+Here is the Main(PETS) Ontology:
+
+```
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix nodeOntology: <http://example.org/NodeOntology#> .
+
+
+nodeOntology: a owl:Ontology ;
+    rdfs:comment "An RDFS Ontology for PETS's node System." ;
+    rdfs:label "PETS's node Ontology" .
+
+nodeOntology:Server a owl:Class ;
+ rdfs:comment "A way to another server" ;
+    rdfs:label "Server" .
+
+#Define_properties
+
+nodeOntology:pointsToServer a rdf:pointsToNode ;
+    rdfs:domain nodeOntology:NodeFalse ;
+    rdfs:range nodeOntology:Server ;
+    rdfs:comment "Links a Node to a Server ".
+
+nodeOntology:hasIP a rdfs:Property ;
+ rdfs:domain nodeOntology:Server ;
+ rdfs:range xsd:string . # store IP addres as String
+ 
+nodeOntology:hasID a rdfs:Property ;
+ rdfs:domain nodeOntology:Node ;
+ rdfs:range xsd:int  . # store ID addres as String
+```
 
 ## Node ontologies
 
 ```mermaid
 graph TD;
 
-        Stick_Plank_made_Instance -->|obtainedBy| Stick_Planks_recipe_Instance
+        minecraft:Stick_Plank_made_Instance -->|minecraft:obtainedBy| minecraft:Stick_Planks_recipe_Instance
 
-        Stick_Bamboo_made_Instance -->|obtainedBy| Stick_bamboo_recipe_Instance
-
-
-
-        Pickaxe_Instance_Henry -->|obtainedBy| PickaxeRecipe_Instance
+        minecraft:Stick_Bamboo_made_Instance -->|minecraft:obtainedBy| minecraft:Stick_bamboo_recipe_Instance
 
 
-        Plank_Instance -->|obtainedBy| Plannks_From_Logs_Recipe_Instance
 
-        Plank_from_Bamboo_Instance -->|obtainedBy| Plank_from_bamboo_recipe_Instance
+        minecraft:Pickaxe_Instance_Henry -->|minecraft:obtainedBy| minecraft:PickaxeRecipe_Instance
 
-        PickaxeRecipe_Instance -->|hasInput| Stick_Plank_made_Instance
-        PickaxeRecipe_Instance -->|hasInput| Stick_Bamboo_made_Instance
-        PickaxeRecipe_Instance -->|hasInput| Cobblestone_Bob
-        PickaxeRecipe_Instance -->|hasOutput| Pickaxe_Instance_Henry
-        PickaxeRecipe_Instance -->|usedInStation| CraftingTable_Instance
 
-        Stick_bamboo_recipe_Instance -->|hasInput| Bamboo_Instance
-        Stick_bamboo_recipe_Instance -->|hasOutput| Stick_Bamboo_made_Instance
-        Stick_bamboo_recipe_Instance -->|usedInStation| CraftingTable_Instance
+        minecraft:Plank_Instance -->|minecraft:obtainedBy| minecraft:Plannks_From_Logs_Recipe_Instance
 
-        Stick_Planks_recipe_Instance -->|hasInput| Plank_Instance
-        Stick_Planks_recipe_Instance -->|hasInput| Plank_from_Bamboo_Instance
-        Stick_Planks_recipe_Instance -->|hasOutput| Stick_Plank_made_Instance
-        Stick_Planks_recipe_Instance -->|usedInStation| CraftingTable_Instance
+        minecraft:Plank_from_Bamboo_Instance -->|minecraft:obtainedBy| minecraft:Plank_from_bamboo_recipe_Instance
 
-        Plannks_From_Logs_Recipe_Instance -->|hasInput| Log_Instance
-        Plannks_From_Logs_Recipe_Instance -->|hasOutput| Plank_Instance
-        Plannks_From_Logs_Recipe_Instance -->|usedInStation| CraftingTable_Instance
+        minecraft:PickaxeRecipe_Instance -->|minecraft:hasInput| minecraft:Stick_Plank_made_Instance
+        minecraft:PickaxeRecipe_Instance -->|minecraft:hasInput| minecraft:Stick_Bamboo_made_Instance
+        minecraft:PickaxeRecipe_Instance -->|minecraft:hasInput| minecraft:Cobblestone_Bob
+        minecraft:PickaxeRecipe_Instance -->|minecraft:hasOutput| minecraft:Pickaxe_Instance_Henry
+        minecraft:PickaxeRecipe_Instance -->|minecraft:usedInStation| minecraft:CraftingTable_Instance
 
-        Plank_from_bamboo_recipe_Instance-->|hasInput|Bamboo_Instance
-        Plank_from_bamboo_recipe_Instance-->|hasOutput|Plank_from_Bamboo_Instance
-        Plank_from_bamboo_recipe_Instance-->|usedInStation|CraftingTable_Instance
+        minecraft:Stick_bamboo_recipe_Instance -->|minecraft:hasInput| minecraft:Bamboo_Instance
+        minecraft:Stick_bamboo_recipe_Instance -->|minecraft:hasOutput| minecraft:Stick_Bamboo_made_Instance
+        minecraft:Stick_bamboo_recipe_Instance -->|minecraft:usedInStation| minecraft:CraftingTable_Instance
+
+        minecraft:Stick_Planks_recipe_Instance -->|minecraft:hasInput| minecraft:Plank_Instance
+        minecraft:Stick_Planks_recipe_Instance -->|minecraft:hasInput| minecraft:Plank_from_Bamboo_Instance
+        minecraft:Stick_Planks_recipe_Instance -->|minecraft:hasOutput| minecraft:Stick_Plank_made_Instance
+        minecraft:Stick_Planks_recipe_Instance -->|minecraft:usedInStation| minecraft:CraftingTable_Instance
+
+        minecraft:Plannks_From_Logs_Recipe_Instance -->|minecraft:hasInput| minecraft:Log_Instance
+        minecraft:Plannks_From_Logs_Recipe_Instance -->|minecraft:hasOutput| minecraft:Plank_Instance
+        minecraft:Plannks_From_Logs_Recipe_Instance -->|minecraft:usedInStation| minecraft:CraftingTable_Instance
+
+        minecraft:Plank_from_bamboo_recipe_Instance-->|minecraft:hasInput|minecraft:Bamboo_Instance
+        minecraft:Plank_from_bamboo_recipe_Instance-->|minecraft:hasOutput|minecraft:Plank_from_Bamboo_Instance
+        minecraft:Plank_from_bamboo_recipe_Instance-->|minecraft:usedInStation|minecraft:CraftingTable_Instance
 ```
 
 ### Node ontologies distributed
@@ -105,61 +253,61 @@ graph TD;
 
 
         subgraph Server A
-            Plank_from_bamboo_recipe_Instance
-            Stick_Bamboo_made_Instance
-            Stick_bamboo_recipe_Instance
-            Bamboo_Instance
-            CraftingTable_Instance
+            minecraft:Plank_from_bamboo_recipe_Instance
+            minecraft:Stick_Bamboo_made_Instance
+            minecraft:Stick_bamboo_recipe_Instance
+            minecraft:Bamboo_Instance
+            minecraft:CraftingTable_Instance
         end
 
         subgraph Server B
-            Plank_from_Bamboo_Instance
-            Plank_Instance
-            Stick_Plank_made_Instance
-            Stick_Planks_recipe_Instance
+            minecraft:Plank_from_Bamboo_Instance
+            minecraft:Plank_Instance
+            minecraft:Stick_Plank_made_Instance
+            minecraft:Stick_Planks_recipe_Instance
         end
 
         subgraph Server C
-            Pickaxe_Instance_Henry
-            PickaxeRecipe_Instance
-            Plannks_From_Logs_Recipe_Instance
-            Cobblestone_Bob
-            Log_Instance
+            minecraft:Pickaxe_Instance_Henry
+            minecraft:PickaxeRecipe_Instance
+            minecraft:Plannks_From_Logs_Recipe_Instance
+            minecraft:Cobblestone_Bob
+            minecraft:Log_Instance
         end
 
-        Stick_Plank_made_Instance -->|obtainedBy| Stick_Planks_recipe_Instance
+        minecraft:Stick_Plank_made_Instance -->|minecraft:obtainedBy| minecraft:Stick_Planks_recipe_Instance
 
-        Stick_Bamboo_made_Instance -->|obtainedBy| Stick_bamboo_recipe_Instance
+        minecraft:Stick_Bamboo_made_Instance -->|minecraft:obtainedBy| minecraft:Stick_bamboo_recipe_Instance
 
-        Pickaxe_Instance_Henry -->|obtainedBy| PickaxeRecipe_Instance
+        minecraft:Pickaxe_Instance_Henry -->|minecraft:obtainedBy| minecraft:PickaxeRecipe_Instance
 
 
-        Plank_Instance -->|obtainedBy| Plannks_From_Logs_Recipe_Instance
+        minecraft:Plank_Instance -->|minecraft:obtainedBy| minecraft:Plannks_From_Logs_Recipe_Instance
 
-        Plank_from_Bamboo_Instance -->|obtainedBy| Plank_from_bamboo_recipe_Instance
+        minecraft:Plank_from_Bamboo_Instance -->|minecraft:obtainedBy| minecraft:Plank_from_bamboo_recipe_Instance
 
-        PickaxeRecipe_Instance -->|hasInput| Stick_Plank_made_Instance
-        PickaxeRecipe_Instance -->|hasInput| Stick_Bamboo_made_Instance
-        PickaxeRecipe_Instance -->|hasInput| Cobblestone_Bob
-        PickaxeRecipe_Instance -->|hasOutput| Pickaxe_Instance_Henry
-        PickaxeRecipe_Instance -->|usedInStation| CraftingTable_Instance
+        minecraft:PickaxeRecipe_Instance -->|minecraft:hasInput| minecraft:Stick_Plank_made_Instance
+        minecraft:PickaxeRecipe_Instance -->|minecraft:hasInput| minecraft:Stick_Bamboo_made_Instance
+        minecraft:PickaxeRecipe_Instance -->|minecraft:hasInput| minecraft:Cobblestone_Bob
+        minecraft:PickaxeRecipe_Instance -->|minecraft:hasOutput| minecraft:Pickaxe_Instance_Henry
+        minecraft:PickaxeRecipe_Instance -->|minecraft:usedInStation| minecraft:CraftingTable_Instance
 
-        Stick_bamboo_recipe_Instance -->|hasInput| Bamboo_Instance
-        Stick_bamboo_recipe_Instance -->|hasOutput| Stick_Bamboo_made_Instance
-        Stick_bamboo_recipe_Instance -->|usedInStation| CraftingTable_Instance
+        minecraft:Stick_bamboo_recipe_Instance -->|minecraft:hasInput| minecraft:Bamboo_Instance
+        minecraft:Stick_bamboo_recipe_Instance -->|minecraft:hasOutput| minecraft:Stick_Bamboo_made_Instance
+        minecraft:Stick_bamboo_recipe_Instance -->|minecraft:usedInStation| minecraft:CraftingTable_Instance
 
-        Stick_Planks_recipe_Instance -->|hasInput| Plank_Instance
-        Stick_Planks_recipe_Instance -->|hasInput| Plank_from_Bamboo_Instance
-        Stick_Planks_recipe_Instance -->|hasOutput| Stick_Plank_made_Instance
-        Stick_Planks_recipe_Instance -->|usedInStation| CraftingTable_Instance
+        minecraft:Stick_Planks_recipe_Instance -->|minecraft:hasInput| minecraft:Plank_Instance
+        minecraft:Stick_Planks_recipe_Instance -->|minecraft:hasInput| minecraft:Plank_from_Bamboo_Instance
+        minecraft:Stick_Planks_recipe_Instance -->|minecraft:hasOutput| minecraft:Stick_Plank_made_Instance
+        minecraft:Stick_Planks_recipe_Instance -->|minecraft:usedInStation| minecraft:CraftingTable_Instance
 
-        Plannks_From_Logs_Recipe_Instance -->|hasInput| Log_Instance
-        Plannks_From_Logs_Recipe_Instance -->|hasOutput| Plank_Instance
-        Plannks_From_Logs_Recipe_Instance -->|usedInStation| CraftingTable_Instance
+        minecraft:Plannks_From_Logs_Recipe_Instance -->|minecraft:hasInput| minecraft:Log_Instance
+        minecraft:Plannks_From_Logs_Recipe_Instance -->|minecraft:hasOutput| minecraft:Plank_Instance
+        minecraft:Plannks_From_Logs_Recipe_Instance -->|minecraft:usedInStation| minecraft:CraftingTable_Instance
 
-        Plank_from_bamboo_recipe_Instance-->|hasInput|Bamboo_Instance
-        Plank_from_bamboo_recipe_Instance-->|hasOutput|Plank_from_Bamboo_Instance
-        Plank_from_bamboo_recipe_Instance-->|usedInStation|CraftingTable_Instance
+        minecraft:Plank_from_bamboo_recipe_Instance-->|minecraft:hasInput|minecraft:Bamboo_Instance
+        minecraft:Plank_from_bamboo_recipe_Instance-->|minecraft:hasOutput|minecraft:Plank_from_Bamboo_Instance
+        minecraft:Plank_from_bamboo_recipe_Instance-->|minecraft:usedInStation|minecraft:CraftingTable_Instance
 ```
 
 ### Truly distributed data
@@ -168,228 +316,156 @@ graph TD;
 graph TD;
 subgraph Server_a
 Server_a_minecraft:Server_b[(Server_b)]
+Server_a_minecraft:Stick_Bamboo_made_Instance([Stick_Bamboo_made_Instance])
+Server_a_minecraft:Bamboo_Instance([Bamboo_Instance])
+Server_a_minecraft:CraftingTable_Instance([CraftingTable_Instance])
+Server_a_minecraft:Stick_bamboo_recipe_Instance([Stick_bamboo_recipe_Instance])
+Server_a_minecraft:Plank_from_Bamboo_Instance[Plank_from_Bamboo_Instance]
+Server_a_minecraft:Plank_from_bamboo_recipe_Instance([Plank_from_bamboo_recipe_Instance])
 end
 
-subgraph Server_a
-Server_a_minecraft:Stick_Bamboo_made_Instance([Stick_Bamboo_made_Instance])
-end
 Server_a_minecraft:Stick_Bamboo_made_Instance-->|obtainedBy|Server_a_minecraft:Stick_bamboo_recipe_Instance
 
-subgraph Server_a
-Server_a_minecraft:Bamboo_Instance([Bamboo_Instance])
-end
-
-subgraph Server_a
-Server_a_minecraft:CraftingTable_Instance([CraftingTable_Instance])
-end
-
-subgraph Server_a
-Server_a_minecraft:Stick_bamboo_recipe_Instance([Stick_bamboo_recipe_Instance])
-end
 Server_a_minecraft:Stick_bamboo_recipe_Instance-->|hasInput|Server_a_minecraft:Bamboo_Instance
 Server_a_minecraft:Stick_bamboo_recipe_Instance-->|hasOutput|Server_a_minecraft:Stick_Bamboo_made_Instance
 Server_a_minecraft:Stick_bamboo_recipe_Instance-->|usedInStation|Server_a_minecraft:CraftingTable_Instance
 
-subgraph Server_a
-Server_a_minecraft:Plank_from_Bamboo_Instance[Plank_from_Bamboo_Instance]
-end
 Server_a_minecraft:Plank_from_Bamboo_Instance-->|inter_server|Server_b_minecraft:Plank_from_Bamboo_Instance
 Server_a_minecraft:Plank_from_Bamboo_Instance-->|pointsToServer|Server_a_minecraft:Server_b
 
-subgraph Server_a
-Server_a_minecraft:Plank_from_bamboo_recipe_Instance([Plank_from_bamboo_recipe_Instance])
-end
 Server_a_minecraft:Plank_from_bamboo_recipe_Instance-->|hasInput|Server_a_minecraft:Bamboo_Instance
 Server_a_minecraft:Plank_from_bamboo_recipe_Instance-->|hasOutput|Server_a_minecraft:Plank_from_Bamboo_Instance
 Server_a_minecraft:Plank_from_bamboo_recipe_Instance-->|usedInStation|Server_a_minecraft:CraftingTable_Instance
 
 subgraph Server_b
 Server_b_minecraft:Stick_Plank_made_Instance([Stick_Plank_made_Instance])
+Server_b_minecraft:Server_a[(Server_a)]
+Server_b_minecraft:Server_c[(Server_c)]
+Server_b_minecraft:Plank_Instance([Plank_Instance])
+Server_b_minecraft:CraftingTable_Instance[CraftingTable_Instance]
+Server_b_minecraft:Stick_Planks_recipe_Instance([Stick_Planks_recipe_Instance])
+Server_b_minecraft:Plannks_From_Logs_Recipe_Instance[Plannks_From_Logs_Recipe_Instance]
+Server_b_minecraft:Plank_from_Bamboo_Instance([Plank_from_Bamboo_Instance])
+Server_b_minecraft:Plank_from_bamboo_recipe_Instance[Plank_from_bamboo_recipe_Instance]
 end
 Server_b_minecraft:Stick_Plank_made_Instance-->|obtainedBy|Server_b_minecraft:Stick_Planks_recipe_Instance
 
-subgraph Server_b
-Server_b_minecraft:Server_a[(Server_a)]
-end
-
-subgraph Server_b
-Server_b_minecraft:Server_c[(Server_c)]
-end
-
-subgraph Server_b
-Server_b_minecraft:Plank_Instance([Plank_Instance])
-end
 Server_b_minecraft:Plank_Instance-->|obtainedBy|Server_b_minecraft:Plannks_From_Logs_Recipe_Instance
 
-subgraph Server_b
-Server_b_minecraft:CraftingTable_Instance[CraftingTable_Instance]
-end
 Server_b_minecraft:CraftingTable_Instance-->|inter_server|Server_a_minecraft:CraftingTable_Instance
 Server_b_minecraft:CraftingTable_Instance-->|pointsToServer|Server_b_minecraft:Server_a
 
-subgraph Server_b
-Server_b_minecraft:Stick_Planks_recipe_Instance([Stick_Planks_recipe_Instance])
-end
 Server_b_minecraft:Stick_Planks_recipe_Instance-->|hasInput|Server_b_minecraft:Plank_Instance
 Server_b_minecraft:Stick_Planks_recipe_Instance-->|hasInput|Server_b_minecraft:Plank_from_Bamboo_Instance
 Server_b_minecraft:Stick_Planks_recipe_Instance-->|hasOutput|Server_b_minecraft:Stick_Plank_made_Instance
 Server_b_minecraft:Stick_Planks_recipe_Instance-->|usedInStation|Server_b_minecraft:CraftingTable_Instance
 
-subgraph Server_b
-Server_b_minecraft:Plannks_From_Logs_Recipe_Instance[Plannks_From_Logs_Recipe_Instance]
-end
 Server_b_minecraft:Plannks_From_Logs_Recipe_Instance-->|inter_server|Server_c_minecraft:Plannks_From_Logs_Recipe_Instance
 Server_b_minecraft:Plannks_From_Logs_Recipe_Instance-->|pointsToServer|Server_b_minecraft:Server_c
 
-subgraph Server_b
-Server_b_minecraft:Plank_from_Bamboo_Instance([Plank_from_Bamboo_Instance])
-end
 Server_b_minecraft:Plank_from_Bamboo_Instance-->|obtainedBy|Server_b_minecraft:Plank_from_bamboo_recipe_Instance
 
-subgraph Server_b
-Server_b_minecraft:Plank_from_bamboo_recipe_Instance[Plank_from_bamboo_recipe_Instance]
-end
 Server_b_minecraft:Plank_from_bamboo_recipe_Instance-->|inter_server|Server_a_minecraft:Plank_from_bamboo_recipe_Instance
 Server_b_minecraft:Plank_from_bamboo_recipe_Instance-->|pointsToServer|Server_b_minecraft:Server_a
 
 subgraph Server_c
 Server_c_minecraft:Stick_Plank_made_Instance[Stick_Plank_made_Instance]
+Server_c_minecraft:Stick_Bamboo_made_Instance[Stick_Bamboo_made_Instance]
+Server_c_minecraft:Cobblestone_Bob([Cobblestone_Bob])
+Server_c_minecraft:Log_Instance([Log_Instance])
+Server_c_minecraft:Pickaxe_Instance_Henry([Pickaxe_Instance_Henry])
+Server_c_minecraft:Pickaxe_Instance_Gustav([Pickaxe_Instance_Gustav])
+Server_c_minecraft:Server_a[(Server_a)]
+Server_c_minecraft:Server_b[(Server_b)]
+Server_c_minecraft:Plank_Instance[Plank_Instance]
+Server_c_minecraft:CraftingTable_Instance[CraftingTable_Instance]
+Server_c_minecraft:PickaxeRecipe_Instance([PickaxeRecipe_Instance])
+Server_c_minecraft:Plannks_From_Logs_Recipe_Instance([Plannks_From_Logs_Recipe_Instance])
 end
 Server_c_minecraft:Stick_Plank_made_Instance-->|inter_server|Server_b_minecraft:Stick_Plank_made_Instance
 Server_c_minecraft:Stick_Plank_made_Instance-->|pointsToServer|Server_c_minecraft:Server_b
 
-subgraph Server_c
-Server_c_minecraft:Stick_Bamboo_made_Instance[Stick_Bamboo_made_Instance]
-end
 Server_c_minecraft:Stick_Bamboo_made_Instance-->|inter_server|Server_a_minecraft:Stick_Bamboo_made_Instance
 Server_c_minecraft:Stick_Bamboo_made_Instance-->|pointsToServer|Server_c_minecraft:Server_a
 
-subgraph Server_c
-Server_c_minecraft:Cobblestone_Bob([Cobblestone_Bob])
-end
-
-subgraph Server_c
-Server_c_minecraft:Log_Instance([Log_Instance])
-end
-
-subgraph Server_c
-Server_c_minecraft:Pickaxe_Instance_Henry([Pickaxe_Instance_Henry])
-end
 Server_c_minecraft:Pickaxe_Instance_Henry-->|obtainedBy|Server_c_minecraft:PickaxeRecipe_Instance
 
-subgraph Server_c
-Server_c_minecraft:Pickaxe_Instance_Gustav([Pickaxe_Instance_Gustav])
-end
-
-subgraph Server_c
-Server_c_minecraft:Server_a[(Server_a)]
-end
-
-subgraph Server_c
-Server_c_minecraft:Server_b[(Server_b)]
-end
-
-subgraph Server_c
-Server_c_minecraft:Plank_Instance[Plank_Instance]
-end
 Server_c_minecraft:Plank_Instance-->|inter_server|Server_b_minecraft:Plank_Instance
 Server_c_minecraft:Plank_Instance-->|pointsToServer|Server_c_minecraft:Server_b
 
-subgraph Server_c
-Server_c_minecraft:CraftingTable_Instance[CraftingTable_Instance]
-end
 Server_c_minecraft:CraftingTable_Instance-->|inter_server|Server_a_minecraft:CraftingTable_Instance
 Server_c_minecraft:CraftingTable_Instance-->|pointsToServer|Server_c_minecraft:Server_a
 
-subgraph Server_c
-Server_c_minecraft:PickaxeRecipe_Instance([PickaxeRecipe_Instance])
-end
 Server_c_minecraft:PickaxeRecipe_Instance-->|hasInput|Server_c_minecraft:Stick_Plank_made_Instance
 Server_c_minecraft:PickaxeRecipe_Instance-->|hasInput|Server_c_minecraft:Stick_Bamboo_made_Instance
 Server_c_minecraft:PickaxeRecipe_Instance-->|hasInput|Server_c_minecraft:Cobblestone_Bob
 Server_c_minecraft:PickaxeRecipe_Instance-->|hasOutput|Server_c_minecraft:Pickaxe_Instance_Henry
 Server_c_minecraft:PickaxeRecipe_Instance-->|usedInStation|Server_c_minecraft:CraftingTable_Instance
 
-subgraph Server_c
-Server_c_minecraft:Plannks_From_Logs_Recipe_Instance([Plannks_From_Logs_Recipe_Instance])
-end
 Server_c_minecraft:Plannks_From_Logs_Recipe_Instance-->|hasInput|Server_c_minecraft:Log_Instance
 Server_c_minecraft:Plannks_From_Logs_Recipe_Instance-->|hasOutput|Server_c_minecraft:Plank_Instance
 Server_c_minecraft:Plannks_From_Logs_Recipe_Instance-->|usedInStation|Server_c_minecraft:CraftingTable_Instance
 ```
 
-## Parsing the ontologies into GoLang
+## From Query to Result
 
-For this parsing function, nodes have been defined as struct containing an array (or slices in GoLang) with edges to the node. We also create a struct for edges with the properties "EdgeName" and "TargetName" with each property denoting how an item is obtained respectively what the edge is pointing to. One server can then save all these nodes in a hashmap (dictionary) with the key being the node name and the value, the DataNode struct.
+The user enter in a query, for example
+`S/Pickaxe/obtainedBy/crafting_recipe/hasInput` \
+that is being sent with a JSON request {"data":"S/Pickaxe/obtainedBy/crafting_recipe/hasInput#100"} to the webserver to be traversed.
+The number after # represents the ttl (Time to live) thats being inputted at the website, with the default value of 100.
 
-```go
-type DataNode struct {
-    Edges []DataEdge
-}
-type DataEdge struct { // minecraft:obtainedBy minecraft:Stick_bamboo_recipe_Instance
-    EdgeName   string  // obtainedBy
-    TargetName string  // Stick_bamboo_recipe_Instance
-}
+When the server receives an query from the website, It goes through syntax validation so that it follows the requirements of the query structure,
+for example making sure there are no following operators, there are always closing brackets, etc.
+If the query is deemed valid, a query struct is made with the relevant information, such as a newly generated uuid.
+The Query requires an evaluation tree to find the next edges, which can be constructed from the query.
 
-var nodeLst map[string]DataNode    // Hashmap (or dictionary) with pairs of nodenames and DataNode
+Firstly, a function call is made to build the tree structure by recursively separating the operators and edges, storing them in respective operator and leaf nodes.
+
+Then, with an evaluation tree now built, traversal can begin. The traversal is similar to an in-order walk, but with the added condition of checking the operator node to determine how to proceed. For example, upon reaching an AND-node, the children are checked to see if they all exist and return them if they do. The edges it can reach are ones inside the server host. Ideally, edges in different servers should be reachable.
+
+To get edge & node information from the database a query is sent asking for every predicate and corresponding object of the subject which is then searched for when the predicate equals the edge witch is requested.
+
+With this walk in the evaluation tree whe have the edges we should traverse along, and if multiple destinations exist, the query is split.
+If the node is determined to be a false node, by the existence of the edge ``NodeOntology:PointsToServer``,
+the contact information is retrieved from the ServerNode that the edge PointsToServer points to.
+With this contact information the query is serialized to a stream of bytes (se the [query wrapper](#the-query-wrapper) for information)
+and sent over the network (currently carried by the http protocol but could easily be retrofitted for pure tcp)
+
+When the query is received at the other server the tree building process will repeat,
+and with the help of other information passed along in the query the full state can be reconstructed.
+
+While the query is traversing, it's continuously* streaming back the path it takes in mermaid syntax and gets collected at the start server to then be displayed on the website.
+
+## Getting data from the database
+
+Here is an example of what is sent to the database:
+
+```ttl
+PREFIX nodeOntology: <http://example.org/NodeOntology#>
+PREFIX minecraft: <http://example.org/minecraft#>
+SELECT ?p ?o WHERE { minecraft:Pickaxe_Instance_Henry ?p ?o } limit 100
 ```
 
-Reading the ontologies into Go is very simple. Since the ontologies follow a certain standard (Subject, Predicate, Object) we utilize this to read the subject prefix in order to infer the type of object and similarly what attributes it may have to apply them to our hashmap of nodes. Here is some rough pseudo-code on how the parsing works;
+where the response would be:
 
-```go
-    if strings.HasPrefix(line, "minecraft:") { // minecraft:Stick_Bamboo_made_Instance a minecraft:Stick ;
-
-        temp := strings.TrimPrefix(line, "minecraft:") // Stick_Bamboo_made_Instance a minecraft:Stick ;
-
-        wrd := getFirstWord(temp) // Get the first word in trimmed line; "Stick_Bamboo_made_Instance"
-
-        nodeLst[wrd] = ""  // Declare a key "wrd" with value "" in the hashmap "nodeLst"
-    }
-
-    // Next line;       minecraft:obtainedBy minecraft:Stick_bamboo_recipe_Instance
-    if strings.HasPrefix(line, "minecraft:EdgeName minecraft:TargetName"){
-        var tempEdge DataEdge
-        temp := strings.TrimPrefix(line, "minecraft:") //obtainedBy minecraft:Stick_bamboo_recipe_Instance
-        firstName := getFirstWord(temp) // Get the first word in trimmed line; "obtainedBy"
-        temp := strings.TrimPrefix(temp, "EdgeName minecraft:")
-        secondName := getFirstWord(temp) // Get the second word in trimmed line; "Stick_bamboo_recipe_Instance"
-
-        tempEdge.EdgeName = firstName
-        tempEdge.TargetName = secondName
-
-        nodeLst[wrd] = append(nodeLst[wrd], tempEdge)  // Append tempEdge to array of edges in node "wrd"
-    }
+```ttl
+rdf:type | minecraft:Pickaxe
+nodeOntology:hasID | 4
+minecraft:obtainedBy | minecraft:PickaxeRecipe_Instance
 ```
+
+as a hash map with the edges as keys and the nodes as value.
 
 ## Architecture
 
 ```mermaid
 sequenceDiagram
     participant API
-    participant cent as Central server
-
     note over API: where request start
 
-
-    note over cent: A server which listens to http request<br/>and answer/forward queries.<br/>All servers are of this type, but their<br/>databases very<br/>and the central database is quite<br/>different with only one node*.
-
-    API->>+cent: Pick/crafted_by*
-    note left of cent: sent over http api
-
-    loop until not stored
-        create participant DB_A as DB
-        cent->>DB_A: 
-        note over DB_A: This database is just a node<br/>which edges point to items in other servers
-        destroy DB_A
-        DB_A->>cent: 
-    end
-    note left of DB_A: won't loop since only one node
-
-
-
     participant Tool_company as The tool company
-    cent->>+Tool_company: Pick/crafted_by*
-
+    API->>+Tool_company: Pick/crafted_by
+    Note over Tool_company: Query is parsed<br/>and validated.<br/>As well as converted<br/>to an internal representation
 
     loop until not stored
         create participant DB_B as DB
@@ -398,14 +474,18 @@ sequenceDiagram
         destroy DB_B
         DB_B->>Tool_company: 
     end
-
     note left of DB_B: Pickaxe don't have<br/>nodes stone or stick<br/>returns server contact<br/>information.
 
-    
-    note right of Tool_company: outgoing querys can be sent in parallel
-    participant Mason_LTD as Masons LTD
-    Tool_company->>+Mason_LTD: Stone/crafted_by*
 
+    note right of Tool_company: report back that the query traverses to new servers
+    Tool_company->>+API: pick-.->|crafted_by|stick
+    Tool_company->>+API: pick-.->|crafted_by|stone
+
+    note right of Tool_company: outgoing queries can be sent in parallel,<br/>send next node and what edge index that was used to traverse
+    participant Mason_LTD as Masons LTD
+    Tool_company->>+Mason_LTD: Pick/crafted_by*:1(craftedBy):Stone
+
+    note left of Mason_LTD: reconstruct the internal query representation
 
     loop until not stored
         create participant DB_C as DB
@@ -413,32 +493,34 @@ sequenceDiagram
         destroy DB_C 
         DB_C->>Mason_LTD: 
     end
-    note left of DB_C: Stone don't have crafted by<br/>and is att end of query, return stone
-
-
-    Mason_LTD->>-Tool_company: Data of Stone
+    note left of DB_C: Stone don't have crafted by<br/>and is att end of query, no traverses to report back
 
     participant Wood_INC as Wood INC
 
-    Tool_company->>+Wood_INC: Stick/crafted_by*
+    Tool_company->>+Wood_INC: Pick/crafted_by*:1(craftedBy):Stick
     loop until not stored
         create participant DB_D as DB
-        Wood_INC->>DB_D: 
+        Wood_INC->>DB_D:
         destroy DB_D
-        DB_D->>Wood_INC: 
+        DB_D->>Wood_INC:
     end
     note left of DB_D: This query can be resolved<br/>without traversing to other<br/>servers<br/>Stick -> Plank -> Log
 
-    Wood_INC->>-Tool_company: Data of Log
-    Tool_company->>-cent: [Data of Stone, Data of Log]
-    cent->>-API: [Data of Stone, Data of Log]
 
+    Wood_INC->>Tool_company: Stick-->|craftedBy|Plank
+    Tool_company->>API: Stick-->|craftedBy|Plank
+    Wood_INC->>Tool_company: Plank-->|craftedBy|Log
+    Tool_company->>-API: Plank-->|craftedBy|Log
 ```
-<!-- TODO Explain in words what happens in the sequence diagram -->
+
+This diagram shows how the Query traverses the servers ``tool company``, ``Masons LTD`` and ``Wood INC``.
+First the query goes to the tool server, where the query is parsed and validated, if these fail an error is returned to the user.
+Inside of ``tool company`` the query is traversed until the next nodes are no longer available in our data and then forwarded to the correct server.
+This continues recursively and the result are are propagated back to the original sender.
 
 ## Query structure
 
-The query structure was designed for simplicity and not fines, the goal was an easy way to write path expressions with loops.
+The query structure was designed for simplicity and not fines, the goal was an **easy** way to write path expressions with loops.
 
 ```mermaid
 graph LR;
@@ -466,7 +548,7 @@ To follow a simple path, first have the starting node (s in this case a we have 
 
 `S/Pickaxe/obtainedBy/crafting_recipe/hasInput`
 
-The example will start att pickaxe and follow edge `obtainedBy` to `Pickaxe_From_Stick_And_Stone_Recipe`
+The example will start at pickaxe and follow edge `obtainedBy` to `Pickaxe_From_Stick_And_Stone_Recipe`
 where the query will split and go to both `Cobblestone` and `stick`.
 Since this is the end of the query they are returned.
 
@@ -478,7 +560,7 @@ In the above example the query each operation was evaluated left to right, in so
 ``S/Pick/{made_of/Crafting_recipie}*``
 
 In other cases we might want to do more complex
-operations, for exapmle an AND or an XOR operation between edges, those are explained in further examples.
+operations, for example an AND or an XOR operation between edges, those are explained in further examples.
 
 <!-- ### example arguments (), TO BE DECIDED
 
@@ -503,7 +585,7 @@ Where both Cobblestone and Log would be returned.
 
 after taking hasInput it will loop if available and go check the rarity if available if neither edge exist it returns as normal.
 
-### Example 4, Or
+### Example 4, OR
 
 Allows a path traversal to follow either edge
 
@@ -525,7 +607,7 @@ Pickaxe --> Pickaxe_From_Stick_And_Stone_Recipe --> Common
 Pickaxe --> Mineshaft --> Rare
 ```
 
-``S/Stick/{obtainedBy & foundAt}/rarity`` would return nothing as stick dont have the edge foundAt.
+``S/Stick/{obtainedBy & foundAt}/rarity`` would return nothing as stick don't have the edge foundAt.
 
 ### Example 6, XOR
 
@@ -540,11 +622,126 @@ Pickaxe --> Mineshaft --> Rare
 
 ``S/Stick/{obtainedBy ^ foundAt}/rarity`` would go down obtainedBy as it does not have the edge foundAt
 
-## Current limitations
+## Parsing and constructing the evaluationTree
 
-Currently AND, OR and XOR are not implemented due to the program not supporting evaluation between different edges. NextNode does not have acces to other data. With the current implemtation of the three being that of a binary tree we are limited in the queries we can construct, in future developmen the structs will change from having a Left, Right to having a ds that allows us to not be limited by the number of constraints in our query.
+When constructing the evaluationTree the code calls the function func grow_tree(str string, parent Node, id *int) (Node, error)
+providing the query string, and the parent node, it returns a node and an error, the error is nil if it did not encounter an error in the function.
+It then passes the string for some formatting, removing whitespaces, newlines and so on.
 
-For sprint two we need to implement the missing features as well as add more covering unit tests. To add the features it could be quite an expensive task as it requires a rewrite of two important parts of the program. while adding the unit tess would be cheap unless untill they discover errors.
+It then calls the function slit_q, where it separates operators from non-operators(edges, bracket-sections or remainder), and returns them.
+for example it starts matching traverseNodes, "/", and then finds another operator
+everything to the right of the last traverseNode will be treated as a remainder and added to the non-operators.
+
+grow-tree then matches the returned operator and creates a matching node.
+The node then takes all the parts and recursively calls growTree on them, then assigns them as a child and appends it to its slice of children.
+
+A/B/{C|D|E}*{F&G}
+
+<https://github.com/user-attachments/assets/1eec223d-1153-4555-9fdf-6d42b714fef4>
+
+## Traversing the tree
+
+When traversing the tree it will call  NextNode(caller Node, availablePaths []string) []*LeafNode,
+that takes in the caller node, all the available paths on the server, and returns a slice of leafNode pointers.
+
+Different nodes behave differently when NextNode is called on them but the general behavior is that it calls the next child it has,
+and if it was the last child that called it calls its parents nextNode.
+
+The recursive nextNode goes down to the first leaf it finds (some nodes look for more then one leafNode) and returns a pointer to it.
+When NextNode is called from a leaf it will find the next leaf in the evaluation order.
+
+When the query is passed to a new server it has to recreate the tree and must then get a new pointer to the last visited leaf in the newly constructed tree, it then calls GetLeaf(id int) *LeafNode,
+that takes in the id of a leaf and returns a pointer to it.
+
+<https://github.com/user-attachments/assets/60283f12-b982-4da7-be1f-c4a5cb7b2a4d>
+
+## go style pseudo code
+
+Note this is an example of part of the tree structure.
+This example will use the traverse- and leaf- node as an example.
+
+```go
+// interface type that all nodes need to implement
+// it add the possibility to query for the next node, returns the leaf nodes that are next in the query
+// And find the next leaf, returning a pointer to it
+type Node interface {
+ NextNode(Node, []string) []*LeafNode
+ GetLeaf(int) *LeafNode
+}
+
+// A Traverse Node represent a traversal from right to left
+type TraverseNode struct {
+ Parent Node
+ Children []Node 
+}
+
+// will simple pass by and return a matching leafNode pointer or null (see leafNode)
+func (t *TraverseNode) GetLeaf(id int) *LeafNode {
+ // returns the first node where id matches or nil
+ for i, _ := range t.Children {
+  tmp := t.Children[i].GetLeaf(id)
+  if tmp != nil {
+   return tmp
+  }
+ }
+ return nil
+}
+
+// node that implements the traverse function.
+// If the parent calls it checks the fist node
+// if a child calls it checks the next node
+// if it is the last child it calls parents nextNode nad gets it's next child.
+// returns a slice of leafNode pointers, empty if no matches or logic stops it.
+func (t *TraverseNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
+ var leafs []*LeafNode
+ // if caller is parent we check the "first" node
+ if caller == t.Parent {
+  leafs = append(leafs, t.Children[0].NextNode(t, availablePaths)...)
+ // then we check all the following Children
+ } else if caller != t.Children[len(t.Children)-1] {
+  for i, n := range t.Children {
+   if caller == n {
+    leafs = append(leafs, t.Children[i+1].NextNode(t, availablePaths)...)
+    break
+   }
+  }
+ // until we reach the last child where we call the parent
+ } else if caller == t.Children[len(t.Children)-1] {
+  leafs = append(leafs, t.Parent.NextNode(t, availablePaths)...)
+ } else {
+  panic("Should not happen!")
+ }
+ return leafs
+}
+
+// A leaf node represent en edge in the query, these are also the leafs in the evaluation tree
+type LeafNode struct {
+ Parent Node
+ Value  string
+ ID     int
+}
+
+// will check if the id matches and return a pointer to itself if it does, nil if it doesn't
+func (l *LeafNode) GetLeaf(id int) *LeafNode {
+ if l.ID == id {
+  return l
+ }
+ return nil
+}
+
+// Returns pointer to self in slice if parent called it
+// if call came from nil take parents nextNode instead
+func (l *LeafNode) NextNode(caller Node, availablePaths []string) []*LeafNode {
+ if caller == l.Parent {
+  return []*LeafNode{l}
+ } else if caller == nil {
+  return l.Parent.NextNode(l, availablePaths)
+ } else {
+  panic("leafNode nextNode panic")
+ }
+}
+
+```
 
 ## Example of internal structure of a query
 
@@ -574,126 +771,29 @@ Lets take an example query of show its internal evaluation
 
 ``S/Pickaxe/{obtainedBy/hasInput}*``
 
-This is then converted to a tree structure of operations, where the leafs are edges and nodes .
+This is then converted to a tree structure of operations, where the leafs are edges and nodes.
 
-lets say that we are on edge ``obtainedBy``, and we want to know whats next.
+Lets say that we are on edge ``obtainedBy``, and we want to know whats next.
 By looking at the parent we know that we are on the left side of an *traverse*
-and the next edge is the one on the right of the traverse, ``hasInput``
+and the next edge is the one on the right of the traverse, ``hasInput``.
 
-if whe should get the next node from ``hasInput`` we can again look att the parentO
-and se that we are on the right side of the *traverse*,
+If we should get the next node from ``hasInput`` we can again look att the parentO
+and see that we are on the right side of the *traverse*,
 to find the next node we need to look higher, the *traverse*'s parent.
 This gives us the knowledge that we are on the left side of *loop* operator (aka *zero or more*)
 We then have two possible options continue right or redo the left side.
-by evaluating the left side we get ``obtainedBy`` again, showing us that the *loop* works.
-the right sides gives us NULL, the end of the query an valid position to return.
+By evaluating the left side we get ``obtainedBy`` again, showing us that the *loop* works.
+The right sides gives us NULL, the end of the query an valid position to return.
 
-## go style pseudo code
+## Syntax Validation
 
-Note that this pseudo code
-
-```go
-type TraverseNode Struct{
-    Parent  *Node
-    Left    *Node
-    Right   *Node
-}
-
-// when calling this function we need to know where this was called from, was it our parent, left or right, there for passing a pointer to caller is necessary
-// the function return array of pointers to the leafs/query edges, which can be used to determine the next node(s)
-func (self TraverseNode) NextNode(caller *Node) []*LeafNode {
-    // if the caller is parent, we should deced into the left branch,
-    if caller == self.parent {
-        return self.left.NextNode(&self)
-    }
-    // when the left branch has evaluated it will call us again
-    // an we than have to evaluate the right branch
-    else if caller == self.left {
-        self.right.NextNode(&self)
-    }
-    // when the right brach has evaluated it will call us again
-    // we then know we have been fully evaluated and can call our parent saying we are done
-    else if caller == self.right {
-        self.parent.nextEdege(&self)
-    }
-}
-
-type LeafNode Struct {
-    Parent      *Node
-    edgeName    string
-}
-
-// we are asked what the next edge is, this LeafNode represent that edge
-func (self LeafNode) NextNode(caller *Node) []*LeafNode {
-    if caller == self.parent {
-        return [&self]
-    }
-}
-
-type LoopNode Struct{
-    Parent  *Node
-    Left    *Node
-    Right   *Node
-}
-
-func (self LoopNode) NextNode(caller *Node) []*LeafNode {
-    // if the caller is parent, the possible outcomes are that we match zero of the edges and move on with the right branch
-    // or that we match whatever in the left brach, therefore we return the next edges
-    // an therefore return 
-    // if this was match one and more instead of zero or more, calling right would not be the right option as it then would
-    // progress forward without having matched anything on the left
-    // maybe add an + operator which is match one or more?
-    if caller == self.parent {
-        return [self.left.NextNode(&self),self.right.NextNode(&self)]
-    }
-    // when the left branch has evaluated it will call us again
-    // we can continue the loop so left is an valid option, but we could also exit
-    // this leads to the same output as the caller was the parent
-    else if caller == self.left {
-        return [self.left.NextNode(&self),self.right.NextNode(&self)]
-    }
-    // when the right brach has evaluated it will call us again
-    // we then know we have been fully evaluated and can call our parent saying we are done
-    else if caller == self.right {
-        self.parent.NextNode(&self)
-    }
-}
-
-type OrNode Struct{
-    Parent  *Node
-    Left    *Node
-    Right   *Node
-}
-
-func (self OrNode) NextNode(caller *Node) []*LeafNode {
-    // if the parent calls us we could either match each side, so both sides are an alternative
-    if caller == self.parent {
-        return [self.left.NextNode(&self),self.right.NextNode(&self)]
-    }
-    // if the left side calls us we have then completed one of the options and are fully evaluated, an the call our parent saying we are done, and let them get the next edge
-    else if caller == self.left {
-        self.parent.NextNode(&self)
-    }
-    // same ass above
-    else if caller == self.right {
-        self.parent.NextNode(&self)
-    }
-}
-```
-
-## Parsing and constructing the evaluationTree
-
-When constructing the evaluationTree the code calls the function grow_tree(str string, parent Node, id *int)
-where it creates nodes according to the operation,
-for example, /,&,|,* that point to other nodes.
-if there is no operation it knows that it is a leaf and constructs a leafnode
-
-when it evaluates groups it follows the operation order withing the group by first treating the group itself as and edge then its content as normal by removing the group block, {}.
+As mentioned previously, checking the syntax is very straightforward. We simply only need to check for invalid operator combinations with a few edge cases such as what starting/ending operators are allowed.
 
 ## The query wrapper
 
 The evaluation tree, on its own, does not provide complete utility.
 Therefore, a wrapper is constructed to include additional information necessary for graph traversal.
+Before the construction of this warper functions that validate the syntax of the query is executed to make sure no problems would arise in the evaluation tree
 This wrapper specifies the next node to traverse and the edge along which to traverse.
 
 With the aid of the evaluation tree, the next edges and subsequent nodes can be determined, and the traversal path can be updated,
@@ -701,9 +801,19 @@ provided we have access to the graph.
 This process may necessitate splitting the query into multiple sub-queries in certain cases.
 By applying this approach recursively, we can effectively navigate the graph.
 
-Currently, the wrapper, which is responsible for initializing values and invoking the grow tree function,
-lacks error handling and query syntax validation. For a system like this to be useful,
-stability is crucial, which is currently not the case.
+During the evaluation, multiple events can occur that require error handling, such as the expiration of the time to live,
+a failed connection to the database, or an error resulting from passing the query to another server.
+These errors are converted to valid Mermaid syntax and piped along with the rest of the results.
+
+An example on how an ttl error looks, first row is the error, second the query, third the curent node, and list the edge index used to get to that node, and the name of the edge.
+
+```mermaid
+graph TD;
+9 -->|TTL err| 7590597108386491890@{ shape: braces, label: "Time to live expired
+minecraft:Pickaxe_Instance_Henry/minecraft:obtainedBy*minecraft:hasInput*nodeOntology:hasID*
+9
+3(nodeOntology:hasID)" }
+```
 
 Implementing error handling for simple syntax errors is relatively straightforward.
 However, more advanced error handling may require additional time due to potential edge cases,
@@ -711,12 +821,12 @@ particularly those involving Unicode.
 
 ### Passing the query to dirent servers
 
-To pass data and queries to different servers an common protocol is needed, this is described bellow
+To pass data and queries to different servers an common protocol is needed, this is described below.
 
 #### The Common Header
 
-The common header for all queries Include general information that is needed for the system.
-These include an magic to determine if its acutely an PETS query, Query type, an identifying UUID and TTL.
+The common header for all queries include general information that is needed for the system.
+These include an magic to determine if its actually an PETS query, Query type, an identifying UUID and TTL.
 The body to this header is determined by the type.
 
 There might be further changes to this standard to include multiple variable with authorizations tokens in further development. This would allow advanced functions such as to hide internal paths to non authorized users, but still propagate the query thru the network.
@@ -749,7 +859,36 @@ This information is sufficient to reconstruct the query and its state. In the cu
 if state values are missing, the query is assumed to be new. The starting node is the first part of the query, and the edge is the same as the starting node.
 
 The return of *recursive mermaid query* is always a valid mermaid string, when error are encountered during the traversal its converted to an valid mermaid syntax,
-shush as node with custom styling containing the error message, if possible an arrow to the node that the error occurred in is also drawn.
+such as node with custom styling containing the error message, if possible an arrow to the node that the error occurred in is also drawn.
+
+### Improvements and limitations of the query wrapper
+
+Currently, the Query wrapper, responsible for traversing the data, is single-threaded and uses a depth-first evaluation approach.
+The query speed could be significantly improved by adopting a breadth-first, multi-threaded approach.
+This is because the system is primarily I/O-bound,
+either waiting for data from the database or passing results from another server, even with cached database results.
+
+By utilizing Go's green threads (Goroutines), the query could be evaluated in parallel.
+It is important to note that green threads are not system threads, so asynchronous versions of I/O operations need to be used to avoid blocking.
+This might require changes to how communication between the db and other servers are done internally.
+
+Another dramatic speedup could be achieved by switching from HTTP to TCP. The system was originally designed with TCP in mind,
+as evidenced by the use of custom binary headers and the lack of use off HTTP functionality beyond its message-carrying capability.
+HTTP requires buffering the entire message before sending it over the wire because it is designed to send fixed-size data, as indicated by the content-length header.
+By transferring data over TCP, unnecessary buffering is avoided, leading to lower latency and reduced memory usage.
+
+To implement both these improvements, the primary challenge is determining when to split the evaluation,
+as creating one green thread per traversal step would likely incur significant overhead in creation and context switching.
+Another issue is protecting writes to the response stream to avoid interweaved characters in the Mermaid syntax.
+This could be achieved by buffering lines and ensuring each line is fully written before writing the next one.
+An exception to this would be the multiline blocks that represent errors, but this could be resolved by checking for opening and closing brackets in the Mermaid syntax.
+
+A thing to note is that there were unit test for this structure but due to time constraints these were dropped when the system was changed from using ttl files to an actual database.
+This was because the functions for database access are not related to an interface are global, by using an interface test data can again be passed to the tests, this would also allow
+for multiple "backends" to be used.
+
+When evaluating the query for traversal the nodes are today limited to only the from current node, this limits the current operator to only deal with the currents nodes edges.
+It would also be beneficial to add some more nodes/operators allowing to create more a precise query.
 
 ## Webserver
 
@@ -757,3 +896,4 @@ A webserver is beneficial for our system because it acts as a bridge between use
 It allows us to interact with our system from anywhere using a simple HTTP request and it provides a unified interface for querying and retrieving linked data.
 
 <!-- TODO write about rendering mermaid -->
+Mermaid.js renders diagrams by converting text-based syntax into scalable vector graphics (SVG). When a user submits a query, the server responds with a Mermaid-formatted string. This string is dynamically inserted into an HTML `<div>` with the class mermaid. The mermaid.init() function scans the document for elements with the .mermaid class and processes the text inside them, transforming it into a structured SVG diagram. This enables easy visualization of flowcharts, sequence diagrams, and other graph types directly in the browser without additional rendering tools.
