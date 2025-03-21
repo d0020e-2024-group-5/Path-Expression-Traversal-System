@@ -17,13 +17,12 @@ Our system is designed to navigate and retrieve information from linked ontologi
 - [Installation](#installation)
 - [Example](#example)
 - [Ontologies](#ontologies)
-- [Ontology text](#ontology-text)
+- [Example Data text](#example-data-text)
 - [Node ontologies](#node-ontologies)
   - [Node ontologies distributed](#node-ontologies-distributed)
   - [Truly distributed data](#truly-distributed-data)
 - [From Query to Result](#from-query-to-result)
 - [Getting data from the database](#getting-data-from-the-database)
-- [Parsing the ontologies into GoLang](#parsing-the-ontologies-into-golang)
 - [Architecture](#architecture)
 - [Query structure](#query-structure)
   - [Example 1, Simple traversal](#example-1-simple-traversal)
@@ -313,151 +312,92 @@ graph TD;
 graph TD;
 subgraph Server_a
 Server_a_minecraft:Server_b[(Server_b)]
+Server_a_minecraft:Stick_Bamboo_made_Instance([Stick_Bamboo_made_Instance])
+Server_a_minecraft:Bamboo_Instance([Bamboo_Instance])
+Server_a_minecraft:CraftingTable_Instance([CraftingTable_Instance])
+Server_a_minecraft:Stick_bamboo_recipe_Instance([Stick_bamboo_recipe_Instance])
+Server_a_minecraft:Plank_from_Bamboo_Instance[Plank_from_Bamboo_Instance]
+Server_a_minecraft:Plank_from_bamboo_recipe_Instance([Plank_from_bamboo_recipe_Instance])
 end
 
-subgraph Server_a
-Server_a_minecraft:Stick_Bamboo_made_Instance([Stick_Bamboo_made_Instance])
-end
 Server_a_minecraft:Stick_Bamboo_made_Instance-->|obtainedBy|Server_a_minecraft:Stick_bamboo_recipe_Instance
 
-subgraph Server_a
-Server_a_minecraft:Bamboo_Instance([Bamboo_Instance])
-end
-
-subgraph Server_a
-Server_a_minecraft:CraftingTable_Instance([CraftingTable_Instance])
-end
-
-subgraph Server_a
-Server_a_minecraft:Stick_bamboo_recipe_Instance([Stick_bamboo_recipe_Instance])
-end
 Server_a_minecraft:Stick_bamboo_recipe_Instance-->|hasInput|Server_a_minecraft:Bamboo_Instance
 Server_a_minecraft:Stick_bamboo_recipe_Instance-->|hasOutput|Server_a_minecraft:Stick_Bamboo_made_Instance
 Server_a_minecraft:Stick_bamboo_recipe_Instance-->|usedInStation|Server_a_minecraft:CraftingTable_Instance
 
-subgraph Server_a
-Server_a_minecraft:Plank_from_Bamboo_Instance[Plank_from_Bamboo_Instance]
-end
 Server_a_minecraft:Plank_from_Bamboo_Instance-->|inter_server|Server_b_minecraft:Plank_from_Bamboo_Instance
 Server_a_minecraft:Plank_from_Bamboo_Instance-->|pointsToServer|Server_a_minecraft:Server_b
 
-subgraph Server_a
-Server_a_minecraft:Plank_from_bamboo_recipe_Instance([Plank_from_bamboo_recipe_Instance])
-end
 Server_a_minecraft:Plank_from_bamboo_recipe_Instance-->|hasInput|Server_a_minecraft:Bamboo_Instance
 Server_a_minecraft:Plank_from_bamboo_recipe_Instance-->|hasOutput|Server_a_minecraft:Plank_from_Bamboo_Instance
 Server_a_minecraft:Plank_from_bamboo_recipe_Instance-->|usedInStation|Server_a_minecraft:CraftingTable_Instance
 
 subgraph Server_b
 Server_b_minecraft:Stick_Plank_made_Instance([Stick_Plank_made_Instance])
+Server_b_minecraft:Server_a[(Server_a)]
+Server_b_minecraft:Server_c[(Server_c)]
+Server_b_minecraft:Plank_Instance([Plank_Instance])
+Server_b_minecraft:CraftingTable_Instance[CraftingTable_Instance]
+Server_b_minecraft:Stick_Planks_recipe_Instance([Stick_Planks_recipe_Instance])
+Server_b_minecraft:Plannks_From_Logs_Recipe_Instance[Plannks_From_Logs_Recipe_Instance]
+Server_b_minecraft:Plank_from_Bamboo_Instance([Plank_from_Bamboo_Instance])
+Server_b_minecraft:Plank_from_bamboo_recipe_Instance[Plank_from_bamboo_recipe_Instance]
 end
 Server_b_minecraft:Stick_Plank_made_Instance-->|obtainedBy|Server_b_minecraft:Stick_Planks_recipe_Instance
 
-subgraph Server_b
-Server_b_minecraft:Server_a[(Server_a)]
-end
-
-subgraph Server_b
-Server_b_minecraft:Server_c[(Server_c)]
-end
-
-subgraph Server_b
-Server_b_minecraft:Plank_Instance([Plank_Instance])
-end
 Server_b_minecraft:Plank_Instance-->|obtainedBy|Server_b_minecraft:Plannks_From_Logs_Recipe_Instance
 
-subgraph Server_b
-Server_b_minecraft:CraftingTable_Instance[CraftingTable_Instance]
-end
 Server_b_minecraft:CraftingTable_Instance-->|inter_server|Server_a_minecraft:CraftingTable_Instance
 Server_b_minecraft:CraftingTable_Instance-->|pointsToServer|Server_b_minecraft:Server_a
 
-subgraph Server_b
-Server_b_minecraft:Stick_Planks_recipe_Instance([Stick_Planks_recipe_Instance])
-end
 Server_b_minecraft:Stick_Planks_recipe_Instance-->|hasInput|Server_b_minecraft:Plank_Instance
 Server_b_minecraft:Stick_Planks_recipe_Instance-->|hasInput|Server_b_minecraft:Plank_from_Bamboo_Instance
 Server_b_minecraft:Stick_Planks_recipe_Instance-->|hasOutput|Server_b_minecraft:Stick_Plank_made_Instance
 Server_b_minecraft:Stick_Planks_recipe_Instance-->|usedInStation|Server_b_minecraft:CraftingTable_Instance
 
-subgraph Server_b
-Server_b_minecraft:Plannks_From_Logs_Recipe_Instance[Plannks_From_Logs_Recipe_Instance]
-end
 Server_b_minecraft:Plannks_From_Logs_Recipe_Instance-->|inter_server|Server_c_minecraft:Plannks_From_Logs_Recipe_Instance
 Server_b_minecraft:Plannks_From_Logs_Recipe_Instance-->|pointsToServer|Server_b_minecraft:Server_c
 
-subgraph Server_b
-Server_b_minecraft:Plank_from_Bamboo_Instance([Plank_from_Bamboo_Instance])
-end
 Server_b_minecraft:Plank_from_Bamboo_Instance-->|obtainedBy|Server_b_minecraft:Plank_from_bamboo_recipe_Instance
 
-subgraph Server_b
-Server_b_minecraft:Plank_from_bamboo_recipe_Instance[Plank_from_bamboo_recipe_Instance]
-end
 Server_b_minecraft:Plank_from_bamboo_recipe_Instance-->|inter_server|Server_a_minecraft:Plank_from_bamboo_recipe_Instance
 Server_b_minecraft:Plank_from_bamboo_recipe_Instance-->|pointsToServer|Server_b_minecraft:Server_a
 
 subgraph Server_c
 Server_c_minecraft:Stick_Plank_made_Instance[Stick_Plank_made_Instance]
+Server_c_minecraft:Stick_Bamboo_made_Instance[Stick_Bamboo_made_Instance]
+Server_c_minecraft:Cobblestone_Bob([Cobblestone_Bob])
+Server_c_minecraft:Log_Instance([Log_Instance])
+Server_c_minecraft:Pickaxe_Instance_Henry([Pickaxe_Instance_Henry])
+Server_c_minecraft:Pickaxe_Instance_Gustav([Pickaxe_Instance_Gustav])
+Server_c_minecraft:Server_a[(Server_a)]
+Server_c_minecraft:Server_b[(Server_b)]
+Server_c_minecraft:Plank_Instance[Plank_Instance]
+Server_c_minecraft:CraftingTable_Instance[CraftingTable_Instance]
+Server_c_minecraft:PickaxeRecipe_Instance([PickaxeRecipe_Instance])
+Server_c_minecraft:Plannks_From_Logs_Recipe_Instance([Plannks_From_Logs_Recipe_Instance])
 end
 Server_c_minecraft:Stick_Plank_made_Instance-->|inter_server|Server_b_minecraft:Stick_Plank_made_Instance
 Server_c_minecraft:Stick_Plank_made_Instance-->|pointsToServer|Server_c_minecraft:Server_b
 
-subgraph Server_c
-Server_c_minecraft:Stick_Bamboo_made_Instance[Stick_Bamboo_made_Instance]
-end
 Server_c_minecraft:Stick_Bamboo_made_Instance-->|inter_server|Server_a_minecraft:Stick_Bamboo_made_Instance
 Server_c_minecraft:Stick_Bamboo_made_Instance-->|pointsToServer|Server_c_minecraft:Server_a
 
-subgraph Server_c
-Server_c_minecraft:Cobblestone_Bob([Cobblestone_Bob])
-end
-
-subgraph Server_c
-Server_c_minecraft:Log_Instance([Log_Instance])
-end
-
-subgraph Server_c
-Server_c_minecraft:Pickaxe_Instance_Henry([Pickaxe_Instance_Henry])
-end
 Server_c_minecraft:Pickaxe_Instance_Henry-->|obtainedBy|Server_c_minecraft:PickaxeRecipe_Instance
 
-subgraph Server_c
-Server_c_minecraft:Pickaxe_Instance_Gustav([Pickaxe_Instance_Gustav])
-end
-
-subgraph Server_c
-Server_c_minecraft:Server_a[(Server_a)]
-end
-
-subgraph Server_c
-Server_c_minecraft:Server_b[(Server_b)]
-end
-
-subgraph Server_c
-Server_c_minecraft:Plank_Instance[Plank_Instance]
-end
 Server_c_minecraft:Plank_Instance-->|inter_server|Server_b_minecraft:Plank_Instance
 Server_c_minecraft:Plank_Instance-->|pointsToServer|Server_c_minecraft:Server_b
 
-subgraph Server_c
-Server_c_minecraft:CraftingTable_Instance[CraftingTable_Instance]
-end
 Server_c_minecraft:CraftingTable_Instance-->|inter_server|Server_a_minecraft:CraftingTable_Instance
 Server_c_minecraft:CraftingTable_Instance-->|pointsToServer|Server_c_minecraft:Server_a
 
-subgraph Server_c
-Server_c_minecraft:PickaxeRecipe_Instance([PickaxeRecipe_Instance])
-end
 Server_c_minecraft:PickaxeRecipe_Instance-->|hasInput|Server_c_minecraft:Stick_Plank_made_Instance
 Server_c_minecraft:PickaxeRecipe_Instance-->|hasInput|Server_c_minecraft:Stick_Bamboo_made_Instance
 Server_c_minecraft:PickaxeRecipe_Instance-->|hasInput|Server_c_minecraft:Cobblestone_Bob
 Server_c_minecraft:PickaxeRecipe_Instance-->|hasOutput|Server_c_minecraft:Pickaxe_Instance_Henry
 Server_c_minecraft:PickaxeRecipe_Instance-->|usedInStation|Server_c_minecraft:CraftingTable_Instance
 
-subgraph Server_c
-Server_c_minecraft:Plannks_From_Logs_Recipe_Instance([Plannks_From_Logs_Recipe_Instance])
-end
 Server_c_minecraft:Plannks_From_Logs_Recipe_Instance-->|hasInput|Server_c_minecraft:Log_Instance
 Server_c_minecraft:Plannks_From_Logs_Recipe_Instance-->|hasOutput|Server_c_minecraft:Plank_Instance
 Server_c_minecraft:Plannks_From_Logs_Recipe_Instance-->|usedInStation|Server_c_minecraft:CraftingTable_Instance
@@ -512,37 +452,16 @@ minecraft:obtainedBy | minecraft:PickaxeRecipe_Instance
 
 as a hash map with the edges as keys and the nodes as value.
 
-
-
 ## Architecture
 
 ```mermaid
 sequenceDiagram
     participant API
-    participant cent as Central server
-
     note over API: where request start
 
-
-    note over cent: A server which listens to http request<br/>and answer/forward queries.<br/>All servers are of this type, but their<br/>databases very<br/>and the central database is quite<br/>different with only one node*.
-
-    API->>+cent: Pick/crafted_by*
-    note left of cent: sent over http api
-
-    loop until not stored
-        create participant DB_A as DB
-        cent->>DB_A: 
-        note over DB_A: This database is just a node<br/>which edges point to items in other servers
-        destroy DB_A
-        DB_A->>cent: 
-    end
-    note left of DB_A: won't loop since only one node
-
-
-
     participant Tool_company as The tool company
-    cent->>+Tool_company: Pick/crafted_by*
-
+    API->>+Tool_company: Pick/crafted_by
+    Note over Tool_company: Query is parsed<br/>and validated.<br/>As well as converted<br/>to an internal representation
 
     loop until not stored
         create participant DB_B as DB
@@ -551,14 +470,18 @@ sequenceDiagram
         destroy DB_B
         DB_B->>Tool_company: 
     end
-
     note left of DB_B: Pickaxe don't have<br/>nodes stone or stick<br/>returns server contact<br/>information.
 
-    
-    note right of Tool_company: outgoing queries can be sent in parallel
-    participant Mason_LTD as Masons LTD
-    Tool_company->>+Mason_LTD: Stone/crafted_by*
 
+    note right of Tool_company: report back that the query traverses to new servers
+    Tool_company->>+API: pick-.->|crafted_by|stick
+    Tool_company->>+API: pick-.->|crafted_by|stone
+
+    note right of Tool_company: outgoing queries can be sent in parallel,<br/>send next node and what edge index that was used to traverse
+    participant Mason_LTD as Masons LTD
+    Tool_company->>+Mason_LTD: Pick/crafted_by*:1(craftedBy):Stone
+
+    note left of Mason_LTD: reconstruct the internal query representation
 
     loop until not stored
         create participant DB_C as DB
@@ -566,32 +489,34 @@ sequenceDiagram
         destroy DB_C 
         DB_C->>Mason_LTD: 
     end
-    note left of DB_C: Stone don't have crafted by<br/>and is att end of query, return stone
-
-
-    Mason_LTD->>-Tool_company: Data of Stone
+    note left of DB_C: Stone don't have crafted by<br/>and is att end of query, no traverses to report back
 
     participant Wood_INC as Wood INC
 
-    Tool_company->>+Wood_INC: Stick/crafted_by*
+    Tool_company->>+Wood_INC: Pick/crafted_by*:1(craftedBy):Stick
     loop until not stored
         create participant DB_D as DB
-        Wood_INC->>DB_D: 
+        Wood_INC->>DB_D:
         destroy DB_D
-        DB_D->>Wood_INC: 
+        DB_D->>Wood_INC:
     end
     note left of DB_D: This query can be resolved<br/>without traversing to other<br/>servers<br/>Stick -> Plank -> Log
 
-    Wood_INC->>-Tool_company: Data of Log
-    Tool_company->>-cent: [Data of Stone, Data of Log]
-    cent->>-API: [Data of Stone, Data of Log]
 
+    Wood_INC->>Tool_company: Stick-->|craftedBy|Plank
+    Tool_company->>API: Stick-->|craftedBy|Plank
+    Wood_INC->>Tool_company: Plank-->|craftedBy|Log
+    Tool_company->>-API: Plank-->|craftedBy|Log
 ```
-<!-- TODO Explain in words what happens in the sequence diagram -->
+
+This diagram shows how the Query traverses the servers ``tool company``, ``Masons LTD`` and ``Wood INC``.
+First the query goes to the tool server, where the query is parsed and validated, if these fail an error is returned to the user.
+Inside of ``tool company`` the query is traversed until the next nodes are no longer available in our data and then forwarded to the correct server.
+This continues recursively and the result are are propagated back to the original sender.
 
 ## Query structure
 
-The query structure was designed for simplicity and not fines, the goal was an easy way to write path expressions with loops.
+The query structure was designed for simplicity and not fines, the goal was an **easy** way to write path expressions with loops.
 
 ```mermaid
 graph LR;
