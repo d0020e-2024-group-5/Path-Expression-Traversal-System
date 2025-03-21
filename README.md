@@ -88,6 +88,10 @@ To test the system with the example data open a browser and connect to port 80 (
 
 ![Image of a query send in the website](readme_images/website_loop_query.png)
 
+## Automatic test
+
+Automatic test where implemented for some parts of the code, but due to time constraints these test where dropped during later development.
+
 ## Ontologies
 
 An Ontology is a way to describe a relationship with a structure of subject, predicate and object. And our data is therefore a list of these structures which can be describe as following:
