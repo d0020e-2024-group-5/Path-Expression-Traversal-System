@@ -52,14 +52,14 @@ connection details should be supplied by these environment variables
 
 - ``GRAPHDB_HOSTNAME`` this is the hostname of the database, could be an ip or an domain, note that the port is fixed to 7200.
 - ``GRAPHDB_REPOSITORY`` the graphDB repository that should be used.
-- ``CASHING`` if set to "TRUE" the result from the GraphDB queries would be cashed indefinitely
+- ``CASHING`` if set to "TRUE" the result from the GraphDB queries would be cashed indefinitely ( if you plan to change the data in the database while running the program this should be turned of)
 
-The PETS protocol currently waits for http on port 80, but the application could send to other ports if defined so i the HasIp attribute in the database
+The PETS protocol currently waits for http on port 80, but the application could send to other ports if defined so with the nodeOntology:hasIp property in the database
 
 ## Example
 
 We provide an example in this repo with the help of a docker compose file and example data files
-as problem occurred with automatically loading data into graphDB this needs to be done manually.
+as problems occurred with automatically loading data into graphDB this needs to be done manually.
 
 The example creates 3 PETS servers and 3 graphDB instances, where PETS server C port 80 is exposed to the wider network.
 To load the correct data for this test into the graph databases follow these steps
