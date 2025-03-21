@@ -5,3 +5,6 @@ graphDBdata/*
 .vscode
 src/pets
 src/pets.exe
+tmp*
+TMP*
+Tmp*

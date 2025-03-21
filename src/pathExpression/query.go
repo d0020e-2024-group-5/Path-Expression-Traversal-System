@@ -248,7 +248,7 @@ func TraverseQuery(q *QueryStruct) string {
 func RecursiveTraverse(q *QueryStruct, res io.Writer) {
 	// if Time to live is zero write error
 	if q.TimeToLive == 0 {
-		mermaidError.MermaidErrorEdge(res, q.nextNode, " ", fmt.Sprintf("Time to live expired\n%s(%s)", strings.ReplaceAll(q.toString(), ";", "\n"), q.followLeaf.Value))
+		mermaidError.MermaidErrorEdge(res, q.nextNode, "TTL err", fmt.Sprintf("Time to live expired\n%s(%s)", strings.ReplaceAll(q.toString(), ";", "\n"), q.followLeaf.Value))
 		return
 	}
 
@@ -257,7 +257,7 @@ func RecursiveTraverse(q *QueryStruct, res io.Writer) {
 
 	// next might multiple errors
 	for _, err := range qErr {
-		mermaidError.MermaidErrorEdge(res, q.nextNode, "", err.Error())
+		mermaidError.MermaidErrorEdge(res, q.nextNode, "Next err", err.Error())
 	}
 
 	// for each of the next queys
@@ -266,7 +266,7 @@ func RecursiveTraverse(q *QueryStruct, res io.Writer) {
 
 		domains, err := pointsToServer(qRec)
 		if err != nil {
-			mermaidError.MermaidErrorEdge(res, qRec.nextNode, "",
+			mermaidError.MermaidErrorEdge(res, qRec.nextNode, "FalseNode err",
 				fmt.Sprintf("Error testing for falseNode %s:\n%s", qRec.nextNode, err.Error()))
 			continue
 		}
@@ -292,7 +292,7 @@ func RecursiveTraverse(q *QueryStruct, res io.Writer) {
 
 				// if error sending to server
 				if err != nil {
-					mermaidError.MermaidErrorEdge(res, qRec.nextNode, "SERVER ERROR",
+					mermaidError.MermaidErrorEdge(res, qRec.nextNode, "Network err",
 						fmt.Sprintf("Could not send this this to server %s\nErr: %s\n%s", domain, err.Error(), qRec.DebugToString()))
 					continue // try next domain
 				}
